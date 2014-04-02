@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#	SURPI_v22_15.sh
+#	SURPI_v1.0.0.sh
 #
 #	This is the main driver script for the SURPI pipeline.
 #	Chiu Laboratory
