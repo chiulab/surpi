@@ -124,7 +124,7 @@ To generate the National Center for Biotechnology Information (NCBI) nucleotide 
 
 		SURPI_v1.0.0.sh -z <INPUTFILE>
 
-	After typing the above line, a config file and a �go� file will be created. The config file will contain default values for many parameters - these parameters may need to be modified depending on your environment. The config file has descriptions of the options allowed by SURPI.
+	After typing the above line, a config file and a "go" file will be created. The config file will contain default values for many parameters - these parameters may need to be modified depending on your environment. The config file has descriptions of the options allowed by SURPI.
 
 	2. Once the config file has been customized, the SURPI pipeline can be initiated by typing in the name of the go file that was created. Below is an example (boldfaced text is inputted by the user):
 
