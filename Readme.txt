@@ -65,26 +65,26 @@ To generate the National Center for Biotechnology Information (NCBI) nucleotide 
 
 	SNAP Databases
 
-		� Human DB
+		• Human DB
 
 			Comprehensive Mode
 
-			� NCBI nr DB
-			� Viral protein DB
-			� NCBI nt DB
+			• NCBI nr DB
+			• Viral protein DB
+			• NCBI nt DB
 
 			Fast Mode
 	
-			� Viral nt DB
-			� Bacterial DB
+			• Viral nt DB
+			• Bacterial DB
 	
 	Taxonomy Databases
 
 	These databases can be created using the shell script titled: create_taxonomy_db.sh. Depending on your internet connection speed, and the speed of your system, this script may take several hours to complete creation of the database.
 
-		� gi_taxid_prot.db
-		� gi_taxid_nucl.db
-		� names_nodes_scientific.db
+		• gi_taxid_prot.db
+		• gi_taxid_nucl.db
+		• names_nodes_scientific.db
 
 	To use this script, execute the create_taxonomy_db.sh program. This script will download the necessary data from NCBI, and generate the above 3 databases.
 
@@ -93,15 +93,15 @@ To generate the National Center for Biotechnology Information (NCBI) nucleotide 
 
 	Below are some notes on files that may need to be modified to run SURPI.
 
-� cutadapt_quality.csh - specify location of /tmp folder
+• cutadapt_quality.csh - specify location of /tmp folder
 
 	cutadapt_quality.csh defaults to using /tmp for temporary file storage. If using a system with limited space in this location, change the location to a directory with more storage space available.
 
-� taxonomy_lookup_embedded.pl
+• taxonomy_lookup_embedded.pl
 
 	Set database_directory to the location of the taxonomy databases created below.
 
-� tweet.pl
+• tweet.pl
 
 	SURPI has the ability to send out notifications via Twitter at various stages within the pipeline. If this feature is desired, you will need to set up a Twitter application within your account for this purpose. See https://dev.twitter.com/apps for more details.
 
@@ -111,7 +111,7 @@ To generate the National Center for Biotechnology Information (NCBI) nucleotide 
 		oauth_token
 		oauth_token_secret
 
-	� perl modules to install
+	• perl modules to install
 		Net::Twitter::Lite::WithAPIv1_1
 		Net::OAuth
 
