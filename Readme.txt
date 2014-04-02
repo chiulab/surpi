@@ -9,7 +9,7 @@ SURPI has been tested on Ubuntu 12.04. It will likely function properly on other
 
 Hardware Requirements
 
-	SURPI requires a machine with high RAM in order to run efficiently. This is mainly due to SNAP, which gains its speed by loading the reference databases completely into RAM. We�ve run SURPI successfully on machines with 60.5GB RAM. SURPI will use all cores on a machine by default, though the number of cores used can be adjusted within the config file. Much of SURPI is parallelized, so it benefits from using as many cores as possible.
+	SURPI requires a machine with high RAM in order to run efficiently. This is mainly due to SNAP, which gains its speed by loading the reference databases completely into RAM. We've run SURPI successfully on machines with 60.5GB RAM. SURPI will use all cores on a machine by default, though the number of cores used can be adjusted within the config file. Much of SURPI is parallelized, so it benefits from using as many cores as possible.
 
 
 The steps to install SURPI on a machine are as follows:
