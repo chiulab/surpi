@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#	SURPI_v1.0.0.sh
+#	SURPI.sh
 #
 #	This is the main driver script for the SURPI pipeline.
 #	Chiu Laboratory
@@ -12,6 +12,8 @@
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
 # Last revised 1/26/2014    
+
+version="1.0.1" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -50,7 +52,7 @@ if [[ $HELP -eq 1  ||  $# -lt 1 ]]
 then
 	cat <<USAGE
 
-${bold}$scriptname${normal}
+${bold}SURPI version ${version}${normal}
 
 This program will run the SURPI pipeline with the parameters supplied by either the config file, or specified on the command line.
 
