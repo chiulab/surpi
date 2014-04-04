@@ -367,6 +367,7 @@ echo "--------------------------------------------------------------------------
 echo "INPUT PARAMETERS"
 echo "-----------------------------------------------------------------------------------------"
 echo "Command Line Usage: $scriptname $@"
+echo "SURPI version: $version"
 echo "config_file: $config_file"
 echo "Server: $host"
 echo "run_mode: $run_mode"
