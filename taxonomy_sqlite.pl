@@ -21,7 +21,7 @@ my $time = 0;
 
 if ( @ARGV != 3 ) {
 	print "=======================================\n";
-	print "USAGE: <taxonomy_sqlite-hash.pl> <blast_file/sam_file> <file_type:blast/sam> <nucl/prot> \n";
+	print "USAGE: <taxonomy_sqlite.pl> <blast_file/sam_file> <file_type:blast/sam> <nucl/prot> \n";
 	print "=======================================\n";
 	print "NOTE: If you have blasted against a protein database, the last parameter will be 'prot', and in case of blasting to a nucleotide database, use 'nucl'\n";
 	print "Will read the blast output or SAM output, extract the matched reads and append annotation to the blast/sam file\n";

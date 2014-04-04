@@ -34,7 +34,7 @@ my $nt = Net::Twitter::Lite::WithAPIv1_1->new(
     access_token        => $oauth_token,
     access_token_secret => $oauth_token_secret,
     legacy_lists_api    => 0,
-    ssl                 => 1
+    ssl					=> 1
 );
 #print "$status_update\n"
 $nt->update($status_update);

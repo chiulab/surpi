@@ -40,7 +40,7 @@ echo "done creating $inputfile.tempsorted"
 sed 's/#/ /g'  $inputfile.tempsorted | sed 's/\// /g' | awk '{print$2}' | sed 's/^/#/g' | sed 's/[1-2]$//g' | sort | uniq > $inputfile.barcodes.int #makes a barcode list from the entire file #change $inputfile.tempsorted to $inputfile once no need for temp table
 echo "created list of barcodes"
 
-	sed '/N/d' $inputfile.barcodes.int > $inputfile.barcodes
+sed '/N/d' $inputfile.barcodes.int > $inputfile.barcodes
 
 ######GENERATE gi LIST ##############
 if [ "$gi" != "N" ]

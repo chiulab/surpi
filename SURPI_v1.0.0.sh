@@ -159,27 +159,36 @@ crop_length=75
 
 abysskmer=34
 
-#Verify FASTQ quality  (0 = skip validation / 1 [default]= run validation, dont check uniq names, quit on failure / 2 = run validation, check uniq names, quit on failure / 3= run validatoin check uniq names, do not quit on failure )
+#Verify FASTQ quality  
+#	0 = skip validation
+#	1 [default] = run validation, don't check uniq names, quit on failure
+#	2 = run validation, check uniq names, quit on failure
+#	3 = run validation, check uniq names, do not quit on failure
 VERIFY_FASTQ=1
+
+#Below options are to skip specific steps.
+#Uncomment next line to skip preprocessing
+#(useful for large data sets that have already undergone preprocessing step) 
+#preprocess="skip"
 
 ##########################
 # Server related values
 ##########################
 
 # directory containing SNAP databases (for subtraction phase)
-SNAP_directory="/reference/reference"
+SNAP_directory="/reference"
 
 # directory for SNAP databases (for mapping phase/comprehensive mode)
-SURPI_db_directory_COMP="/reference/reference/COMP_SNAP"
+SURPI_db_directory_COMP="/reference/COMP_SNAP"
 
 # directory for SNAP databases (for mapping phase/FAST mode)
-SURPI_db_directory_FAST="/reference/reference/FAST_SNAP"
+SURPI_db_directory_FAST="/reference/FAST_SNAP"
 
 #prefix of SNAP nt database
 snapNTdb="snap_index_"
 
 #RAPSearch database location
-RAPSearch_db_directory="/reference/reference/RAPSearch"
+RAPSearch_db_directory="/reference/RAPSearch"
 
 #RAPSearch viral database
 RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
@@ -188,7 +197,7 @@ RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
 RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
 
 #RAPSearch executable path 
-rapsearch="rapsearch"
+rapsearch="rapsearch_v2.12"
 EOF
 ) > $configprefix.config
 #------------------------------------------------------------------------------------------------
@@ -350,7 +359,7 @@ then
 	fastQValidator --file $inputfile --printBaseComp --avgQual > quality.$basef.log
 fi
 
-let "length = $(head -n 2 $inputfile | sed '/@/d' | awk 'BEGIN{FS=""}{for(i=1;i<=NF;i++)c++}END{print c}')"
+length=$( expr length $( head $inputfile | tail -1 ) ) # get length of 1st sequence in FASTQ file
 contigcutoff=$(perl -le "print int(1.75 * $length)")
 echo "-----------------------------------------------------------------------------------------"
 echo "INPUT PARAMETERS"
@@ -397,6 +406,10 @@ echo "Found file $inputfile"
 echo "After removing path: $nopathf"
 ############ PREPROCESSING ##################
 if [ "$preprocess" != "skip" ]
+# Below are the files that are required by downstream steps of the pipeline. If skipping preprocessing, be sure these files exist in the working directory.
+# DATA		$basef.cutadapt.fastq
+# DATA		$basef.preprocessed.fastq
+# TRASH		$basef.preprocessed.s20.h250n25d12xfu.human.unmatched.fastq
 then
 	echo "############ PREPROCESSING ##################"
 	echo -n "Starting: preprocessing using $cores cores "
@@ -478,7 +491,7 @@ then
 		diff=$(( END11 - START11 ))
 		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds"
 		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" >> timing.$basef.log
-		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam #SAMIA# changed from cp to mv, is that okay?
+		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
 	echo -n "Starting: parsing $basef.NT.snap.sam "
 	date
@@ -653,7 +666,7 @@ then
 			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated SNAP N N Y N $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc 1e-20 1 10 1
 
 			awk '{print$1}'  $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated > $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.header
- 			awk '{print$1}' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header
+			awk '{print$1}' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header
 			# find headers in viral rapsearch that are no longer found in rapsearch to nr 
 			sort $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.header $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header | uniq -d | sort $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.header - | uniq -u > $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.not.in.NR.header
 			rm -r $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.header $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
@@ -731,52 +744,27 @@ fi
 echo -n " Starting: generating readcounts.$basef.log report"
 date
 START17=$(date +%s)
-# Generate reports for .sorted (frequency of families etc)
 
-echo -n "$inputfile " > readcounts.$basef.temp
-egrep -c "@HWI|^@M00|^@SRR" $inputfile >> readcounts.$basef.temp
-echo -n "$basef.preprocessed.fastq " >> readcounts.$basef.temp
-egrep -c "@HWI|^@M00|^@SRR" $basef.preprocessed.fastq >> readcounts.$basef.temp
-echo -n "$basef_h.human.snap.unmatched.sam " >> readcounts.$basef.temp
-egrep -c "HWI|^M00|^SRR" $basef_h.human.snap.unmatched.sam >> readcounts.$basef.temp
-echo -n "$basef.NT.snap.matched.sam " >> readcounts.$basef.temp
-egrep -c "HWI|^M00|^SRR" $basef.NT.snap.matched.sam >> readcounts.$basef.temp
-echo -n "$basef.NT.snap.unmatched.sam " >> readcounts.$basef.temp
-egrep -c "HWI|^M00|^SRR" $basef.NT.snap.unmatched.sam >> readcounts.$basef.temp
-echo -n "$basef.NT.snap.matched.fl.Viruses.annotated " >> readcounts.$basef.temp
-egrep -c "HWI|^M00|^SRR" $basef.NT.snap.matched.fl.Viruses.annotated >> readcounts.$basef.temp
-echo -n "$basef_r.virus.contigs.RAPvir.1e+0nr.Viruses.sorted " >> readcounts.$basef.temp
-egrep -c "HWI|^M00|^F1" $basef_r.virus.contigs.RAPvir.1e+0nr.Viruses.sorted >> readcounts.$basef.temp
+headerid_top=$(head -1 $basef.fastq | cut -c1-4)
+headerid_bottom=$(tail -4 $basef.fastq | cut -c1-4 | head -n 1)
 
-echo "$inputfile" > barcode_readcounts.$basef.1.temp
-egrep "^@HW|^@M0|^@SRR" $inputfile | sed 's/#/ /g' | awk '{print$2}' | sort | uniq -c >> barcode_readcounts.$basef.1.temp
-echo "$basef.preprocessed.fastq" > barcode_readcounts.$basef.2.temp
-egrep "^@HW|^@M0|^@SRR" $basef.preprocessed.fastq | sed 's/#/ /g' | awk '{print$2}' | sort | uniq -c >> barcode_readcounts.$basef.2.temp
-echo "$basef_h.human.snap.unmatched.sam" > barcode_readcounts.$basef.3.temp
-sed 's/#/ /g' $basef_h.human.snap.unmatched.sam | awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.3.temp
-echo "$basef_h.human.snap.matched.sam" > barcode_readcounts.$basef.4.temp
-sed 's/#/ /g'  $basef_h.human.snap.matched.sam| awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.4.temp
-echo "$basef_h.human.snap.unmatched.sam" >barcode_readcounts.$basef.5.temp
-sed 's/#/ /g' $basef_h.human.snap.unmatched.sam | awk '{print$2}' | sort | uniq -c | sed '/:/d'>> barcode_readcounts.$basef.5.temp
-echo "$basef.NT.snap.matched.sam" > barcode_readcounts.$basef.6.temp
-sed 's/#/ /g' $basef.NT.snap.matched.sam | awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.6.temp
-echo "$basef.NT.snap.unmatched.sam" > barcode_readcounts.$basef.7.temp
-sed 's/#/ /g' $basef.NT.snap.unmatched.sam | awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.7.temp
-echo "$basef.NT.snap.matched.fl.Viruses.annotated" > barcode_readcounts.$basef.8.temp
-sed 's/#/ /g' $basef.NT.snap.matched.fl.Viruses.annotated | awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.8.temp
-echo "$basef.Ecutoff1.virus.contigs.RAPSearch.addseq.m8" > barcode_readcounts.$basef.9.temp
-sed 's/#/ /g' $basef.Ecutoff1.virus.contigs.RAPSearch.addseq.m8 | awk '{print$2}' | sort | uniq -c | sed '/:/d' >> barcode_readcounts.$basef.9.temp
+if [ "$headerid_top" == "$headerid_bottom" ]
+# This code is checking that the top header is equal to the bottom header.
+# We should adjust this code to check that all headers are unique, rather than just the first and last
+then
+	headerid=$(head -1 $basef.fastq | cut -c1-4 | sed 's/@//g')
+	echo " headerid_top $headerid_top = headerid_bottom $headerid_bottom and headerid = $headerid"
+	readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated  
+	echo -n " Done: generating readcounts.$basef.log report"
+	date
+	END17=$(date +%s)
+	diff=$(( END17 - START17 ))
+	echo "Generating read count report Took $diff seconds"
+	echo "Generating read count report Took $diff seconds" >> timing.$basef.log
+else
+	echo "readcount.sh aborted due to non-unique header id"
+fi
 
-cat barcode_readcounts.$basef*temp > barcode_readcounts.$basef.log
-cat readcounts.$basef.temp barcode_readcounts.$basef.log > readcounts.$basef.log
-
-echo -n " Done: generating readcounts.$basef.log report"
-date
-END17=$(date +%s)
-diff=$(( END17 - START17 ))
-echo "Generating read count report Took $diff seconds"
-echo "Generating read count report Took $diff seconds" >> timing.$basef.log
-	
 echo "#################### SURPI PIPELINE COMPLETE ##################"
 END0=$(date +%s)
 echo -n "Done: "
@@ -855,7 +843,7 @@ mv $basef.NT.snap.matched.fl.nonPrimMammal.annotated OUTPUT_$basef
 mv $basef.NT.snap.matched.fl.nonMammalChordat.annotated OUTPUT_$basef
 mv $basef.NT.snap.matched.fl.nonChordatEuk.annotated OUTPUT_$basef
 mv $basef.Ecutoff1.virus.contigs.RAPSearch.annotated*.sorted OUTPUT_$basef
-mv readcounts.$basef.log OUTPUT_$basef
+mv readcounts.$basef.*log OUTPUT_$basef
 mv timing.$basef.log OUTPUT_$basef
 mv $basef*table OUTPUT_$basef
 mv $basef.cutadapt.cropped.dusted.bad.fastq TRASH_$basef

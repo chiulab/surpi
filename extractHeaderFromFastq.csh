@@ -22,13 +22,13 @@ if ($#argv != 4) then
 endif
 
 foreach f ($argv[1] $argv[3])
-if (! -e $f) then
-	echo $f" not found"
-endif
+	if (! -e $f) then
+		echo $f" not found"
+	endif
 end
 
 if ("$argv[2]" =~ "BLASTN") then
-	cat $argv[1] | awk '{print $1}' | sed '/^$/d' > $argv[1]:r.temp$$ 
+	cat $argv[1] | awk '{print $1}' | sed '/^$/d' > $argv[1]:r.temp$$
 else if ("$argv[2]" =~ "FASTQ") then
 	cat $argv[1] | sed "/^[^@]/d" | sed 's/^@//g' | awk '{print $1}' > $argv[1]:r.temp$$
 else if ("$argv[2]" =~ "FASTA") then
