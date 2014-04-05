@@ -20,6 +20,8 @@ if [ $# -lt 5 ]; then
     exit
 fi
 
+plot_log="B" # set coveragePlotLog.py to display both log and linear plots
+
 if [ $3 != "FA" ]
 then
 	get_genbankfasta.pl $2 > $3.$2.fasta
@@ -97,7 +99,7 @@ echo "scale=6;$sumofcolumntwo/$gilength" | bc >> $1.$2.$3.$4.report
 echo "Number of reads contributing to assembly = $numberBlastnReads" >> $1.$2.$3.$4.report
 
 ####coverage plot#####
-coveragePlot.py $1.$2.$3.$4.map $3_$2
+coveragePlot.py $1.$2.$3.$4.map $3_$2 $plot_log
 ps2pdf14 $1.$2.$3.$4.ps $1.$2.$3.$4.pdf
 
 #### Cleanup ########
