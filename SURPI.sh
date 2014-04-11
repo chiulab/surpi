@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.2" #SURPI version
+version="1.0.3" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -200,6 +200,9 @@ RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
 
 #RAPSearch executable path 
 rapsearch="rapsearch_v2.12"
+
+#e value for BLASTn used in coverage map generation
+eBLASTn="1e-15"
 EOF
 ) > $configprefix.config
 #------------------------------------------------------------------------------------------------
@@ -331,6 +334,10 @@ then
 	abysskmer=34
 fi
 
+if [ ! $eBLASTn ]
+then
+	eBLASTn=1e-15
+fi
 nopathf=${inputfile##*/} # remove the path to file
 basef=${nopathf%.fastq}
 
@@ -666,7 +673,8 @@ then
 			#allow contigs to be incorporated into coverage maps by making contig barcodes the same as non-contig barcodes (removing the @)
 			sed 's/@//g' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc
 			echo "making coverage maps"
-			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated SNAP N N Y N $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc 1e-20 1 10 1
+			# coverage_generator_bp.sh (divides each fasta file into $cores cores then runs BLASTn using one core each.
+			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn $cores 10 1 $basef
 
 			awk '{print$1}'  $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated > $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated.header
 			awk '{print$1}' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header
@@ -731,7 +739,8 @@ then
 			table_generator.sh $basef.Contigs.$rapsearch_database.RAPsearch.e${ecutoff_NR}.noVir.annotated RAP N Y N N
 			sed 's/@//g' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated.bar.inc
 			echo "making coverage maps"
-			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated SNAP N N Y N $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated.bar.inc 1e-20 1 10 1
+			
+			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn 10 10 1 $basef
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
 			echo "RAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds"
@@ -916,8 +925,10 @@ mv $basef.quality OUTPUT_$basef
 
 mv *$basef*.Report COVERAGEMAPS_$basef
 mv bar*$basef*.pdf OUTPUT_$basef
-mv bar*$basef* COVERAGEMAPS_$basef
-mv *bar*$basef* COVERAGEMAPS_$basef
+#mv bar*$basef* COVERAGEMAPS_$basef
+#mv *bar*$basef* COVERAGEMAPS_$basef
+mv genus.bar*$basef.plotting TRASH_$basef
+mv genus.bar*$basef.Blastn.fasta OUTPUT_$basef
 mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.all.annotated TRASH_$basef
 mv *.annotated OUTPUT_$basef
 mv $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta DATASETS_$basef
