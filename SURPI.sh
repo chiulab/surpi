@@ -199,7 +199,7 @@ RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
 RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
 
 #RAPSearch executable path 
-rapsearch="rapsearch_v2.12"
+rapsearch="rapsearch"
 
 #e value for BLASTn used in coverage map generation
 eBLASTn="1e-15"
