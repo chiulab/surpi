@@ -24,7 +24,7 @@ my $gi_table;
 my $sql_taxdb_loc;
 my $taxid;
 
-my $database_directory = "/reference/reference/taxonomy";
+my $database_directory = "/reference/taxonomy";
 my $sql_taxdb_loc_nucl = "$database_directory/gi_taxid_nucl.db";
 my $sql_taxdb_loc_prot = "$database_directory/gi_taxid_prot.db";
 my $lineage="";
