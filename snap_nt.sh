@@ -23,11 +23,11 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
                  
-expected_args=6
+expected_args=5
 
 if [ $# -lt $expected_args ]
 then
-	echo "Usage: snap_nt.sh <FASTQ input file> <directory containing SNAP NT indexes> <number of cores> <free cache memory cutoff in GB> <SNAP d-value cutoff> <db names>"
+	echo "Usage: snap_nt.sh <FASTQ input file> <directory containing SNAP NT indexes> <number of cores> <free cache memory cutoff in GB> <SNAP d-value cutoff>"
 	exit 65
 fi
 
@@ -37,7 +37,6 @@ SNAP_NT_index_directory=$2
 cores=$3
 free_cache_cutoff=$4
 SNAP_d_cutoff=$5
-snapNTdb=$6
 ###
 
 echo -n "starting: "
@@ -59,7 +58,7 @@ rm -f $basef.NT.sam
 
 counter=0
 
-for snap_index in $( ls -d $SNAP_NT_index_directory"/"$snapNTdb""* ); do
+for snap_index in $SNAP_NT_index_directory/* ; do
 	freemem=`free -g | awk '{print $4}' | head -n 2 | tail -1 | more`
 	echo "There is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
 	if [ $freemem -lt $free_cache_cutoff ]

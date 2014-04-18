@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.3" #SURPI version
+version="1.0.4" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -113,7 +113,7 @@ then
 #------------------------------------------------------------------------------------------------
 (
 	cat <<EOF
-# This is the config file used by SURPI, starting with v22_2. It contains mandatory parameters, 
+# This is the config file used by SURPI. It contains mandatory parameters, 
 # optional parameters, and server related constants.
 
 
@@ -122,25 +122,41 @@ then
 ##########################
 
 
-#FASTQ input file
+#input filename: see http://chiulab.ucsf.edu/SURPI/input
+#To create this file, concatenate the entirety of a sequencing run into one FASTQ file. 
+#SURPI currently does not have paired-end functionality, we routinely concatenate Read 1 and Read 2 into the unified input file. 
+#For SURPI to provide proper readcount statistics, all read headers in a single SURPI input dataset should share a 
+#common 3 letter string (eg: M00, HWI, HIS, SCS, SRR for example). SURPI currently selects the string from the first and last reads only. 
 inputfile="$create_config_file"
 
-#FASTQ quality type. Must be Sanger or Illumina
+#input filetype. [FASTA/FASTQ]
+inputtype="FASTQ"
+
+#FASTQ quality score type: [Sanger/Illumina]
+#Sanger = Sanger score (ASCII-33)
+#Illumina = Illumina score (ASCII-64)
 quality="Sanger"
 
-#length_cutoff
+#length_cutoff: after quality and adaptor trimming, any sequence with length smaller than length_cutoff will be discarded
 length_cutoff="50"
 
-#Adapter set used. Must be Truseq, Nextera, or NexSolB
+#Adapter set used. [Truseq/Nextera/NexSolB]
+#Truseq = trims truseq adaptors
+#Nextera = trims Nextera adaptors
 adapter_set="Truseq"
 
-#RAPSearch database method to use. Must be Viral or NR
+#RAPSearch database method to use. [Viral/NR]
+#Viral database contains viral proteins derived from genbank
+#NR contains all NR proteins
 rapsearch_database="Viral"
 
-#SNAP edit distance
+#SNAP edit distance [Highly recommended default: d_human=12]
+#see Section 3.1.2 MaxDist description: http://snap.cs.berkeley.edu/downloads/snap-1.0beta-manual.pdf
 d_human=12
 
 #RAPSearch e_cutoffs
+#E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1). 
+#Larger E-values are required to find highly divergent viral sequences.
 ecutoff_Vir="1"
 ecutoff_NR="0"
 
@@ -148,58 +164,67 @@ ecutoff_NR="0"
 # Optional Parameters
 ##########################
 
-#Run mode to use. Must be Comprehensive or Fast.
+#Run mode to use. [Comprehensive/Fast]
+#Comprehensive mode allows SNAP to NT -> denovo contig assembly -> RAPSearch to Viral proteins or NR 
+#Fast mode allows SNAP to curated FAST databases
 run_mode="Comprehensive"
 
 #Number of cores to use. Will use all cores on machine if unspecified.
 #Uncomment the parameter to set explicitly.
 #cores=64
 
-#Cropping values. Where to start crop, and how long to crop.
+#Cropping values. Highly recommended default = 10,75
+#Cropping quality trimmed reads prior to SNAP alignment
+#snapt_nt = Where to start crop
+#crop_length = how long to crop
 start_nt=10
 crop_length=75
 
+#kmer value for ABySS in DeBruijn portion of denovo contig assembly. Highly recommended default=34
 abysskmer=34
 
 #Verify FASTQ quality  
 #	0 = skip validation
-#	1 [default] = run validation, don't check uniq names, quit on failure
-#	2 = run validation, check uniq names, quit on failure
-#	3 = run validation, check uniq names, do not quit on failure
+#	1 [default] = run validation, don't check for unique names, quit on failure
+#	2 = run validation, check for unique names, quit on failure (helpful with newer MiSeq output that has same name for read1 and read2 due to spacing)
+#	3 = run validation, check for unique names, do not quit on failure
 VERIFY_FASTQ=1
 
 #Below options are to skip specific steps.
-#Uncomment next line to skip preprocessing
-#(useful for large data sets that have already undergone preprocessing step) 
+#Uncomment preprocess parameter to skip preprocessing
+#(useful for large data sets that have already undergone preprocessing step)
+# If skipping preprocessing, be sure these files exist in the working directory.
+# $basef.cutadapt.fastq
+# $basef.preprocessed.fastq
+# $basef.preprocessed.s20.h250n25d12xfu.human.unmatched.fastq
 #preprocess="skip"
 
 ##########################
 # Server related values
 ##########################
 
-# directory containing SNAP databases (for subtraction phase)
+# directory containing SNAP-indexed databases of host genome (for subtraction phase)
 SNAP_directory="/reference"
 
-# directory for SNAP databases (for mapping phase/comprehensive mode)
+# directory for SNAP-indexed databases of NCBI NT (for mapping phase in comprehensive mode)
+# directory must ONLY contain snap indexed databases
 SURPI_db_directory_COMP="/reference/COMP_SNAP"
 
-# directory for SNAP databases (for mapping phase/FAST mode)
+# directory for SNAP-indexed databases for mapping phase in FAST mode
+# directory must ONLY contain snap indexed databases
 SURPI_db_directory_FAST="/reference/FAST_SNAP"
 
-#prefix of SNAP nt database
-snapNTdb="snap_index_"
-
-#RAPSearch database location
+#RAPSearch database directory
+#This folder should contain both files created by RAPSearch - indexed database + .info file
 RAPSearch_db_directory="/reference/RAPSearch"
 
-#RAPSearch viral database
+#RAPSearch viral database name: indexed protein dataset (all of Viruses) located in RAPSearch_db_directory
+#make sure that directory also includes the .info file 
 RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
 
-#RAPSearch nr database
+#RAPSearch nr database name: indexed protein dataset (all of NR) located in RAPSearch_db_directory
+#make sure that directory also includes the .info file 
 RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
-
-#RAPSearch executable path 
-rapsearch="rapsearch"
 
 #e value for BLASTn used in coverage map generation
 eBLASTn="1e-15"
@@ -228,6 +253,16 @@ else # parameters must be specified
 		echo "The inputfile specified: $inputfile is not present."
 		exit 65
 	fi
+fi
+
+if [ $inputtype = "FASTQ" ]
+then
+	FASTQ_file=$inputfile
+elif [ $inputtype = "FASTA" ]
+then
+	echo "Converting $inputfile to FASTQ format..."
+	FASTQ_file="$inputfile.fastq"
+	fasta_to_fastq $inputfile > $FASTQ_file
 fi
 
 #set cores. if none specified, use all cores present on machine
@@ -338,37 +373,47 @@ if [ ! $eBLASTn ]
 then
 	eBLASTn=1e-15
 fi
-nopathf=${inputfile##*/} # remove the path to file
+nopathf=${FASTQ_file##*/} # remove the path to file
 basef=${nopathf%.fastq}
+
+#verify taxonomy is functioning properly
+result=$( taxonomy_lookup_embedded.pl -d nucl 149408158 )
+if [ $result = "149408158" ]
+then
+	echo "taxonomy is functioning properly."
+else
+	echo "taxonomy appears to be malfunctioning. Please check logs and config file to verify proper taxonomy functionality."
+	exit 65
+fi
 
 if [ "$VERIFY_FASTQ" = 1 ]
 then
-	fastQValidator --file $inputfile --printBaseComp --avgQual --disableSeqIDCheck > quality.$basef.log
+	fastQValidator --file $FASTQ_file --printBaseComp --avgQual --disableSeqIDCheck > quality.$basef.log
 	if [ $? -eq 0 ]
 	then
-		echo "$inputfile appears to be a valid FASTQ file. Check the quality.$basef.log file for details."
+		echo "$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details."
 	else
-		echo "$inputfile appears to be a invalid FASTQ file. Check the quality.$basef.log file for details."
+		echo "$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details."
 		echo "You can bypass the quality check by not using the -v switch."
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 2 ]
 then
-	fastQValidator --file $inputfile --printBaseComp --avgQual > quality.$basef.log
+	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
 	if [ $? -eq 0 ]
 	then
-		echo "$inputfile appears to be a valid FASTQ file. Check the $basef.quality file for details."
+		echo "$FASTQ_file appears to be a valid FASTQ file. Check the $basef.quality file for details."
 	else
-		echo "$inputfile appears to be a invalid FASTQ file. Check the $basef.quality file for details."
+		echo "$FASTQ_file appears to be a invalid FASTQ file. Check the $basef.quality file for details."
 		echo "You can bypass the quality check by not using the -v switch."
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 3 ]
 then
-	fastQValidator --file $inputfile --printBaseComp --avgQual > quality.$basef.log
+	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
 fi
 
-length=$( expr length $( head $inputfile | tail -1 ) ) # get length of 1st sequence in FASTQ file
+length=$( expr length $( head $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
 contigcutoff=$(perl -le "print int(1.75 * $length)")
 echo "-----------------------------------------------------------------------------------------"
 echo "INPUT PARAMETERS"
@@ -379,6 +424,8 @@ echo "config_file: $config_file"
 echo "Server: $host"
 echo "run_mode: $run_mode"
 echo "inputfile: $inputfile"
+echo "inputtype: $inputtype"
+echo "FASTQ_file: $FASTQ_file"
 echo "cores used: $cores"
 echo "Raw Read quality: $quality"
 echo "Read length_cutoff for preprocessing under which reads are thrown away: $length_cutoff"
@@ -386,13 +433,11 @@ echo "SURPI_db_directory housing the reference databases for Comprehensive Mode:
 echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST"
 
 echo "SNAP human indexed database SNAP_directory: $SNAP_directory"
-echo "Version of SNAP indexed NT database from snap_nt.sh: $snapNTdb"
 echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human: $d_human"
 
 echo "RAPSearch directory used: $RAPSearch_db_directory"
 echo "RAPSearch indexed viral db used: $RAPSearchDB_Vir"
 echo "RAPSearch indexed NR db used: $RAPSearchDB_NR"
-echo "RAPSearch program version used: $rapsearch"
 echo "rapsearch_database: $rapsearch_database"
 
 echo "adapter_set: $adapter_set"
@@ -407,19 +452,15 @@ echo "crop_length: $crop_length"
 echo "-----------------------------------------------------------------------------------------"
 
 curdate=$(date)
-tweet.pl "Starting SURPI Pipeline on $host: $inputfile ($curdate) ($scriptname)"
+tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ###########################################################
 echo "#################### STARTING SURPI PIPELINE ##################"
 START0=$(date +%s)
-echo "Found file $inputfile"
+echo "Found file $FASTQ_file"
 echo "After removing path: $nopathf"
 ############ PREPROCESSING ##################
 if [ "$preprocess" != "skip" ]
-# Below are the files that are required by downstream steps of the pipeline. If skipping preprocessing, be sure these files exist in the working directory.
-# DATA		$basef.cutadapt.fastq
-# DATA		$basef.preprocessed.fastq
-# TRASH		$basef.preprocessed.s20.h250n25d12xfu.human.unmatched.fastq
 then
 	echo "############ PREPROCESSING ##################"
 	echo -n "Starting: preprocessing using $cores cores "
@@ -431,8 +472,8 @@ then
 	date
 	END2=$(date +%s)
 	diff=$(( END2 - START2 ))
-	echo "$inputfile Preprocessing Took $diff seconds"
-	echo "$inputfile Preprocessing Took $diff seconds" > timing.$basef.log
+	echo "$FASTQ_file Preprocessing Took $diff seconds"
+	echo "$FASTQ_file Preprocessing Took $diff seconds" > timing.$basef.log
 fi
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
@@ -487,12 +528,12 @@ then
 
 		if [ $run_mode = "Comprehensive" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $snapNTdb"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $snapNTdb
+			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human"
+			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human
 		elif [ $run_mode = "Fast" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human $snapNTdb"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human $snapNTdb
+			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
+			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
 		fi
 		
 		echo -n "Done:  SNAP to NT"
@@ -575,7 +616,7 @@ then
 	echo " Done uniquing full length sequences of unmatched to NT "
 fi
 curdate=$(date)
-tweet.pl "Finished SNAP mapping on $host: $inputfile ($curdate) ($scriptname)"
+tweet.pl "Finished SNAP mapping on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
@@ -608,8 +649,8 @@ then
 			echo -n "Starting: RAPSearch $basef.NT.snap.unmatched.uniq.fl.fasta "
 			date
 			START14=$(date +%s)
-			echo "$rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPsearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
-			"$rapsearch" -q "$basef.NT.snap.unmatched.uniq.fl.fasta" -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir} -z "$cores" -e "$ecutoff_Vir" -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log
+			echo "rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPsearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
+			rapsearch -q "$basef.NT.snap.unmatched.uniq.fl.fasta" -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir} -z "$cores" -e "$ecutoff_Vir" -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log
 			echo -n "Done RAPSearch: "
 			date
 			END14=$(date +%s)
@@ -644,7 +685,7 @@ then
 			echo -n "Starting: RAPSearch to $RAPSearchDB_NR of $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta :"
 			date
 			START16=$(date +%s)
-			"$rapsearch" -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			rapsearch -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
 			echo "rapsearch to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8
 			echo "removed extra #"
@@ -710,7 +751,7 @@ then
 			echo -n "Starting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			date
 			START16=$(date +%s)
-			$rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
 			echo "rapsearch  to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.m8
 			echo "removed extra #"
@@ -791,7 +832,6 @@ echo "Raw Read length = $length" >> $basef.pipeline_parameters.log
 echo " Read length_cutoff for preprocessing under which reads are thrown away = $length_cutoff" >> $basef.pipeline_parameters.log
 echo "SURPI_db_directory housing all the reference databases = $SURPI_db_directory" >> $basef.pipeline_parameters.log
 echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human = $d_human" >> $basef.pipeline_parameters.log
-echo " Version of SNAP indexed  NT database from snap_nt.sh = $snapNTdb " >> $basef.pipeline_parameters.log
 echo "RAPSearch indexed viral db used = $RAPSearchDB" >> $basef.pipeline_parameters.log
 echo "contigcutoff for abyss assembly unitigs = $contigcutoff"  >> $basef.pipeline_parameters.log
 echo "abysskmer length = $abysskmer"  >> $basef.pipeline_parameters.log
@@ -954,4 +994,4 @@ mv quality.$basef.log LOG_$basef
 
 curdate=$(date)
 
-tweet.pl "Completed SURPI Pipeline on $host: $inputfile. ($curdate) ($scriptname)"
+tweet.pl "Completed SURPI Pipeline on $host: $FASTQ_file. ($curdate) ($scriptname)"
