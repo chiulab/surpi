@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.4" #SURPI version
+version="1.0.5" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -571,7 +571,7 @@ then
 		###retrieve taxonomy matched to NT ###
 		echo -n "taxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
 		date
-		taxonomy_sqlite.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl >& "$basef.taxonomy.SNAPNT.log"
+		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores >& "$basef.taxonomy.SNAPNT.log"
 		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
 	fi
@@ -664,7 +664,7 @@ then
 
 			sed '/>/d' $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta >  $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta.seq
 			paste $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8 $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta.seq > $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8
-			taxonomy_sqlite.pl $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8 blast prot 
+			taxonomy_lookup.pl $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores
 			mv $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.all.annotated $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated
 	
 			table_generator.sh $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y
@@ -702,7 +702,7 @@ then
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e$ecutoff_Vir.NR.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8
 			echo "made addseq file $(date)"
 			echo "############# RAPSearch Taxonomy $(date)"
-			taxonomy_sqlite.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot 
+			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot $cores
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
 			echo "retrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated
@@ -768,7 +768,7 @@ then
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8
 			echo "made addseq file $(date)"
 			echo "############# RAPSearch Taxonomy $(date)"
-			taxonomy_sqlite.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8 blast prot
+			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8 blast prot $cores
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.annotated
 			echo "retrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated
