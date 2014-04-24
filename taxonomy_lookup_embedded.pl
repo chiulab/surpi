@@ -24,19 +24,16 @@ my $gi_table;
 my $sql_taxdb_loc;
 my $taxid;
 
-my $database_directory = "/reference/taxonomy";
-my $sql_taxdb_loc_nucl = "$database_directory/gi_taxid_nucl.db";
-my $sql_taxdb_loc_prot = "$database_directory/gi_taxid_prot.db";
+# my $database_directory = "/reference/taxonomy";
 my $lineage="";
 my $name;
-my $names_nodes = "$database_directory/names_nodes_scientific.db";
 my $gi;
 my $gi_count = 0;
 sub trim($);
 my %rank_to_print;
-our ($opt_d, $opt_k, $opt_p, $opt_c, $opt_o, $opt_f, $opt_g, $opt_s, $opt_l, $opt_h, $opt_x);
+our ($opt_q, $opt_d, $opt_k, $opt_p, $opt_c, $opt_o, $opt_f, $opt_g, $opt_s, $opt_l, $opt_h, $opt_x);
 
-getopts('d:kpcofgslhtxn:m:');
+getopts('q:d:kpcofgslhx');
 
 if ($opt_h) {
 	print <<USAGE;
@@ -51,11 +48,17 @@ returned data will be in tabular format, and will be in the following order.
 Usage:
 
 To look up taxonomy for a file containing gi
-	taxonomy_lookup_embedded.pl -kpcofgsx -d nucl 149408158
+	taxonomy_lookup_embedded.pl -kpcofgsx -d nucl -q "/reference/taxonomy" 149408158
 
 Command Line Switches:
 
 	-h	Show help & ignore all other switches
+	-q	folder containing taxonomy databases
+		This folder should contain the 3 SQLite files created by the script "create_taxonomy_db.sh"
+			gi_taxid_nucl.db - nucleotide db of gi/taxonid
+			gi_taxid_prot.db - protein db of gi/taxonid
+			names_nodes_scientific.db - db of taxonid/taxonomy
+
 	-d	nucl/prot
 		This specifies whether the gi list are nucleotides or protein. It is a required parameter.
 	
@@ -73,6 +76,11 @@ Command Line Switches:
 USAGE
 	exit;
 }
+
+my $database_directory = $opt_q;
+my $sql_taxdb_loc_nucl = "$database_directory/gi_taxid_nucl.db";
+my $sql_taxdb_loc_prot = "$database_directory/gi_taxid_prot.db";
+my $names_nodes = "$database_directory/names_nodes_scientific.db";
 
 if ($opt_k) {$rank_to_print{kingdom} = "1";}
 if ($opt_p) {$rank_to_print{phylum} = "1";}

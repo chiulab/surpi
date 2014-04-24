@@ -14,8 +14,8 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-if [ $# -lt 8 ]; then
-	echo "Usage: preprocess_ncores.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <Y/N clear_cache> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length>"
+if [ $# != 11 ]; then
+	echo "Usage: preprocess_ncores.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <Y/N clear_cache> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
 	exit
 fi
 
@@ -30,6 +30,7 @@ keep_short_reads=$7
 adapter_set=$8
 start_nt=$9
 crop_length=${10}
+temporary_files_directory=${11}
 ###
 
 if [ ! -f $inputfile ];
@@ -78,7 +79,7 @@ do
 	mv $f $f.fastq
 	echo "preprocessing $f.fastq..."
 	echo "preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length >& $f.preprocess.log &"
-	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length >& $f.preprocess.log &
+	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &
 done
 
 for job in `jobs -p`

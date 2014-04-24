@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.5" #SURPI version
+version="1.0.6" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -218,6 +218,13 @@ SURPI_db_directory_FAST="/reference/FAST_SNAP"
 #This folder should contain both files created by RAPSearch - indexed database + .info file
 RAPSearch_db_directory="/reference/RAPSearch"
 
+#Taxonomy Reference data directory
+#This folder should contain the 3 SQLite files created by the script "create_taxonomy_db.sh"
+#gi_taxid_nucl.db - nucleotide db of gi/taxonid
+#gi_taxid_prot.db - protein db of gi/taxonid
+#names_nodes_scientific.db - db of taxonid/taxonomy
+taxonomy_db_directory="/reference/taxonomy"
+
 #RAPSearch viral database name: indexed protein dataset (all of Viruses) located in RAPSearch_db_directory
 #make sure that directory also includes the .info file 
 RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
@@ -228,6 +235,11 @@ RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
 
 #e value for BLASTn used in coverage map generation
 eBLASTn="1e-15"
+
+#specify a location for storage of temporary files.
+#Space needed may be up to 10x the size of the input file.
+#This folder will not be created by SURPI, so be sure it already exists with proper permissions.
+temporary_files_directory="/tmp/"
 EOF
 ) > $configprefix.config
 #------------------------------------------------------------------------------------------------
@@ -376,8 +388,11 @@ fi
 nopathf=${FASTQ_file##*/} # remove the path to file
 basef=${nopathf%.fastq}
 
+#This is the point to verify all input before the SURPI run initiates
+# add verification for all databases and access to all dependencies
+
 #verify taxonomy is functioning properly
-result=$( taxonomy_lookup_embedded.pl -d nucl 149408158 )
+result=$( taxonomy_lookup_embedded.pl -d nucl -q $taxonomy_db_directory 149408158 )
 if [ $result = "149408158" ]
 then
 	echo "taxonomy is functioning properly."
@@ -422,6 +437,7 @@ echo "Command Line Usage: $scriptname $@"
 echo "SURPI version: $version"
 echo "config_file: $config_file"
 echo "Server: $host"
+echo "Working directory: $( pwd )"
 echo "run_mode: $run_mode"
 echo "inputfile: $inputfile"
 echo "inputtype: $inputtype"
@@ -429,6 +445,9 @@ echo "FASTQ_file: $FASTQ_file"
 echo "cores used: $cores"
 echo "Raw Read quality: $quality"
 echo "Read length_cutoff for preprocessing under which reads are thrown away: $length_cutoff"
+
+echo "temporary files directory used: $temporary_files_directory"
+
 echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SURPI_db_directory_COMP"
 echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST"
 
@@ -440,6 +459,7 @@ echo "RAPSearch indexed viral db used: $RAPSearchDB_Vir"
 echo "RAPSearch indexed NR db used: $RAPSearchDB_NR"
 echo "rapsearch_database: $rapsearch_database"
 
+echo "taxonomy database directory: $taxonomy_db_directory"
 echo "adapter_set: $adapter_set"
 
 echo "Raw Read length: $length"
@@ -449,6 +469,8 @@ echo "abysskmer length: $abysskmer"
 echo "cache_reset: $cache_reset"
 echo "start_nt: $start_nt"
 echo "crop_length: $crop_length"
+
+echo "e value for BLASTn used in coverage map generation: $eBLASTn"
 echo "-----------------------------------------------------------------------------------------"
 
 curdate=$(date)
@@ -466,8 +488,8 @@ then
 	echo -n "Starting: preprocessing using $cores cores "
 	date
 	START2=$(date +%s)
-	echo "Parameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length>& $basef.preprocess.log"
-	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length>& $basef.preprocess.log
+	echo "Parameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length>& $basef.preprocess.log $temporary_files_directory"
+	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log
 	echo -n "Done: preprocessing "
 	date
 	END2=$(date +%s)
@@ -571,7 +593,7 @@ then
 		###retrieve taxonomy matched to NT ###
 		echo -n "taxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
 		date
-		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores >& "$basef.taxonomy.SNAPNT.log"
+		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory >& "$basef.taxonomy.SNAPNT.log"
 		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
 	fi
@@ -664,7 +686,7 @@ then
 
 			sed '/>/d' $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta >  $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta.seq
 			paste $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8 $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta.seq > $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8
-			taxonomy_lookup.pl $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores
+			taxonomy_lookup.pl $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			mv $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.addseq.all.annotated $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated
 	
 			table_generator.sh $basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y
@@ -702,7 +724,7 @@ then
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e$ecutoff_Vir.NR.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8
 			echo "made addseq file $(date)"
 			echo "############# RAPSearch Taxonomy $(date)"
-			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot $cores
+			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
 			echo "retrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated
@@ -768,7 +790,7 @@ then
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8
 			echo "made addseq file $(date)"
 			echo "############# RAPSearch Taxonomy $(date)"
-			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8 blast prot $cores
+			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.annotated
 			echo "retrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated

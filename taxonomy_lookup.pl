@@ -18,14 +18,13 @@
 use Time::HiRes qw[gettimeofday tv_interval];
 use DBI;
 
-if ( @ARGV != 4 ) {
-	print "USAGE: <taxonomy_lookup.pl> <blast_file/sam_file> <file_type:blast/sam> <nucl/prot> <cores>\n";
+if ( @ARGV != 5 ) {
+	print "USAGE: taxonomy_lookup.pl <blast_file/sam_file> <file_type:blast/sam> <nucl/prot> <cores> <taxonomy_reference_directory>\n";
 	exit;
 }
 
-my ($inputfile, $filetype, $seq_type, $cores) = @ARGV;
+my ($inputfile, $filetype, $seq_type, $cores, $database_directory) = @ARGV;
 
-my $database_directory = "/reference/taxonomy";
 my $sql_taxdb_loc_nucl = "$database_directory/gi_taxid_nucl.db";
 my $sql_taxdb_loc_prot = "$database_directory/gi_taxid_prot.db";
 my $names_nodes        = "$database_directory/names_nodes_scientific.db";

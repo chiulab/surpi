@@ -17,8 +17,8 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-if [ $# != 8 ]; then
-	echo "Usage: preprocess.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length>"
+if [ $# != 9 ]; then
+	echo "Usage: preprocess.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
 	exit
 fi
 
@@ -31,6 +31,7 @@ keep_short_reads=$5
 adapter_set=$6
 start_nt=$7
 crop_length=$8
+temporary_files_directory=$9
 ###
 if [ ! -f $inputfile ];
 then
@@ -65,12 +66,12 @@ then
 	# modified to take into account anything in there [N or Y]
 	echo `date`
 	START1=$(date +%s)
-	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set
+	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
 	mv $basef.modheader.cutadapt.fastq $basef.cutadapt.fastq
 else
 	echo `date`
 	START1=$(date +%s)
-	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set
+	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
 fi
 
 END1=$(date +%s)

@@ -21,10 +21,10 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-set TEMPDIR = "/tmp/"
+# set TEMPDIR = "/tmp/"
                                                                                                              
-if ($#argv != 5) then
-	echo "Usage: cutadapt_quality.csh <input FASTQ file> <quality S/I> <length cutoff> <keep short reads Y/N> <adapter_set>"
+if ($#argv != 6) then
+	echo "Usage: cutadapt_quality.csh <input FASTQ file> <quality S/I> <length cutoff> <keep short reads Y/N> <adapter_set> <temporary_files_directory>"
 	exit(1)
 endif
 
@@ -34,6 +34,7 @@ set quality = $argv[2]
 set length_cutoff = $argv[3]
 set keep_short_reads = $argv[4]
 set adapter_set = $argv[5]
+set TEMPDIR = $argv[6]
 ###
 
 set numreads_start = `egrep -c "@HWI|@M00|@SRR" $inputfile`
