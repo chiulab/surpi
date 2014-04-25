@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.6" #SURPI version
+version="1.0.7" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -122,7 +122,6 @@ then
 ##########################
 
 
-#input filename: see http://chiulab.ucsf.edu/SURPI/input
 #To create this file, concatenate the entirety of a sequencing run into one FASTQ file. 
 #SURPI currently does not have paired-end functionality, we routinely concatenate Read 1 and Read 2 into the unified input file. 
 #For SURPI to provide proper readcount statistics, all read headers in a single SURPI input dataset should share a 
@@ -199,6 +198,18 @@ VERIFY_FASTQ=1
 # $basef.preprocessed.s20.h250n25d12xfu.human.unmatched.fastq
 #preprocess="skip"
 
+#snap_nt iterator to use. [inline/end]
+#inline : compares each SNAP iteration to the previous as they are completed
+#end	: compares all SNAP iterations once they have all completed. 
+#				Uses more disk space, and should be faster for larger input files.
+#				also allows for concurrent SNAP runs.
+snap_nt="end"
+
+#only used if snap_nt=end
+#if using this parameter, the SNAP databases should reside on separate disks in order to increase throughput.
+#(Mechanism for doing this is not yet in place)
+num_simultaneous_SNAP_runs=1;
+
 ##########################
 # Server related values
 ##########################
@@ -267,9 +278,17 @@ else # parameters must be specified
 	fi
 fi
 
+#check that $inputfile is a FASTQ file, and has a FASTQ suffix.
+# convert from FASTA if necessary, add FASTQ suffix if necessary.
 if [ $inputtype = "FASTQ" ]
 then
-	FASTQ_file=$inputfile
+	if [ ${inputfile##*.} != "fastq" ]
+	then
+		ln -s $inputfile $inputfile.fastq
+		FASTQ_file=$inputfile.fastq
+	else
+		FASTQ_file=$inputfile
+	fi
 elif [ $inputtype = "FASTA" ]
 then
 	echo "Converting $inputfile to FASTQ format..."
@@ -550,12 +569,19 @@ then
 
 		if [ $run_mode = "Comprehensive" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human
+			if [ $snap_nt = "inline" ]
+			then
+				echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human"
+				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human
+			elif [ $snap_nt = "end" ]
+			then
+				echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
+				snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
+			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
+			echo "Parameters: $snap_nt $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
+			$snap_nt $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
 		fi
 		
 		echo -n "Done:  SNAP to NT"
@@ -852,7 +878,10 @@ echo "Script and Parameters = $0 $@ " > $basef.pipeline_parameters.log
 echo " Raw Read quality = $quality" >> $basef.pipeline_parameters.log
 echo "Raw Read length = $length" >> $basef.pipeline_parameters.log
 echo " Read length_cutoff for preprocessing under which reads are thrown away = $length_cutoff" >> $basef.pipeline_parameters.log
-echo "SURPI_db_directory housing all the reference databases = $SURPI_db_directory" >> $basef.pipeline_parameters.log
+
+echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SURPI_db_directory_COMP" >> $basef.pipeline_parameters.log
+echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST" >> $basef.pipeline_parameters.log
+
 echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human = $d_human" >> $basef.pipeline_parameters.log
 echo "RAPSearch indexed viral db used = $RAPSearchDB" >> $basef.pipeline_parameters.log
 echo "contigcutoff for abyss assembly unitigs = $contigcutoff"  >> $basef.pipeline_parameters.log
