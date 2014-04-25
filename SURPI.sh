@@ -200,12 +200,13 @@ VERIFY_FASTQ=1
 
 #snap_nt iterator to use. [inline/end]
 #inline : compares each SNAP iteration to the previous as they are completed
-#end	: compares all SNAP iterations once they have all completed. 
 #				Uses more disk space, and should be faster for larger input files.
 #				also allows for concurrent SNAP runs.
-snap_nt="end"
+#end	: compares all SNAP iterations once they have all completed.
+#These two methods should give identical results, but may have different performance.
+snap_integrator="end"
 
-#only used if snap_nt=end
+#only used if snap_integrator=end
 #if using this parameter, the SNAP databases should reside on separate disks in order to increase throughput.
 #(Mechanism for doing this is not yet in place)
 num_simultaneous_SNAP_runs=1;
@@ -569,19 +570,19 @@ then
 
 		if [ $run_mode = "Comprehensive" ]
 		then
-			if [ $snap_nt = "inline" ]
+			if [ $snap_integrator = "inline" ]
 			then
 				echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human"
 				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human
-			elif [ $snap_nt = "end" ]
+			elif [ $snap_integrator = "end" ]
 			then
 				echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
 				snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo "Parameters: $snap_nt $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
-			$snap_nt $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
+			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
+			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
 		fi
 		
 		echo -n "Done:  SNAP to NT"
