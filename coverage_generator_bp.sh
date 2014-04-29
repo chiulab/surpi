@@ -7,7 +7,7 @@
 #	University of California, San Francisco
 #	January, 2014
 #
-# input annotated sam file (variable 1) and annotated RAPsearch file (variable 7) , output ps and pdf files (as well as intermediary text report files). For each barcode, the best coverage map for each genus identified in the dataset is shown. Reads contributing to coverage map are derived from assignments present in the 2 input files
+# input annotated sam file (variable 1) and annotated RAPSearch file (variable 7) , output ps and pdf files (as well as intermediary text report files). For each barcode, the best coverage map for each genus identified in the dataset is shown. Reads contributing to coverage map are derived from assignments present in the 2 input files
 #
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.

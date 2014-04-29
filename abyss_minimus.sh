@@ -126,20 +126,20 @@ echo " barcode concatenation Took $diff s"
 # cleaning up files by organizing directories, moving files into directories, and removing temporary files
 mkdir $1.dir
 mv bar*$1*.fa $1.dir
-mv all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPsearch.m8 $1.dir
-rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPsearch.aln
-rm -f all.$1.contigs.abyssmini.e1.NR.RAPsearch.m8.noheader
-rm -f all.$1.contigs.abyssmini.e1.NR.RAPsearch.m8.noheader.seq
-rm -f all.$1.contigs.abyssmini.e1.NR.RAPsearch.m8.noheader 
-rm -f all.$1.contigs.abyssmini.e1.NR.RAPsearch.m8.noheader.ex.fa
+mv all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.m8 $1.dir
+rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.aln
+rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader
+rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.seq
+rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader 
+rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.ex.fa
 rm -f all.$1.unitigs.cut$2-contigs.sortlen.seq
 rm -f all-contigs*
 rm -f all.bar*.$1.unitigs.cut$2-minim.fa
 rm -f $1.barcodes
-rm -f all.$1.contigs.abyssmini.e1.NR.RAPsearch.m8.noheader.fasta
-rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPsearch.addseq.gi
-rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPsearch.addseq.gi.uniq
-rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPsearch.addseq.gi.taxonomy
+rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.fasta
+rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.addseq.gi
+rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.addseq.gi.uniq
+rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.addseq.gi.taxonomy
 rm -f bar#*.$1_*
 rm -f bar#*$1*fasta
 rm -f *$1.unitigs.cut$2.fa.runAmos.log

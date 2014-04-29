@@ -1,6 +1,6 @@
 SURPI
-v1.0.0
-March 2014
+v1.0.7
+April 2014
 
 
 Note: For the most up to date version of the SURPI source code, go to this website: http://chiulab.ucsf.edu/surpi.
@@ -9,16 +9,16 @@ SURPI has been tested on Ubuntu 12.04. It will likely function properly on other
 
 Hardware Requirements
 
-	SURPI requires a machine with high RAM in order to run efficiently. This is mainly due to SNAP, which gains its speed by loading the reference databases completely into RAM. We've run SURPI successfully on machines with 60.5GB RAM. SURPI will use all cores on a machine by default, though the number of cores used can be adjusted within the config file. Much of SURPI is parallelized, so it benefits from using as many cores as possible.
+	SURPI requires a machine with high RAM in order to run efficiently. This is mainly due to SNAP, which gains its speed by loading the reference databases completely into RAM. We’ve run SURPI successfully on machines with 60.5GB RAM. SURPI will use all cores on a machine by default, though the number of cores used can be adjusted within the config file. Much of SURPI is parallelized, so it benefits from using as many cores as possible.
 
 
 The steps to install SURPI on a machine are as follows:
 
-1. Install all software dependencies
-2. Decompress SURPI.tar.gz, and place all files into a directory included in your $PATH
-3. Create the databases
-4. Customize certain SURPI files as shown below
-5. Run SURPI
+1.	Install all software dependencies
+2.	Decompress SURPI.tar.gz, and place all files into a directory included in your $PATH
+3.	Create the databases
+4.	Customize certain SURPI files as shown below
+5.	Run SURPI
 
 1. Install Software Dependencies
 
@@ -59,7 +59,7 @@ The steps to install SURPI on a machine are as follows:
 
 	The content and creation of the SNAP databases is documented in the paper in the Reference Databases section, which is duplicated below:
 
-A 3.1 gigabase (Gb) human nucleotide database (human DB) was constructed from a combination of human genomic DNA (GRCh37 / hg19), rRNA (RefSeq), mRNA (RefSeq), and mitochondrial RNA (RefSeq) sequences in NCBI as of March of 2012.  The bacterial nucleotide, viral nucleotide, and viral protein databases used by SURPI in fast mode (bacterial DB, viral nucleotide DB, and viral protein DB, respectively) were also constructed from sequences in NCBI as of March of 2012.  The 3 Gb bacterial DB was constructed from all bacterial RefSeq entries and consisted of 348,922 unique accessioned sequences, each with a minimum length of 100 bp.  The 1.4 Gb viral nucleotide DB included 1,193,607 entries and was constructed by searching for all viral sequences in the 42 Gb National Center for Biotechnology Information (NCBI) nt collection using the query term "viridae[Organism]" in BioPython.  The viral protein DB was similarly constructed by extracting viral sequences from the NCBI nr DB collection.  Index tables for SNAP (v0.15) were generated with an empirically determined default seed size of 20 for the human DB and viral nucleotide DB, and seed size of 16 for the bacterial DB.  Index tables for RAPSearch (v2.09) were generated from the viral protein DB using default parameters.
+A 3.1 gigabase (Gb) human nucleotide database (human DB) was constructed from a combination of human genomic DNA (GRCh37 / hg19), rRNA (RefSeq), mRNA (RefSeq), and mitochondrial RNA (RefSeq) sequences in NCBI as of March of 2012.  The bacterial nucleotide, viral nucleotide, and viral protein databases used by SURPI in fast mode (bacterial DB, viral nucleotide DB, and viral protein DB, respectively) were also constructed from sequences in NCBI as of March of 2012.  The 3 Gb bacterial DB was constructed from all bacterial RefSeq entries and consisted of 348,922 unique accessioned sequences, each with a minimum length of 100 bp.  The 1.4 Gb viral nucleotide DB included 1,193,607 entries and was constructed by searching for all viral sequences in the 42 Gb National Center for Biotechnology Information (NCBI) nt collection using the query term “viridae[Organism]” in BioPython.  The viral protein DB was similarly constructed by extracting viral sequences from the NCBI nr DB collection.  Index tables for SNAP (v0.15) were generated with an empirically determined default seed size of 20 for the human DB and viral nucleotide DB, and seed size of 16 for the bacterial DB.  Index tables for RAPSearch (v2.09) were generated from the viral protein DB using default parameters.
 To generate the National Center for Biotechnology Information (NCBI) nucleotide (nt) collection (NCBI nt DB) used by SURPI in comprehensive mode, the complete 42 Gb nucleotide collection (nt) was downloaded from NCBI in January of 2013.  This collection consists of a comprehensive archive of sequences from multiple sources, including GenBank, European Molecular Biology Laboratory (EMBL), DNA Data Bank of Japan (DDBJ), and Protein Data Bank (PDB), and is the richest collection of annotated microbial sequence data publicly available.  As SNAP uses 32-bit offsets in the reference genome during hashing, the aligner restricts the size of the reference genome to an absolute maximum of  2^32 bases, or ~4.2 Gb.  Thus, the 42 Gb NCBI nt collection was first split into 29 sub-databases, each approximately 1.5 Gb in size.  Each sub-database was then indexed separately by SNAP at default parameters with a seed size of 20.  This generated 29 SNAP indexed databases, each approximately 27 GB in size, with the aggregate of all 29 databases referred to as the NCBI nt DB.
 
 
@@ -122,9 +122,9 @@ To generate the National Center for Biotechnology Information (NCBI) nucleotide 
 
 	1. This command will create the necessary config file to run SURPI:
 
-		SURPI_v1.0.0.sh -z <INPUTFILE>
+		SURPI.sh -z <INPUTFILE>
 
-	After typing the above line, a config file and a "go" file will be created. The config file will contain default values for many parameters - these parameters may need to be modified depending on your environment. The config file has descriptions of the options allowed by SURPI.
+	After typing the above line, a config file and a “go” file will be created. The config file will contain default values for many parameters - these parameters may need to be modified depending on your environment. The config file has descriptions of the options allowed by SURPI.
 
 	2. Once the config file has been customized, the SURPI pipeline can be initiated by typing in the name of the go file that was created. Below is an example (boldfaced text is inputted by the user):
 
@@ -133,7 +133,7 @@ total 750212
 drwxrwxr-x  2 sfederman sfederman      4096 Jan 20 16:45 ./
 drwxrwxr-x 11 sfederman sfederman     61440 Jan 20 16:45 ../
 -rw-rw-r--  1 sfederman sfederman 768143660 Jan 20 16:45 inputfile.fastq
-sfederman@tribble:/data/inputfile/test$ SURPI_v1.0.0.sh -z inputfile.fastq
+sfederman@tribble:/data/inputfile/test$ SURPI.sh -z inputfile.fastq
 
 inputfile.config generated. Please edit it to contain the proper parameters for your analysis.
 go_ inputfile generated. Initiate the pipeline by running this program. (./go_inputfile)
