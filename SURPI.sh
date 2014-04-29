@@ -514,8 +514,7 @@ then
 	date
 	END2=$(date +%s)
 	diff=$(( END2 - START2 ))
-	echo "$FASTQ_file Preprocessing Took $diff seconds"
-	echo "$FASTQ_file Preprocessing Took $diff seconds" > timing.$basef.log
+	echo "$FASTQ_file Preprocessing Took $diff seconds" | tee timing.$basef.log
 fi
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
@@ -541,8 +540,7 @@ then
 		date
 		END6=$(date +%s)
 		diff=$(( END6 - START6 ))
-		echo "$basef.preprocessed.fastq Human mapping Took $diff seconds"
-		echo "$basef.preprocessed.fastq Human mapping Took $diff seconds" >> timing.$basef.log
+		echo "$basef.preprocessed.fastq Human mapping Took $diff seconds" | tee -a timing.$basef.log
 		egrep -v "^@" $basef_h.human.snap.unmatched.sam | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef_h".human.snap.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
 	done
 fi
@@ -589,8 +587,7 @@ then
 		date
 		END11=$(date +%s)
 		diff=$(( END11 - START11 ))
-		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds"
-		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" >> timing.$basef.log
+		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" | tee -a timing.$basef.log
 		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
 	echo -n "Starting: parsing $basef.NT.snap.sam "
@@ -721,8 +718,7 @@ then
 			date
 			END15=$(date +%s)
 			diff=$(( END15 - START15 ))
-			echo "converting RAPsearch Vir output to fasta sequences Took $diff seconds"
-			echo "converting RAPsearch Vir output to fasta sequences Took $diff seconds" >> timing.$basef.log
+			echo "converting RAPsearch Vir output to fasta sequences Took $diff seconds" | tee -a timing.$basef.log
 			cat "$basef.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta" "all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa" > "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta"
 		else
 			echo "Cannot run viral RAPSearch - necessary input file ($basef.$rapsearch_database.RAPsearch.e$ecutoff_Vir.m8) does not exist"
@@ -740,8 +736,7 @@ then
 			echo "removed extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds"
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" >> timing.$basef.log
+			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
 			echo -n "Starting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}  :"
 			date
 			START17=$(date +%s)
@@ -783,8 +778,7 @@ then
 		
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo "RAPSearch seq retrieval, taxonomy and readcount Took $diff seconds"
-			echo "RAPSearch seq retrieval, taxonomy and readcount Took $diff seconds" >> timing.$basef.log
+			echo "RAPSearch seq retrieval, taxonomy and readcount Took $diff seconds" | tee -a timing.$basef.log
 		else
 			echo "Cannot run RAPSearch to NR - necessary input file ($basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_Vir}.m8.fasta) does not exist"
 		fi
@@ -806,8 +800,7 @@ then
 			echo "removed extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds"
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" >> timing.$basef.log
+			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
 			echo -n "Starting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}"
 			date
 			START17=$(date +%s)
@@ -833,8 +826,7 @@ then
 			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPsearch.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn 10 10 1 $basef
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo "RAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds"
-			echo "RAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds" >> timing.$basef.log
+			echo "RAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds" | tee -a timing.$basef.log
 		else
 			echo "Cannot run RAPSearch to NR - necessary input file ($basef.Contigs.NT.snap.unmatched.uniq.fl.fasta) does not exist"
 		fi
@@ -861,8 +853,7 @@ then
 	date
 	END17=$(date +%s)
 	diff=$(( END17 - START17 ))
-	echo "Generating read count report Took $diff seconds"
-	echo "Generating read count report Took $diff seconds" >> timing.$basef.log
+	echo "Generating read count report Took $diff seconds" | tee -a timing.$basef.log
 else
 	echo "readcount.sh aborted due to non-unique header id"
 fi
@@ -872,13 +863,12 @@ END0=$(date +%s)
 echo -n "Done: "
 date
 diff=$(( END0 - START0 ))
-echo "Total run time of pipeline Took $diff seconds" 
-echo "Total run time of pipeline Took $diff seconds" >> timing.$basef.log
+echo "Total run time of pipeline Took $diff seconds" | tee -a timing.$basef.log
 
 echo "Script and Parameters = $0 $@ " > $basef.pipeline_parameters.log
-echo " Raw Read quality = $quality" >> $basef.pipeline_parameters.log
+echo "Raw Read quality = $quality" >> $basef.pipeline_parameters.log
 echo "Raw Read length = $length" >> $basef.pipeline_parameters.log
-echo " Read length_cutoff for preprocessing under which reads are thrown away = $length_cutoff" >> $basef.pipeline_parameters.log
+echo "Read length_cutoff for preprocessing under which reads are thrown away = $length_cutoff" >> $basef.pipeline_parameters.log
 
 echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SURPI_db_directory_COMP" >> $basef.pipeline_parameters.log
 echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST" >> $basef.pipeline_parameters.log
