@@ -38,7 +38,7 @@ simultaneous_SNAPs=$6
 ###
 
 echo -n "starting: "
-echo `date`
+date
 START1=$(date +%s)
 
 echo "Found file $inputfile"
@@ -70,7 +70,7 @@ while [ $snap_index != "END" ]; do
 	fi
 
 	echo -n "starting: "
-	echo `date`
+	date
 	START2=$(date +%s)
 ######################## RUN SNAP ##########################
 
@@ -94,7 +94,7 @@ while [ $snap_index != "END" ]; do
 	END2=$(date +%s)
 
 	echo -n "Done to $snap_index "
-	echo `date`
+	date
 	diff=$(( $END2 - $START2 ))
 	echo "Mapping to $snap_index took $diff seconds"
 done
@@ -130,7 +130,7 @@ compare_multiple_sam.py ${FILEARRAY[@]}
 
 END1=$(date +%s)
 echo -n "Done with SNAP_NT "
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "output written to $basef.NT.sam"
 echo "SNAP_NT took $diff seconds"

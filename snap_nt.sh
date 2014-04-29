@@ -40,7 +40,7 @@ SNAP_d_cutoff=$5
 ###
 
 echo -n "starting: "
-echo `date`
+date
 START1=$(date +%s)
 
 echo "Found file $inputfile"
@@ -69,7 +69,7 @@ for snap_index in $SNAP_NT_index_directory/* ; do
 	nopathsnap_index=${snap_index##*/} # remove the path to file
 	echo "Found $snap_index ... processing ..."
 	echo -n "starting: "
-	echo `date`
+	date
 	START2=$(date +%s)
 
 ######################## RUN SNAP ##########################
@@ -94,7 +94,7 @@ for snap_index in $SNAP_NT_index_directory/* ; do
 	END2=$(date +%s)
 
 	echo -n "Done with $snap_index "
-	echo `date`
+	date
 	diff=$(( $END2 - $START2 ))
 	echo "Mapping of $snap_index took $diff seconds"
 done
@@ -109,7 +109,7 @@ rm -f $basef.prev.sam
 
 END1=$(date +%s)
 echo -n "Done with SNAP_NT "
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "output written to $basef.NT.sam"
 echo "SNAP_NT took $diff seconds"

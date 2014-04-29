@@ -64,19 +64,19 @@ if [ $s == "SPACE" ]
 then
 	sed "s/\([@HWI|@M00135|@SRR][^ ]*\) \(.\):.:0:\(.*\)/\1#\3\/\2/g" $inputfile > $basef.modheader.fastq
 	# modified to take into account anything in there [N or Y]
-	echo `date`
+	date
 	START1=$(date +%s)
 	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
 	mv $basef.modheader.cutadapt.fastq $basef.cutadapt.fastq
 else
-	echo `date`
+	date
 	START1=$(date +%s)
 	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
 fi
 
 END1=$(date +%s)
 echo -n "Done cutadapt: "
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "CUTADAPT took $diff seconds"
 echo ""
@@ -85,7 +85,7 @@ echo ""
 if [ $run_uniq == "Y" ]
 then
 	echo "********** running uniq, Read1 **********"
-	echo `date`
+	date
 	START1=$(date +%s)
 
 	if [ $quality = "S" ]
@@ -97,7 +97,7 @@ then
 
 	END1=$(date +%s)
 	echo -n "Done uniq: "
-	echo `date`
+	date
 	diff=$(( $END1 - $START1 ))
 	echo "UNIQ took $diff seconds"
 	echo ""
@@ -105,7 +105,7 @@ fi
 
 # run crop, Read 1
 echo "********** running crop, Read1 **********"
-echo `date`
+date
 START1=$(date +%s)
 
 if [ $run_uniq == "Y" ] 
@@ -119,14 +119,14 @@ fi
 
 END1=$(date +%s)
 echo -n "Done crop: "
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "CROP took $diff seconds"
 echo ""
 
 # run dust, Read1
 echo "********** running dust, Read1 **********"
-echo `date`
+date
 START1=$(date +%s)
 
 if [ $run_uniq == "Y" ] 
@@ -140,7 +140,7 @@ fi
 
 END1=$(date +%s)
 echo -n "Done dust: "
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "DUST took $diff seconds"
 echo ""

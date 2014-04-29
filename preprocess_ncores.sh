@@ -134,14 +134,14 @@ if [ $run_uniq == "Y" ]; # selecting unique reads
 then
 	echo "selecting unique reads"
 	START3=$(date +%s)
-	echo `date`
+	date
 	# selecting unique reads
 	sed "n;n;n;d" $basef2.preprocessed.fastq | sed "n;n;d" | sed "s/^@/>/g" > $basef2.preprocessed.fasta
 	gt sequniq -force -o $basef2.uniq.fasta $basef2.preprocessed.fasta
 	extractHeaderFromFastq.csh $basef2.uniq.fasta FASTA $basef2.preprocessed.fastq $basef2.uniq.fastq
 	cp -f $basef2.uniq.fastq $basef2.preprocessed.fastq
 	END3=$(date +%s)
-	echo `date`
+	date
 	diff3=$(( $END3 - $START3 ))
 	echo "UNIQ took $diff3 seconds"
 else
@@ -149,7 +149,7 @@ else
 fi
 
 END2=$(date +%s)
-echo `date`
+date
 diff2=$(( $END2 - $START1 ))
 
 echo "***********************"
