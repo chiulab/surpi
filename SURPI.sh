@@ -508,7 +508,7 @@ then
 	echo -n "Starting: preprocessing using $cores cores "
 	date
 	START2=$(date +%s)
-	echo "Parameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length>& $basef.preprocess.log $temporary_files_directory"
+	echo "Parameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log"
 	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log
 	echo -n "Done: preprocessing "
 	date
