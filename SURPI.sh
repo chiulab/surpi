@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.7" #SURPI version
+version="1.0.8" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -159,6 +159,9 @@ d_human=12
 ecutoff_Vir="1"
 ecutoff_NR="0"
 
+#e value for BLASTn used in coverage map generation
+eBLASTn="1e-15"
+
 ##########################
 # Optional Parameters
 ##########################
@@ -215,20 +218,16 @@ num_simultaneous_SNAP_runs=1;
 # Server related values
 ##########################
 
-# directory containing SNAP-indexed databases of host genome (for subtraction phase)
-SNAP_directory="/reference"
+# SNAP-indexed database of host genome (for subtraction phase)
+SNAP_subtraction_db="/reference/snap_index_hg19_rRNA_mito_Hsapiens_rna"
 
 # directory for SNAP-indexed databases of NCBI NT (for mapping phase in comprehensive mode)
 # directory must ONLY contain snap indexed databases
-SURPI_db_directory_COMP="/reference/COMP_SNAP"
+SNAP_COMPREHENSIVE_db_dir="/reference/COMP_SNAP"
 
 # directory for SNAP-indexed databases for mapping phase in FAST mode
 # directory must ONLY contain snap indexed databases
-SURPI_db_directory_FAST="/reference/FAST_SNAP"
-
-#RAPSearch database directory
-#This folder should contain both files created by RAPSearch - indexed database + .info file
-RAPSearch_db_directory="/reference/RAPSearch"
+SNAP_FAST_db_dir="/reference/FAST_SNAP"
 
 #Taxonomy Reference data directory
 #This folder should contain the 3 SQLite files created by the script "create_taxonomy_db.sh"
@@ -237,16 +236,13 @@ RAPSearch_db_directory="/reference/RAPSearch"
 #names_nodes_scientific.db - db of taxonid/taxonomy
 taxonomy_db_directory="/reference/taxonomy"
 
-#RAPSearch viral database name: indexed protein dataset (all of Viruses) located in RAPSearch_db_directory
+#RAPSearch viral database name: indexed protein dataset (all of Viruses)
 #make sure that directory also includes the .info file 
-RAPSearchDB_Vir="rapsearch_viral_aa_130628_db_v2.12"
+RAPSearch_VIRUS_db="/reference/RAPSearch/rapsearch_viral_aa_130628_db_v2.12"
 
-#RAPSearch nr database name: indexed protein dataset (all of NR) located in RAPSearch_db_directory
+#RAPSearch nr database name: indexed protein dataset (all of NR)
 #make sure that directory also includes the .info file 
-RAPSearchDB_NR="rapsearch_nr_130624_db_v2.12"
-
-#e value for BLASTn used in coverage map generation
-eBLASTn="1e-15"
+RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_130624_db_v2.12"
 
 #specify a location for storage of temporary files.
 #Space needed may be up to 10x the size of the input file.
@@ -411,15 +407,153 @@ basef=${nopathf%.fastq}
 #This is the point to verify all input before the SURPI run initiates
 # add verification for all databases and access to all dependencies
 
+#verify that all software dependencies are properly installed
+declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "snap" "rapsearch" "fastQValidator" "abyss-pe" "Minimo")
+echo "-----------------------------------------------------------------------------------------"
+echo "DEPENDENCY VERIFICATION"
+echo "-----------------------------------------------------------------------------------------"
+for command in "${dependency_list[@]}"
+do
+        if hash $command 2>/dev/null; then
+                echo "$command: OK"
+        else
+                echo
+                echo "$command: BAD"
+                echo "$command does not appear to be installed properly."
+                echo "Please verify your SURPI installation and \$PATH, then restart the pipeline"
+                echo
+                exit 65
+        fi
+done
+echo "All dependencies appear to be properly installed."
+echo "-----------------------------------------------------------------------------------------"
+echo "REFERENCE DATA VERIFICATION"
+echo "-----------------------------------------------------------------------------------------"
+if [ -f $SNAP_subtraction_db/Genome ]
+then
+		echo "SNAP_subtraction_db: $SNAP_subtraction_db: OK"
+else
+		echo "SNAP_subtraction_db: $SNAP_subtraction_db: BAD"
+		echo
+		exit 65
+fi
+
+for f in $SNAP_COMPREHENSIVE_db_dir/*
+do
+	if [ -f $f/Genome ]
+	then
+		echo "$f: OK"
+	else
+		echo "$f: BAD"
+		echo
+		exit 65
+	fi
+done
+
+for f in $SNAP_FAST_db_dir/*
+do
+	if [ -f $f/Genome ]
+	then
+		echo "$f: OK"
+	else
+		echo "$f: BAD"
+		echo
+		exit 65
+	fi
+done
+
 #verify taxonomy is functioning properly
 result=$( taxonomy_lookup_embedded.pl -d nucl -q $taxonomy_db_directory 149408158 )
 if [ $result = "149408158" ]
 then
-	echo "taxonomy is functioning properly."
+	echo "taxonomy: OK"
 else
+	echo "taxonomy: BAD"
 	echo "taxonomy appears to be malfunctioning. Please check logs and config file to verify proper taxonomy functionality."
 	exit 65
 fi
+
+if [ -f $RAPSearch_VIRUS_db ]
+then
+	echo "$RAPSearch_VIRUS_db: OK"
+else
+	echo "$RAPSearch_VIRUS_db: BAD"
+	echo
+	exit 65
+fi
+
+if [ -f $RAPSearch_VIRUS_db.info ]
+then
+	echo "$RAPSearch_VIRUS_db.info: OK"
+else
+	echo "$RAPSearch_VIRUS_db.info: BAD"
+	echo
+	exit 65
+fi
+
+if [ -f $RAPSearch_NR_db ]
+then
+	echo "$RAPSearch_NR_db: OK"
+else
+	echo "$RAPSearch_NR_db: BAD"
+	echo
+	exit 65
+fi
+
+if [ -f $RAPSearch_NR_db.info ]
+then
+	echo "$RAPSearch_NR_db.info: OK"
+else
+	echo "$RAPSearch_NR_db.info: BAD"
+	echo
+	exit 65
+fi
+echo "All databases appear to be properly installed."
+
+length=$( expr length $( head $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
+contigcutoff=$(perl -le "print int(1.75 * $length)")
+echo "-----------------------------------------------------------------------------------------"
+echo "INPUT PARAMETERS"
+echo "-----------------------------------------------------------------------------------------"
+echo "Command Line Usage: $scriptname $@"
+echo "SURPI version: $version"
+echo "config_file: $config_file"
+echo "Server: $host"
+echo "Working directory: $( pwd )"
+echo "run_mode: $run_mode"
+echo "inputfile: $inputfile"
+echo "inputtype: $inputtype"
+echo "FASTQ_file: $FASTQ_file"
+echo "cores used: $cores"
+echo "Raw Read quality: $quality"
+echo "Read length_cutoff for preprocessing under which reads are thrown away: $length_cutoff"
+
+echo "temporary files location: $temporary_files_directory"
+
+echo "SNAP human indexed database (for subtraction): $SNAP_subtraction_db"
+
+echo "SNAP_db_directory housing the reference databases for Comprehensive Mode: $SNAP_COMPREHENSIVE_db_dir"
+echo "SNAP_db_directory housing the reference databases for Fast Mode: $SNAP_FAST_db_dir"
+
+echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human: $d_human"
+
+echo "RAPSearch indexed viral db used: $RAPSearch_VIRUS_db"
+echo "RAPSearch indexed NR db used: $RAPSearch_NR_db"
+echo "rapsearch_database: $rapsearch_database"
+
+echo "taxonomy database directory: $taxonomy_db_directory"
+echo "adapter_set: $adapter_set"
+
+echo "Raw Read length: $length"
+echo "contigcutoff for abyss assembly unitigs: $contigcutoff"
+echo "abysskmer length: $abysskmer"
+
+echo "cache_reset: $cache_reset"
+echo "start_nt: $start_nt"
+echo "crop_length: $crop_length"
+
+echo "e value for BLASTn used in coverage map generation: $eBLASTn"
+echo "-----------------------------------------------------------------------------------------"
 
 if [ "$VERIFY_FASTQ" = 1 ]
 then
@@ -447,52 +581,6 @@ elif [ "$VERIFY_FASTQ" = 3 ]
 then
 	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
 fi
-
-length=$( expr length $( head $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
-contigcutoff=$(perl -le "print int(1.75 * $length)")
-echo "-----------------------------------------------------------------------------------------"
-echo "INPUT PARAMETERS"
-echo "-----------------------------------------------------------------------------------------"
-echo "Command Line Usage: $scriptname $@"
-echo "SURPI version: $version"
-echo "config_file: $config_file"
-echo "Server: $host"
-echo "Working directory: $( pwd )"
-echo "run_mode: $run_mode"
-echo "inputfile: $inputfile"
-echo "inputtype: $inputtype"
-echo "FASTQ_file: $FASTQ_file"
-echo "cores used: $cores"
-echo "Raw Read quality: $quality"
-echo "Read length_cutoff for preprocessing under which reads are thrown away: $length_cutoff"
-
-echo "temporary files directory used: $temporary_files_directory"
-
-echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SURPI_db_directory_COMP"
-echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST"
-
-echo "SNAP human indexed database SNAP_directory: $SNAP_directory"
-echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human: $d_human"
-
-echo "RAPSearch directory used: $RAPSearch_db_directory"
-echo "RAPSearch indexed viral db used: $RAPSearchDB_Vir"
-echo "RAPSearch indexed NR db used: $RAPSearchDB_NR"
-echo "rapsearch_database: $rapsearch_database"
-
-echo "taxonomy database directory: $taxonomy_db_directory"
-echo "adapter_set: $adapter_set"
-
-echo "Raw Read length: $length"
-echo "contigcutoff for abyss assembly unitigs: $contigcutoff"
-echo "abysskmer length: $abysskmer"
-
-echo "cache_reset: $cache_reset"
-echo "start_nt: $start_nt"
-echo "crop_length: $crop_length"
-
-echo "e value for BLASTn used in coverage map generation: $eBLASTn"
-echo "-----------------------------------------------------------------------------------------"
-
 curdate=$(date)
 tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
 
@@ -534,8 +622,8 @@ then
 		echo -n "Starting: $basef_h human mapping"
 		date
 		START6=$(date +%s)
-		echo "Parameters: snap single ${SNAP_directory}/snap_index_hg19_rRNA_mito_Hsapiens_rna $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
-		snap single ${SNAP_directory}/snap_index_hg19_rRNA_mito_Hsapiens_rna $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u     
+		echo "Parameters: snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
+		snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u     
 		echo -n "Done: SNAP to human"
 		date
 		END6=$(date +%s)
@@ -570,17 +658,17 @@ then
 		then
 			if [ $snap_integrator = "inline" ]
 			then
-				echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human"
-				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human
+				echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human"
+				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human
 			elif [ $snap_integrator = "end" ]
 			then
-				echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
-				snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_COMP} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
+				echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
+				snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SURPI_db_directory_FAST} $cores $cache_reset $d_human
+			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human"
+			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human
 		fi
 		
 		echo -n "Done:  SNAP to NT"
@@ -690,13 +778,13 @@ then
 	then
 		if [ -f "$basef.NT.snap.unmatched.uniq.fl.fasta" ]
 		then
-			echo "############# RAPSearch to ${RAPSearchDB_Vir} ON NT-UNMATCHED SEQUENCES #################"
+			echo "############# RAPSearch to ${RAPSearch_VIRUS_db} ON NT-UNMATCHED SEQUENCES #################"
 			dropcache
 			echo -n "Starting: RAPSearch $basef.NT.snap.unmatched.uniq.fl.fasta "
 			date
 			START14=$(date +%s)
-			echo "rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPSearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
-			rapsearch -q "$basef.NT.snap.unmatched.uniq.fl.fasta" -d ${RAPSearch_db_directory}/${RAPSearchDB_Vir} -o $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir} -z "$cores" -e "$ecutoff_Vir" -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log
+			echo "rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
+			rapsearch -q "$basef.NT.snap.unmatched.uniq.fl.fasta" -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir} -z "$cores" -e "$ecutoff_Vir" -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log
 			echo -n "Done RAPSearch: "
 			date
 			END14=$(date +%s)
@@ -727,10 +815,10 @@ then
 		echo "############# Cleanup RAPSearch Vir by RAPSearch to NR #################"
 		if [ -f $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta ]
 		then
-			echo -n "Starting: RAPSearch to $RAPSearchDB_NR of $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta :"
+			echo -n "Starting: RAPSearch to $RAPSearch_NR_db of $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta :"
 			date
 			START16=$(date +%s)
-			rapsearch -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			rapsearch -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
 			echo "rapsearch to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8
 			echo "removed extra #"
@@ -794,7 +882,7 @@ then
 			echo -n "Starting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			date
 			START16=$(date +%s)
-			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d ${RAPSearch_db_directory}/${RAPSearchDB_NR} -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
 			echo "rapsearch  to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8
 			echo "removed extra #"
@@ -870,8 +958,8 @@ echo "Raw Read quality = $quality" >> $basef.pipeline_parameters.log
 echo "Raw Read length = $length" >> $basef.pipeline_parameters.log
 echo "Read length_cutoff for preprocessing under which reads are thrown away = $length_cutoff" >> $basef.pipeline_parameters.log
 
-echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SURPI_db_directory_COMP" >> $basef.pipeline_parameters.log
-echo "SURPI_db_directory housing the reference databases for Fast Mode: $SURPI_db_directory_FAST" >> $basef.pipeline_parameters.log
+echo "SURPI_db_directory housing the reference databases for Comprehensive Mode: $SNAP_COMPREHENSIVE_db_dir" >> $basef.pipeline_parameters.log
+echo "SURPI_db_directory housing the reference databases for Fast Mode: $SNAP_FAST_db_dir" >> $basef.pipeline_parameters.log
 
 echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human = $d_human" >> $basef.pipeline_parameters.log
 echo "RAPSearch indexed viral db used = $RAPSearchDB" >> $basef.pipeline_parameters.log
