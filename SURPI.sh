@@ -11,13 +11,17 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+# Last revised 1/26/2014
 
-version="1.0.9" #SURPI version
+version="1.0.10" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
 normal=$(tput sgr0)
+green='\e[0;32m'
+red='\e[0;31m'
+endColor='\e[0m'
+
 host=$(hostname)
 scriptname=${0##*/}
 
@@ -430,38 +434,37 @@ echo "--------------------------------------------------------------------------
 for command in "${dependency_list[@]}"
 do
         if hash $command 2>/dev/null; then
-                echo "$command: OK"
+                echo -e "$command: ${green}OK${endColor}"
         else
                 echo
-                echo "$command: BAD"
+                echo -e "$command: ${red}BAD${endColor}"
                 echo "$command does not appear to be installed properly."
                 echo "Please verify your SURPI installation and \$PATH, then restart the pipeline"
                 echo
-                exit 65
+				dependency_check="FAIL"
         fi
 done
-echo "All dependencies appear to be properly installed."
 echo "-----------------------------------------------------------------------------------------"
 echo "REFERENCE DATA VERIFICATION"
 echo "-----------------------------------------------------------------------------------------"
 if [ -f $SNAP_subtraction_db/Genome ]
 then
-		echo "SNAP_subtraction_db: $SNAP_subtraction_db: OK"
+		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${green}OK${endColor}"
 else
-		echo "SNAP_subtraction_db: $SNAP_subtraction_db: BAD"
+		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${red}BAD${endColor}"
 		echo
-		exit 65
+		reference_check="FAIL"
 fi
 
 for f in $SNAP_COMPREHENSIVE_db_dir/*
 do
 	if [ -f $f/Genome ]
 	then
-		echo "$f: OK"
+		echo -e "$f: ${green}OK${endColor}"
 	else
-		echo "$f: BAD"
+		echo -e "$f: ${red}BAD${endColor}"
 		echo
-		exit 65
+		reference_check="FAIL"
 	fi
 done
 
@@ -469,11 +472,11 @@ for f in $SNAP_FAST_db_dir/*
 do
 	if [ -f $f/Genome ]
 	then
-		echo "$f: OK"
+		echo -e "$f: ${green}OK${endColor}"
 	else
-		echo "$f: BAD"
+		echo -e "$f: ${red}BAD${endColor}"
 		echo
-		exit 65
+		reference_check="FAIL"
 	fi
 done
 
@@ -481,50 +484,55 @@ done
 result=$( taxonomy_lookup_embedded.pl -d nucl -q $taxonomy_db_directory 149408158 )
 if [ $result = "149408158" ]
 then
-	echo "taxonomy: OK"
+	echo -e "taxonomy: ${green}OK${endColor}"
 else
-	echo "taxonomy: BAD"
+	echo -e "taxonomy: ${red}BAD${endColor}"
 	echo "taxonomy appears to be malfunctioning. Please check logs and config file to verify proper taxonomy functionality."
-	exit 65
+	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_VIRUS_db ]
 then
-	echo "$RAPSearch_VIRUS_db: OK"
+	echo -e "$RAPSearch_VIRUS_db: ${green}OK${endColor}"
 else
-	echo "$RAPSearch_VIRUS_db: BAD"
+	echo -e "$RAPSearch_VIRUS_db: ${red}BAD${endColor}"
 	echo
-	exit 65
+	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_VIRUS_db.info ]
 then
-	echo "$RAPSearch_VIRUS_db.info: OK"
+	echo -e "$RAPSearch_VIRUS_db.info: ${green}OK${endColor}"
 else
-	echo "$RAPSearch_VIRUS_db.info: BAD"
+	echo -e "$RAPSearch_VIRUS_db.info: ${red}BAD${endColor}"
 	echo
-	exit 65
+	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_NR_db ]
 then
-	echo "$RAPSearch_NR_db: OK"
+	echo -e "$RAPSearch_NR_db: ${green}OK${endColor}"
 else
-	echo "$RAPSearch_NR_db: BAD"
+	echo -e "$RAPSearch_NR_db: ${red}BAD${endColor}"
 	echo
-	exit 65
+	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_NR_db.info ]
 then
-	echo "$RAPSearch_NR_db.info: OK"
+	echo -e "$RAPSearch_NR_db.info: ${green}OK${endColor}"
 else
-	echo "$RAPSearch_NR_db.info: BAD"
+	echo -e "$RAPSearch_NR_db.info: ${red}BAD${endColor}"
 	echo
-	exit 65
+	reference_check="FAIL"
 fi
-echo "All databases appear to be properly installed."
-
+if [[ ($dependency_check = "FAIL" || $reference_check = "FAIL") ]]
+then
+	echo -e "${red}There is an issue with one of the dependencies or reference databases above.${endColor}"
+	exit 65
+else
+	echo -e "${green}All dependencies and reference data pass.${endColor}"
+fi
 length=$( expr length $( head $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
 contigcutoff=$(perl -le "print int(1.75 * $length)")
 echo "-----------------------------------------------------------------------------------------"
