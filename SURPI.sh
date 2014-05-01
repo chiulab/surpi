@@ -15,7 +15,7 @@
 
 version="1.0.9" #SURPI version
 
-optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
+optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
 normal=$(tput sgr0)
 host=$(hostname)
