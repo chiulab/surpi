@@ -134,3 +134,11 @@ date
 diff=$(( $END1 - $START1 ))
 echo "output written to $basef.NT.sam"
 echo "SNAP_NT took $diff seconds"
+
+#delete intermediate SAM files
+rm *.noheader.sam
+rm *.noheader.sam.sorted
+for snap_index in $SNAP_NT_index_directory/* ; do
+	nopathsnap_index=${snap_index##*/} # remove the path to file
+	rm *.$nopathsnap_index.sam
+done

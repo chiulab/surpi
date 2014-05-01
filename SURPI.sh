@@ -74,7 +74,7 @@ Create default config and go file
 ${bold}Command Line Switches:${normal}
 
 	-h	Show help & ignore all other switches
-	-v	verification mode
+	-v	Verification mode
 		SURPI will verify the following:
 			• software dependencies
 			• reference data specified in config file
@@ -84,6 +84,11 @@ ${bold}Command Line Switches:${normal}
 	-f	Specify config file & ignore all other switches
 	-i	Specify FASTQ input file
 
+	The below options may be mandatory or optional.
+	Mandatory: option must be present in either config file or on command line
+	Optional: option may be present in either config file or command line.
+				A default value may be applied if not specified.
+				
 	-q	Specify quality type [mandatory] (Sanger/Illumina)
 	-x	Specify length_cutoff [mandatory]
 	-a	Specify adapter_set [mandatory] (Truseq/Nextera)
