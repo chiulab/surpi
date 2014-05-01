@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014
 
-version="1.0.10" #SURPI version
+SURPI_version="1.0.11" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
@@ -57,7 +57,7 @@ if [[ $HELP -eq 1  ||  $# -lt 1 ]]
 then
 	cat <<USAGE
 
-${bold}SURPI version ${version}${normal}
+${bold}SURPI version ${SURPI_version}${normal}
 
 This program will run the SURPI pipeline with the parameters supplied by either the config file, or specified on the command line.
 
@@ -134,7 +134,9 @@ then
 	cat <<EOF
 # This is the config file used by SURPI. It contains mandatory parameters, 
 # optional parameters, and server related constants.
-
+# Do not change the config_file_version - it is auto-generated.
+# 	and used to ensure that the config file used matches the version of the SURPI pipeline run.
+config_file_version="$SURPI_version"
 
 ##########################
 #  Mandatory parameters  
@@ -282,6 +284,14 @@ then # use config file
 	if [[ -r $config_file ]]
 	then
 		source "$config_file"
+		#verify that config file version matches SURPI version
+		if [ "$config_file_version" != "$SURPI_version" ]
+		then
+			echo "The config file $config_file was created with SURPI $config_file_version."
+			echo "The current version of SURPI running is $SURPI_version."
+			echo "Please generate a new config file with SURPI $SURPI_version in order to run SURPI."
+			exit 65
+		fi
 	else
 		echo "The config file specified: $config_file is not present."
 		exit 65
@@ -452,7 +462,6 @@ then
 		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${green}OK${endColor}"
 else
 		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${red}BAD${endColor}"
-		echo
 		reference_check="FAIL"
 fi
 
@@ -463,7 +472,6 @@ do
 		echo -e "$f: ${green}OK${endColor}"
 	else
 		echo -e "$f: ${red}BAD${endColor}"
-		echo
 		reference_check="FAIL"
 	fi
 done
@@ -475,7 +483,6 @@ do
 		echo -e "$f: ${green}OK${endColor}"
 	else
 		echo -e "$f: ${red}BAD${endColor}"
-		echo
 		reference_check="FAIL"
 	fi
 done
@@ -539,8 +546,9 @@ echo "--------------------------------------------------------------------------
 echo "INPUT PARAMETERS"
 echo "-----------------------------------------------------------------------------------------"
 echo "Command Line Usage: $scriptname $@"
-echo "SURPI version: $version"
+echo "SURPI version: $SURPI_version"
 echo "config_file: $config_file"
+echo "config file version: $config_file_version"
 echo "Server: $host"
 echo "Working directory: $( pwd )"
 echo "run_mode: $run_mode"
@@ -583,10 +591,10 @@ then
 	fastQValidator --file $FASTQ_file --printBaseComp --avgQual --disableSeqIDCheck > quality.$basef.log
 	if [ $? -eq 0 ]
 	then
-		echo "$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details."
+		echo -e "${green}$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
 	else
-		echo "$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details."
-		echo "You can bypass the quality check by not using the -v switch."
+		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
+		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}"
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 2 ]
@@ -594,10 +602,10 @@ then
 	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
 	if [ $? -eq 0 ]
 	then
-		echo "$FASTQ_file appears to be a valid FASTQ file. Check the $basef.quality file for details."
+		echo -e "${green}$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
 	else
-		echo "$FASTQ_file appears to be a invalid FASTQ file. Check the $basef.quality file for details."
-		echo "You can bypass the quality check by not using the -v switch."
+		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
+		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}"
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 3 ]
