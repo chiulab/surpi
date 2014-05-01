@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 1/26/2014    
 
-version="1.0.8" #SURPI version
+version="1.0.9" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vx:z:"
 bold=$(tput bold)
@@ -37,7 +37,8 @@ while getopts "$optspec" option; do
 		r) rapsearch_database=${OPTARG};;	#Viral/NR
 		s) start_nt=${OPTARG};;	#10 is default
 		u) run_mode=${OPTARG};; #Comprehensive/Fast
-		v) VERIFY_FASTQ=${OPTARG};; #1 is default
+		v) VERIFICATION=1;;
+		w) VERIFY_FASTQ=${OPTARG};; #1 is default
 		x) length_cutoff=${OPTARG};;
 		z)	create_config_file=${OPTARG}
 			configprefix=${create_config_file%.fastq}
@@ -61,6 +62,9 @@ ${bold}Usage:${normal}
 Run SURPI pipeline with a config file:
 	$scriptname -f config
 
+Run SURPI pipeline in verification mode:
+	$scriptname -f config -v
+	
 Run SURPI pipeline specifying parameters on command line:
 	$scriptname -i test.fastq -q Sanger -a Truseq -x 50 -r Viral
 
@@ -70,6 +74,12 @@ Create default config and go file
 ${bold}Command Line Switches:${normal}
 
 	-h	Show help & ignore all other switches
+	-v	verification mode
+		SURPI will verify the following:
+			• software dependencies
+			• reference data specified in config file
+			• taxonomy lookup functionality
+			• FASTQ file (if requested in config file)
 
 	-f	Specify config file & ignore all other switches
 	-i	Specify FASTQ input file
@@ -89,7 +99,7 @@ ${bold}Command Line Switches:${normal}
 	-n	Skip Snap to NT [Currently only a placeholder - not functional]
 	
 	-u	SURPI Run mode [optional] (Comprehensive [default], Fast)
-	-v	Verify FASTQ quality [optional] (0 / 1 [default] / 2 / 3)
+	-w	Verify FASTQ quality [optional] (0 / 1 [default] / 2 / 3)
 		FASTQ validation uses FastQValidator. See http://genome.sph.umich.edu/wiki/FastQ_Validation_Criteria for details.
 		If quality fails, then pipeline run may end depending on selection. Details will be logged in the .quality file.
 
@@ -580,6 +590,10 @@ then
 elif [ "$VERIFY_FASTQ" = 3 ]
 then
 	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
+fi
+if [[ $VERIFICATION -eq 1 ]]
+then
+	exit
 fi
 curdate=$(date)
 tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
