@@ -11,9 +11,9 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014
+# Last revised 5/15/2014
 
-SURPI_version="1.0.11" #SURPI version
+SURPI_version="1.0.12" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
@@ -68,13 +68,13 @@ Run SURPI pipeline with a config file:
 
 Run SURPI pipeline in verification mode:
 	$scriptname -f config -v
-	
+
 Run SURPI pipeline specifying parameters on command line:
 	$scriptname -i test.fastq -q Sanger -a Truseq -x 50 -r Viral
 
 Create default config and go file
 	$scriptname -z test.fastq
-	
+
 ${bold}Command Line Switches:${normal}
 
 	-h	Show help & ignore all other switches
@@ -92,7 +92,7 @@ ${bold}Command Line Switches:${normal}
 	Mandatory: option must be present in either config file or on command line
 	Optional: option may be present in either config file or command line.
 				A default value may be applied if not specified.
-				
+
 	-q	Specify quality type [mandatory] (Sanger/Illumina)
 	-x	Specify length_cutoff [mandatory]
 	-a	Specify adapter_set [mandatory] (Truseq/Nextera)
@@ -102,11 +102,11 @@ ${bold}Command Line Switches:${normal}
 	-l	Specify crop - crop_length [optional] (default: 75)
 	-c	Specify cores [optional] (default: use all cores on machine)
 	-d	Specify cache_reset [optional] (default: use a calculated value, 200, 100, or 50GB)
-	
+
 	-p	Skip preprocessing [Currently only a placeholder - not functional]
 	-m	Skip Human Mapping [Currently only a placeholder - not functional]
 	-n	Skip Snap to NT [Currently only a placeholder - not functional]
-	
+
 	-u	SURPI Run mode [optional] (Comprehensive [default], Fast)
 	-w	Verify FASTQ quality [optional] (0 / 1 [default] / 2 / 3)
 		FASTQ validation uses FastQValidator. See http://genome.sph.umich.edu/wiki/FastQ_Validation_Criteria for details.
@@ -132,21 +132,21 @@ then
 #------------------------------------------------------------------------------------------------
 (
 	cat <<EOF
-# This is the config file used by SURPI. It contains mandatory parameters, 
+# This is the config file used by SURPI. It contains mandatory parameters,
 # optional parameters, and server related constants.
 # Do not change the config_file_version - it is auto-generated.
 # 	and used to ensure that the config file used matches the version of the SURPI pipeline run.
 config_file_version="$SURPI_version"
 
 ##########################
-#  Mandatory parameters  
+#  Mandatory parameters
 ##########################
 
 
-#To create this file, concatenate the entirety of a sequencing run into one FASTQ file. 
-#SURPI currently does not have paired-end functionality, we routinely concatenate Read 1 and Read 2 into the unified input file. 
-#For SURPI to provide proper readcount statistics, all read headers in a single SURPI input dataset should share a 
-#common 3 letter string (eg: M00, HWI, HIS, SCS, SRR for example). SURPI currently selects the string from the first and last reads only. 
+#To create this file, concatenate the entirety of a sequencing run into one FASTQ file.
+#SURPI currently does not have paired-end functionality, we routinely concatenate Read 1 and Read 2 into the unified input file.
+#For SURPI to provide proper readcount statistics, all read headers in a single SURPI input dataset should share a
+#common 3 letter string (eg: M00, HWI, HIS, SCS, SRR for example). SURPI currently selects the string from the first and last reads only.
 inputfile="$create_config_file"
 
 #input filetype. [FASTA/FASTQ]
@@ -175,7 +175,7 @@ rapsearch_database="Viral"
 d_human=12
 
 #RAPSearch e_cutoffs
-#E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1). 
+#E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1).
 #Larger E-values are required to find highly divergent viral sequences.
 ecutoff_Vir="1"
 ecutoff_NR="0"
@@ -188,9 +188,18 @@ eBLASTn="1e-15"
 ##########################
 
 #Run mode to use. [Comprehensive/Fast]
-#Comprehensive mode allows SNAP to NT -> denovo contig assembly -> RAPSearch to Viral proteins or NR 
+#Comprehensive mode allows SNAP to NT -> denovo contig assembly -> RAPSearch to Viral proteins or NR
 #Fast mode allows SNAP to curated FAST databases
 run_mode="Comprehensive"
+
+#Which method to use for SNAP to nt [AWS_master_slave/solo]
+# AWS_master_slave will start up a slave instance on AWS for each division of the nt database
+# It will be more costly, but should run significantly faster than the solo method, which 
+# runs each NT division through SNAP serially on a single machine.
+# If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
+# set properly.
+# snap_nt_procedure="solo"
+snap_nt_procedure="AWS_master_slave"
 
 #Number of cores to use. Will use all cores on machine if unspecified.
 #Uncomment the parameter to set explicitly.
@@ -206,7 +215,7 @@ crop_length=75
 #kmer value for ABySS in DeBruijn portion of denovo contig assembly. Highly recommended default=34
 abysskmer=34
 
-#Verify FASTQ quality  
+#Verify FASTQ quality
 #	0 = skip validation
 #	1 [default] = run validation, don't check for unique names, quit on failure
 #	2 = run validation, check for unique names, quit on failure (helpful with newer MiSeq output that has same name for read1 and read2 due to spacing)
@@ -269,6 +278,39 @@ RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_130624_db_v2.12"
 #Space needed may be up to 10x the size of the input file.
 #This folder will not be created by SURPI, so be sure it already exists with proper permissions.
 temporary_files_directory="/tmp/"
+
+##########################
+# AWS related values
+##########################
+
+# These values are only used if the "AWS_master_slave" option is set above.
+
+# AWS_master_slave will start up a slave instance on AWS for each division of the nt database
+# It will be more costly, but should run significantly faster than the solo method, which 
+# runs each NT division through SNAP serially on a single machine.
+# If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
+# set properly.
+
+#ami-b93264d0 = Ubuntu 12.04 HVM 64-bit
+#ami-5ef61936 = custom AMI (ami-b93264d0 + SNAP setup)
+ami_id="ami-5ef61936"
+
+#needs to match the number of divisions of nt in SNAP db (29, currently). Can test process with fewer.
+number_of_instances=29
+
+instance_type="c3.8xlarge"
+
+keypair="surpi"
+
+security_group="SURPI"
+
+availability_zone="us-east-1d"
+
+#specify directory for incoming data from slaves
+#this directory will not be created by SURPI - it should pre-exist.
+#There must be sufficient space in this directory to contain all returning compressed SAM files
+incoming_dir="/ssd4/incoming"
+
 EOF
 ) > $configprefix.config
 #------------------------------------------------------------------------------------------------
@@ -584,6 +626,20 @@ echo "start_nt: $start_nt"
 echo "crop_length: $crop_length"
 
 echo "e value for BLASTn used in coverage map generation: $eBLASTn"
+
+echo "---------------------------------------------"
+echo "Cluster settings"
+
+echo "snap_nt_procedure: $snap_nt_procedure"
+echo "ami_id: $ami_id"
+echo "number_of_instances: $number_of_instances"
+echo "instance_type: $instance_type"
+echo "keypair: $keypair"
+echo "security_group: $security_group"
+echo "availability_zone: $availability_zone"
+echo "incoming_dir: $incoming_dir"
+echo "---------------------------------------------"
+
 echo "-----------------------------------------------------------------------------------------"
 
 if [ "$VERIFY_FASTQ" = 1 ]
@@ -624,6 +680,18 @@ echo "#################### STARTING SURPI PIPELINE ##################"
 START0=$(date +%s)
 echo "Found file $FASTQ_file"
 echo "After removing path: $nopathf"
+############ Start up AWS slave machines ##################
+
+#move below parameters to config file before publishing code
+
+file_with_slave_ips="slave_list.txt"
+
+if [ "$snap_nt_procedure" = "AWS_master_slave" ]
+then
+	# start the slaves as a background process. They should be ready to run at the SNAP to NT step in the pipeline.
+	start_slaves.sh $ami_id $number_of_instances $instance_type $keypair $security_group $availability_zone $file_with_slave_ips & # > $basef.AWS.log 2>&1
+fi
+
 ############ PREPROCESSING ##################
 if [ "$preprocess" != "skip" ]
 then
@@ -697,8 +765,29 @@ then
 				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human
 			elif [ $snap_integrator = "end" ]
 			then
-				echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
-				snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
+				if [ "$snap_nt_procedure" = "AWS_master_slave" ]
+				then
+					#this parameter is currently tied to the $keypair used during slave_setup.sh. should be cleaned up prior to release
+					pemkey="/home/ubuntu/.ssh/surpi.pem"
+
+					# transfer data to slave, start SNAP on each slave, and wait for results
+					#check if slave_setup is running before progressing to snap_on_slave.sh
+					#slave_setup should be responsible for verifying that all slaves are properly running.
+					echo -n "Waiting for slave_setup to complete."
+					while [ ! -f $file_with_slave_ips ]
+					do
+						echo -n "."
+						sleep 2
+					done
+					echo
+					echo "snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_human"
+					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> $basef.AWS.log 2>&1
+					
+				elif [ "$snap_nt_procedure" = "solo" ]
+				then
+					echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
+					snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
+				fi
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
@@ -1010,7 +1099,6 @@ mkdir DATASETS_$basef
 if [ $run_mode = "Comprehensive" ]
 then
 	mkdir deNovoASSEMBLY_$basef
-	mkdir COVERAGEMAPS_$basef
 fi
 
 #mv $basef.pipeline_parameters.log OUTPUT_$basef
@@ -1128,10 +1216,7 @@ mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.Viruses.annotated OUTPU
 mv $basef.Contigs.NR.RAPSearch.e*.annotated OUTPUT_$basef
 mv $basef.quality OUTPUT_$basef
 
-mv *$basef*.Report COVERAGEMAPS_$basef
 mv bar*$basef*.pdf OUTPUT_$basef
-#mv bar*$basef* COVERAGEMAPS_$basef
-#mv *bar*$basef* COVERAGEMAPS_$basef
 mv genus.bar*$basef.plotting TRASH_$basef
 mv genus.bar*$basef.Blastn.fasta OUTPUT_$basef
 mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.all.annotated TRASH_$basef
