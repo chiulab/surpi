@@ -198,8 +198,8 @@ run_mode="Comprehensive"
 # runs each NT division through SNAP serially on a single machine.
 # If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
 # set properly.
-# snap_nt_procedure="solo"
-snap_nt_procedure="AWS_master_slave"
+snap_nt_procedure="solo"
+# snap_nt_procedure="AWS_master_slave"
 
 #Number of cores to use. Will use all cores on machine if unspecified.
 #Uncomment the parameter to set explicitly.
