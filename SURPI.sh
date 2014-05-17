@@ -306,6 +306,8 @@ security_group="SURPI"
 
 availability_zone="us-east-1d"
 
+placement_group="surpi"
+
 #specify directory for incoming data from slaves
 #this directory will not be created by SURPI - it should pre-exist.
 #There must be sufficient space in this directory to contain all returning compressed SAM files
@@ -636,6 +638,7 @@ echo "number_of_instances: $number_of_instances"
 echo "instance_type: $instance_type"
 echo "keypair: $keypair"
 echo "security_group: $security_group"
+echo "placement_group: $placement_group"
 echo "availability_zone: $availability_zone"
 echo "incoming_dir: $incoming_dir"
 echo "---------------------------------------------"
@@ -689,7 +692,7 @@ file_with_slave_ips="slave_list.txt"
 if [ "$snap_nt_procedure" = "AWS_master_slave" ]
 then
 	# start the slaves as a background process. They should be ready to run at the SNAP to NT step in the pipeline.
-	start_slaves.sh $ami_id $number_of_instances $instance_type $keypair $security_group $availability_zone $file_with_slave_ips & # > $basef.AWS.log 2>&1
+	start_slaves.sh $ami_id $number_of_instances $instance_type $keypair $security_group $availability_zone $file_with_slave_ips $placement_group & # > $basef.AWS.log 2>&1
 fi
 
 ############ PREPROCESSING ##################

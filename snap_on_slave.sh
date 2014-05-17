@@ -88,15 +88,19 @@ echo "done running SNAP on slaves and transferring data from slaves to master in
 
 #after receiving results from slaves, decompress on master
 START4=$(date +%s)
-for f in $incoming_dir_for_results/*
-do
-	pigz -d $f &
-done
 
-for job in `jobs -p`
-do
-	wait $job
-done
+parallel -j 4 -i bash -c "echo pigz {}; pigz -d {}; echo done {};" -- $incoming_dir_for_results/*.gz
+
+# for f in $incoming_dir_for_results/*
+# do
+# 	pigz -d $f &
+# done
+# 
+# for job in `jobs -p`
+# do
+# 	wait $job
+# done
+
 END4=$(date +%s)
 diff4=$(( END4 - START4 ))
 echo "done decompressing SAM files on master in $diff4 seconds"
@@ -105,7 +109,7 @@ echo "done decompressing SAM files on master in $diff4 seconds"
 START5=$(date +%s)
 echo -n "merging SAM files on master machine: "
 date
-list_of_incoming_sam_files=$(ls $incoming_dir_for_results/*)
+list_of_incoming_sam_files=$(ls $incoming_dir_for_results/*.sorted)
 compare_multiple_sam.py $list_of_incoming_sam_files $output_file
 END5=$(date +%s)
 diff5=$(( END5 - START5 ))

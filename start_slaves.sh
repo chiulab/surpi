@@ -18,7 +18,7 @@ expected_args=7
 
 if [ $# -lt $expected_args ]
 then
-	echo "Usage: start_slaves_setup.sh <ami> <number_of_slaves> <instance_type> <keypair> <security_group> <availability_zone> <file_with_slave_list>"
+	echo "Usage: start_slaves_setup.sh <ami> <number_of_slaves> <instance_type> <keypair> <security_group> <availability_zone> <file_with_slave_list> <placement_group>"
 	exit 65
 fi
 
@@ -30,6 +30,7 @@ keypair=$4
 security_group=$5
 availability_zone=$6
 file_with_slave_ips=$7
+placement_group=$8
 ###
 
 #This is the time (in seconds) this script waits after starting up the AWS machines. 
@@ -87,6 +88,7 @@ result=$(	ec2-run-instances $ami_id \
 				--key $keypair \
 				--group $security_group \
 				--availability-zone $availability_zone \
+				--placement-group $placement_group \
 				-b /dev/xvdb=ephemeral0 -b /dev/xvdc=ephemeral1 \
 				| egrep ^INSTANCE | cut -f2 )
 
