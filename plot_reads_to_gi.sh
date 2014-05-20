@@ -12,7 +12,7 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+# Last revised 5/19/2014    
 
 if [ $# -lt 5 ]; then
     echo "Usage: <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"    
@@ -59,7 +59,7 @@ done
 cat $1*.$2.$3.$4.blastn > $1.$2.$3.$4.Blastn
 
 uniq_blastn_nopipes.csh $1.$2.$3.$4.Blastn  
-extractAlltoFast.csh $1.$2.$3.$4.Blastn.uniq BLASTN $1 FASTA FASTA
+extractAlltoFast.sh $1.$2.$3.$4.Blastn.uniq BLASTN $1 FASTA $1.$2.$3.$4.Blastn.uniq.ex.fa FASTA
 
 ####figuring out length of sequence in gi#######
 

@@ -11,9 +11,9 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/15/2014
+# Last revised 5/19/2014
 
-SURPI_version="1.0.12" #SURPI version
+SURPI_version="1.0.13" #SURPI version
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
@@ -273,6 +273,8 @@ RAPSearch_VIRUS_db="/reference/RAPSearch/rapsearch_viral_aa_130628_db_v2.12"
 #RAPSearch nr database name: indexed protein dataset (all of NR)
 #make sure that directory also includes the .info file 
 RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_130624_db_v2.12"
+
+ribo_snap_bac_euk_directory="/reference/RiboClean_SNAP"
 
 #specify a location for storage of temporary files.
 #Space needed may be up to 10x the size of the input file.
@@ -676,7 +678,8 @@ then
 	exit
 fi
 curdate=$(date)
-tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
+
+# tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ###########################################################
 echo "#################### STARTING SURPI PIPELINE ##################"
@@ -813,9 +816,6 @@ then
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 == "*") print }' > $basef.NT.snap.unmatched.sam
 	echo -n "convert sam to fastq from $basef.NT.snap.sam "
 	date
-	#convertSam2Fastq.sh $basef.NT.snap.sam #SAMIA# use actual converter
-	egrep -v "^@" "$basef.NT.snap.unmatched.sam" | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef.NT.snap.unmatched.sam" | sed 's/\(.*\)\..*/\1/').fastq
-	egrep -v "^@" "$basef.NT.snap.matched.sam" | awk '{if($3 != "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef.NT.snap.matched.sam" | sed 's/\(.*\)\..*/\1/').fastq
 	echo -n "Done: parsing $basef.NT.snap.unmatched.sam  "
 	date
 	if [ ! -f "$basef.NT.snap.matched.all.annotated" ];
@@ -823,11 +823,12 @@ then
 		## convert to FASTQ and retrieve full-length sequences
 		echo -n "convert to FASTQ and retrieve full-length sequences for SNAP NT matched hits "
 		date
-		extractHeaderFromFastq.csh "$basef.NT.snap.matched.fastq" FASTQ "$basef.cutadapt.fastq" "$basef.NT.snap.matched.fulllength.fastq"
+
+		extractHeaderFromFastq_ncores.sh "$cores" "$basef.cutadapt.fastq" "$basef.NT.snap.matched.sam" "$basef.NT.snap.matched.fulllength.fastq" "$basef.NT.snap.unmatched.sam" "$basef.NT.snap.unmatched.fulllength.fastq"   #SNN140507
 		sort -k1,1 "$basef.NT.snap.matched.sam"  > "$basef.NT.snap.matched.sorted.sam"
 		cut -f1-9 "$basef.NT.snap.matched.sorted.sam" > "$basef.NT.snap.matched.sorted.sam.tmp1"
-		cut -f11- "$basef.NT.snap.matched.sorted.sam" > "$basef.NT.snap.matched.sorted.sam.tmp2"
-		awk '(NR%4==1) {printf("%s\t",$0)} (NR%4==2) {printf("%s\n", $0)}' "$basef.NT.snap.matched.fulllength.fastq" | sort -k1,1 | awk '{print $2}' > "$basef.NT.snap.matched.fulllength.sequence.txt"
+		cut -f12- "$basef.NT.snap.matched.sorted.sam" > "$basef.NT.snap.matched.sorted.sam.tmp2" #SNN140507 -f11 -> -f12
+		awk '(NR%4==1) {printf("%s\t",$0)} (NR%4==2) {printf("%s\t", $0)} (NR%4==0) {printf("%s\n",$0)}' "$basef.NT.snap.matched.fulllength.fastq" | sort -k1,1 | awk '{print $2 "\t" $3}' > "$basef.NT.snap.matched.fulllength.sequence.txt" #SNN140507 change this to bring in quality lines as well
 		paste "$basef.NT.snap.matched.sorted.sam.tmp1" "$basef.NT.snap.matched.fulllength.sequence.txt" "$basef.NT.snap.matched.sorted.sam.tmp2" > "$basef.NT.snap.matched.fulllength.sam"
 		###retrieve taxonomy matched to NT ###
 		echo -n "taxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
@@ -839,6 +840,9 @@ then
 # adjust filenames for FAST mode
 	grep "Viruses;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Viruses.annotated"
 	grep "Bacteria;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Bacteria.annotated"
+	
+	##SNN140507 cleanup bacterial reads 
+	ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory #SNN140507
 	
 	if [ $run_mode = "Comprehensive" ]
 	then
@@ -861,7 +865,7 @@ then
 	echo "############# SORTING unmatched to NT BY LENGTH AND UNIQ AND LOOKUP ORIGINAL SEQUENCES  #################"
 	if [ $run_mode = "Comprehensive" ]
 	then
-		extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fastq" FASTQ "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.fulllength.fastq"
+		#SNN 140507 extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fastq" FASTQ "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.fulllength.fastq"
 		sed "n;n;n;d" "$basef.NT.snap.unmatched.fulllength.fastq" | sed "n;n;d" | sed "s/^@/>/g" > "$basef.NT.snap.unmatched.fulllength.fasta"
 	fi
 	cat "$basef.NT.snap.unmatched.fulllength.fasta" | perl -e 'while (<>) {$h=$_; $s=<>; $seqs{$h}=$s;} foreach $header (reverse sort {length($seqs{$a}) <=> length($seqs{$b})} keys %seqs) {print $header.$seqs{$header}}' > $basef.NT.snap.unmatched.fulllength.sorted.fasta
@@ -871,13 +875,15 @@ then
 		crop_reads.csh "$basef.NT.snap.unmatched.fulllength.sorted.fasta" 25 50 > "$basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
 		echo "*** reads cropped ***"
 		gt sequniq -seqit -force -o "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" "$basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
-		extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.uniq.fl.fastq"
-		sed "n;n;n;d" "$basef.NT.snap.unmatched.uniq.fl.fastq" | sed "n;n;d" | sed "s/^@/>/g" > "$basef.NT.snap.unmatched.uniq.fl.fasta"
+#SNN140507              extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.uniq.fl.fastq"
+#SNN140507             sed "n;n;n;d" "$basef.NT.snap.unmatched.uniq.fl.fastq" | sed "n;n;d" | sed "s/^@/>/g" > "$basef.NT.snap.unmatched.uniq.fl.fasta"
+      	 extractAlltoFast.sh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.NT.snap.unmatched.fulllength.fasta" FASTA "$basef.NT.snap.unmatched.uniq.fl.fasta" FASTA #SNN140507
+
 	fi
 	echo " Done uniquing full length sequences of unmatched to NT "
 fi
 curdate=$(date)
-tweet.pl "Finished SNAP mapping on $host: $FASTQ_file ($curdate) ($scriptname)"
+# tweet.pl "Finished SNAP mapping on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
@@ -1095,156 +1101,119 @@ echo "abysskmer length = $abysskmer"  >> $basef.pipeline_parameters.log
 echo "adapter_set = $adapter_set" >> $basef.pipeline_parameters.log
 
 ########CLEANUP############
-mkdir LOG_$basef
-mkdir OUTPUT_$basef
-mkdir TRASH_$basef
-mkdir DATASETS_$basef
+
+dataset_folder="DATASETS_$basef"
+log_folder="LOG_$basef"
+output_folder="OUTPUT_$basef"
+trash_folder="TRASH_$basef"
+denovo_folder="deNovoASSEMBLY_$basef"
+
+mkdir $log_folder
+mkdir $output_folder
+mkdir $trash_folder
+mkdir $dataset_folder
 if [ $run_mode = "Comprehensive" ]
 then
-	mkdir deNovoASSEMBLY_$basef
+	mkdir $denovo_folder
 fi
 
-#mv $basef.pipeline_parameters.log OUTPUT_$basef
-mv $basef.@*.k$abysskmer-*.fa DATASETS_$basef
-mv $basef.@*.k$abysskmer-unitigs.fa DATASETS_$basef
-mv $basef.preprocessed.fastq TRASH_$basef #SNN changed 12/27/2013
-mv $basef.cutadapt.fastq DATASETS_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.sam DATASETS_$basef
-mv $basef.NT.snap.sam DATASETS_$basef
-mv $basef.NT.snap.matched.fulllength.sam DATASETS_$basef
-mv $basef.NT.snap.matched.fulllength.fastq DATASETS_$basef
-mv $basef.NT.snap.unmatched.fulllength.fastq DATASETS_$basef
-mv $basef.NT.snap.unmatched.uniq.fl.fastq DATASETS_$basef
-mv "$basef.@*.k$abysskmer-unitigs.cutoff$contigcutoff.fa" "DATASETS_$basef"
-mv "$basef.NT.snap.unmatched_addVir_uniq.fasta.k$abysskmer-unitigs.cutoff$contigcutoff.all.fa" "OUTPUT_$basef"
-mv $basef.NT.snap.unmatched.fulllength.fasta DATASETS_$basef
-mv $basef.NT.snap.matched.fl.Viruses.uniq.fasta DATASETS_$basef
-mv $basef.NT.snap.unmatched_addVir_uniq.fasta DATASETS_$basef
-mv $basef.NT.snap.unmatched.uniq.contigs.fasta DATASETS_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.m8 DATASETS_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.addseq.m8 DATASETS_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.aln DATASETS_$basef
-mv $basef.@*k$abysskmer-bubbles.fa LOG_$basef
-mv $basef.@*k$abysskmer*.adj LOG_$basef
-mv $basef.@*k$abysskmer*.path LOG_$basef
-mv $basef.@*k$abysskmer-indel.fa LOG_$basef
-mv abyss.@*$basef.log LOG_$basef
-mv $basef.@*.k$abysskmer-*.dot LOG_$basef
-mv coverage.hist LOG_$basef
-mv $basef.cutadapt.summary.log LOG_$basef
-mv $basef.adapterinfo.log LOG_$basef
-mv $basef.cutadapt.cropped.fastq.log LOG_$basef
-mv $basef.preprocess.log LOG_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.time.log LOG_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.snap.log LOG_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.timeNT.log LOG_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.snapNT.log LOG_$basef
-mv $basef.taxonomy.SNAPNT.log LOG_$basef
-mv $basef.Ecutoff1.virus.RAPSearch.log LOG_$basef
-mv $basef.taxonomy.contigs.RAPSearch.log LOG_$basef
-#mv $basef*log LOG_$basef
-mv $basef.NT.snap.matched.fulllength.all.annotated.sorted OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.Viruses.annotated OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.Bacteria.annotated OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.Primates.annotated OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.nonPrimMammal.annotated OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.nonMammalChordat.annotated OUTPUT_$basef
-mv $basef.NT.snap.matched.fl.nonChordatEuk.annotated OUTPUT_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.annotated*.sorted OUTPUT_$basef
-mv readcounts.$basef.*log OUTPUT_$basef
-mv timing.$basef.log OUTPUT_$basef
-mv $basef*table OUTPUT_$basef
-mv $basef.cutadapt.cropped.dusted.bad.fastq TRASH_$basef
-mv temp.sam TRASH_$basef
-mv $basef.NT.snap.matched.sam TRASH_$basef
-mv $basef.NT.snap.unmatched.sam TRASH_$basef
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq TRASH_$basef
-mv $basef.NT.snap.matched.sorted.sam TRASH_$basef
-mv $basef.NT.snap.matched.sorted.sam.tmp2 TRASH_$basef
-mv $basef.NT.snap.unmatched.fastq TRASH_$basef
-mv $basef.NT.snap.matched.fastq TRASH_$basef
-mv $basef.NT.snap.matched.sorted.sam.tmp1 TRASH_$basef
-mv $basef.NT.snap.matched.fulllength.sequence.txt TRASH_$basef
-mv $basef.NT.snap.matched.fulllength.gi.taxonomy TRASH_$basef
-mv $basef.NT.snap.matched.fulllength.all.annotated TRASH_$basef
-mv $basef.NT.snap.matched.fl.Viruses.fastq TRASH_$basef
-mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta.bsr TRASH_$basef
-mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta.bsi TRASH_$basef
-mv $basef.NT.snap.matched.fl.Viruses.fasta.bsr TRASH_$basef
-mv $basef.NT.snap.matched.fl.Viruses.fasta.bsi TRASH_$basef
-mv $basef.NT.snap.unmatched_addVir_uniq.fasta.barcodes TRASH_$basef
-mv $basef.NT.snap.unmatched.fulllength.sorted.fasta TRASH_$basef
-mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta TRASH_$basef
-mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta TRASH_$basef
-mv $basef.NT.snap.unmatched.uniq.fl.fasta TRASH_$basef
-mv $basef.NT.snap.matched.fl.Viruses.fasta TRASH_$basef
-mv $basef.NT.snap.unmatched_addVir_uniq.fasta.@*.fasta TRASH_$basef
-mv "$basef.NT.snap.unmatched_addVir_uniq.fasta.k$abysskmer-unitigs.cutoff$contigcutoff.all.fastq" "TRASH_$basef"
-mv $basef.cutadapt.andcontigs.fastq TRASH_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.m8.fastq TRASH_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.addseq.all.annotated TRASH_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.m8.noheader TRASH_$basef
-mv $basef.Ecutoff1.virus.contigs.RAPSearch.m8.header.fastq TRASH_$basef
-mv readcounts.$basef.temp TRASH_$basef
-mv barcode_readcounts.$basef.[123456789].temp TRASH_$basef
-mv barcode_readcounts.$basef.log TRASH_$basef
-      
-mv $basef.NT.snap.unmatched_addVir_uniq.fasta.dir deNovoASSEMBLY_$basef
-mv all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs*.fa deNovoASSEMBLY_$basef
-mv all.bar*.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut*.fa deNovoASSEMBLY_$basef
-mv all.bar*.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.fa deNovoASSEMBLY_$basef
-mv toAmos.error deNovoASSEMBLY_$basef
+#Move files to DATASETS
 
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.m*.fasta TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.addseq.* TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.aln TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.m8.fast* TRASH_$basef
-mv $basef.Viral.RAPSearch.e1.m8.fasta.seq
+mv $basef.cutadapt.fastq $dataset_folder
+mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.sam $dataset_folder
+mv $basef.NT.snap.sam $dataset_folder
+mv $basef.NT.snap.matched.fulllength.sam $dataset_folder
+mv $basef.NT.snap.matched.fulllength.fastq $dataset_folder
+mv $basef.NT.snap.unmatched.fulllength.fastq $dataset_folder
+mv $basef.NT.snap.unmatched.uniq.fl.fastq $dataset_folder
+mv $basef.NT.snap.unmatched.fulllength.fasta $dataset_folder
+mv $basef.NT.snap.matched.fl.Viruses.uniq.fasta $dataset_folder
+mv $basef.NT.snap.unmatched_addVir_uniq.fasta $dataset_folder
+mv genus.bar*$basef.plotting $dataset_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e[0-9].m8 $dataset_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8 $dataset_folder
 
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 TRASH_$basef
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi TRASH_$basef
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.uniq TRASH_$basef 
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.taxonomy TRASH_$basef
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header TRASH_$basef
+#Move files to deNovoASSEMBLY
+mv $basef.NT.snap.unmatched_addVir_uniq.fasta.dir $denovo_folder
+mv all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs*.fa $denovo_folder
+mv all.bar*.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut*.fa $denovo_folder
+mv all.bar*.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.fa $denovo_folder
 
-mv $basef.NT.snap.matched.fulllength.gi.uniq TRASH_$basef
-mv $basef.Vir.RAPSearch.e*.aln TRASH_$basef
-mv $basef.Vir.RAPSearch.e*.m8.fasta TRASH_$basef
+#Move files to LOG
+mv coverage.hist $log_folder
+mv $basef.cutadapt.summary.log $log_folder
+mv $basef.adapterinfo.log $log_folder
+mv $basef.cutadapt.cropped.fastq.log $log_folder
+mv $basef.preprocess.log $log_folder
+mv $basef.taxonomy.SNAPNT.log $log_folder
+mv $basef.pipeline_parameters.log $log_folder
+mv $basef.table_generator_snap.matched.fl.log $log_folder
+mv $basef*.snap.log $log_folder
+mv $basef*.time.log $log_folder
+mv $basef.$rapsearch_database.RAPSearch.log $log_folder
+mv quality.$basef.log $log_folder
 
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.m8 DATASETS_$basef
-mv $basef.Vir.RAPSearch.e*.m8 DATASETS_$basef
+mv $basef.NT.snap.matched.fulllength.all.annotated $trash_folder
 
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.annotated OUTPUT_$basef
-mv $basef.Contigs.and.NTunmatched.Vir.RAPSearch.e*.NR.e*.Viruses.annotated OUTPUT_$basef
-mv $basef.Contigs.NR.RAPSearch.e*.annotated OUTPUT_$basef
-mv $basef.quality OUTPUT_$basef
+#Move files to OUTPUT
+mv $basef.NT.snap.matched.fulllength.all.annotated.sorted $output_folder
+mv $basef.NT.snap.matched.fl.Viruses.annotated $output_folder
+mv $basef.NT.snap.matched.fl.Bacteria.annotated $output_folder
+mv $basef.NT.snap.matched.fl.Primates.annotated $output_folder
+mv $basef.NT.snap.matched.fl.nonPrimMammal.annotated $output_folder
+mv $basef.NT.snap.matched.fl.nonMammalChordat.annotated $output_folder
+mv $basef.NT.snap.matched.fl.nonChordatEuk.annotated $output_folder
+mv readcounts.$basef.*log $output_folder
+mv timing.$basef.log $output_folder
+mv $basef*table $output_folder
+mv $basef.Contigs.NR.RAPSearch.e*.annotated $output_folder
+if [ -e $basef.quality ]; then mv $basef.quality $output_folder; fi
+mv bar*$basef*.pdf $output_folder
+mv genus.bar*$basef.Blastn.fasta $output_folder
+mv *.annotated $output_folder
 
-mv bar*$basef*.pdf OUTPUT_$basef
-mv genus.bar*$basef.plotting TRASH_$basef
-mv genus.bar*$basef.Blastn.fasta OUTPUT_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.all.annotated TRASH_$basef
-mv *.annotated OUTPUT_$basef
-mv $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta DATASETS_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.addseq* TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.aln TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8 DATASETS_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8.fasta TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8.fasta.seq TRASH_$basef
-mv $basef.$rapsearch_database.RAPSearch.e*.m8.fasta.seq TRASH_$basef
-mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.Viruses.annotated.bar.inc TRASH_$basef
-mv $basef.snap.unmatched_addVir_uniq.fasta.dir deNovoASSEMBLY_$basef
+#Move files to TRASH
+mv $basef.preprocessed.fastq $trash_folder
+mv $basef.cutadapt.cropped.dusted.bad.fastq $trash_folder
+if [ -e temp.sam ]; then mv temp.sam $trash_folder; fi
+mv $basef.NT.snap.matched.sam $trash_folder
+mv $basef.NT.snap.unmatched.sam $trash_folder
+mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $trash_folder
+mv $basef.NT.snap.matched.sorted.sam $trash_folder
+mv $basef.NT.snap.matched.sorted.sam.tmp2 $trash_folder
+mv $basef.NT.snap.unmatched.fastq $trash_folder
+mv $basef.NT.snap.matched.fastq $trash_folder
+mv $basef.NT.snap.matched.sorted.sam.tmp1 $trash_folder
+mv $basef.NT.snap.matched.fulllength.sequence.txt $trash_folder
+mv $basef.NT.snap.matched.fulllength.gi.taxonomy $trash_folder
+mv $basef.NT.snap.matched.fl.Viruses.fastq $trash_folder
+mv $basef.NT.snap.unmatched.fulllength.sorted.fasta $trash_folder
+mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta $trash_folder
+mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta $trash_folder
+mv $basef.NT.snap.unmatched.uniq.fl.fasta $trash_folder
+mv $basef.NT.snap.matched.fl.Viruses.fasta $trash_folder
+mv $basef.Contigs.and.NTunmatched.Viral.RAPSearch.e*.NR.e*.annotated.header $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.uniq $trash_folder 
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.taxonomy $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.header $trash_folder
+mv $basef.NT.snap.matched.fulllength.gi.uniq $trash_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.addseq* $trash_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.aln $trash_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8.fasta $trash_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8.fasta.seq $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e*.m8.fasta.seq $trash_folder
+mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.Viruses.annotated.bar.inc $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.aln $trash_folder
+mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta $trash_folder
 
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.aln TRASH_$basef
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8 DATASETS_$basef
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta TRASH_$basef
-
-cp SURPI.$basef.log OUTPUT_$basef
-cp SURPI.$basef.err OUTPUT_$basef
-cp $basef.config OUTPUT_$basef
-cp quality.$basef.log OUTPUT_$basef
-mv $basef*log LOG_$basef
-mv quality.$basef.log LOG_$basef
+cp SURPI.$basef.log $output_folder
+cp SURPI.$basef.err $output_folder
+cp $basef.config $output_folder
+cp $log_folder/quality.$basef.log $output_folder
+# mv $basef*log $log_folder
 
 curdate=$(date)
 
-tweet.pl "Completed SURPI Pipeline on $host: $FASTQ_file. ($curdate) ($scriptname)"
+# tweet.pl "Completed SURPI Pipeline on $host: $FASTQ_file. ($curdate) ($scriptname)"

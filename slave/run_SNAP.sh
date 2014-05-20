@@ -80,7 +80,7 @@ echo "compressed snap results in $diff4 seconds."
 
 #copy output to master
 START5=$(date +%s)
-rsync -azv -e 'ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/surpi.pem' $snap_outputfile.noheader.sorted.gz  ubuntu@$master:$incomin$
+rsync -azv -e 'ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/surpi.pem' $snap_outputfile.noheader.sorted.gz  ubuntu@$master:$incoming_directory_on_master
 END5=$(date +%s)
 diff5=$(( END5 - START5 ))
 echo "results copied to master in $diff5 seconds."
