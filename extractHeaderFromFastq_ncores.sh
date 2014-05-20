@@ -16,7 +16,7 @@
 
 if [ $# -lt 4 ]
 then
-	echo "<#cores> <parent file fq> <query1 sam> <output fq><query2 sam><output2 fq"
+	echo "<#cores> <parent file fq> <query1 sam> <output fq> <query2 sam> <output2 fq>"
 	exit 65
 fi
 
@@ -71,7 +71,6 @@ for f in $parentfile.SplitXS[a-z][a-z][a-z]
 do
 	cat $f | fqextract $queryfile.header > $queryfile.$f &
 done
-
 
 for job in `jobs -p`
 do
