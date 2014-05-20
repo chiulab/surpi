@@ -26,7 +26,7 @@ cores=$4
 ###
 
 echo -n "starting: "
-echo `date`
+date
 START1=$(date +%s)
 
 if [ $# -lt 4 ]; then  # using 1 core only
@@ -54,7 +54,7 @@ else
 
     for job in `jobs -p`
     do
-		wait $job
+	wait $job
     done
 
     echo "done extracting reads for each chunk"
@@ -63,6 +63,6 @@ fi
 
 END1=$(date +%s)
 echo -n "Done with extractSamFromSam.sh"
-echo `date`
+date
 diff=$(( $END1 - $START1 ))
 echo "extractSamFromSam.sh took $diff seconds"
