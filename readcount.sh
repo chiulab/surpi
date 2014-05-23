@@ -22,6 +22,7 @@ fi
 
 
 #common string is the part of header that is common among all read headers in file (e.g. HWI M00 M02 SCS SRR )
+###
 basef="${1}"
 headerid="${2}"
 multiplexed="${3}"
@@ -35,11 +36,13 @@ nine="${9}"
 ten="${10}"
 eleven="${11}"
 twelve="${12}"
+###
+scriptname=${0##*/}
+
 ##### Generating total report#######
 ##### total report is a list of all files and readcounts per file, all files are entered as variables 4->
 
-echo -n " Starting: generating readcounts.$basef.Total.log report"
-date
+echo -e "$(date)\t$scriptname\tStarting: generating readcounts.$basef.Total.log report"
 START1=$(date +%s)
 
 echo "Total_readcounts_$basef" > readcounts.$basef.Total.temp 
@@ -48,7 +51,7 @@ for f in $four $five $six $seven $eight $nine $ten $eleven $twelve
 do
 	#establishing appropriate headerid prefix (for fastq = @M00 for .sam = M00 for example.	
 	headeridwithprefix=$(grep -m 1 "$headerid" $f | sed 's/'$headerid'/'$headerid' /g' | awk '{print$1}')
-	echo " counting total reads in $f using $headeridwithprefix as string"
+	echo -e "$(date)\t$scriptname\tcounting total reads in $f using $headeridwithprefix as string"
 	#counting occurrences of headerid
 	echo -n "$f " >> readcounts.$basef.Total.temp
 	egrep -c "^$headeridwithprefix" $f >> readcounts.$basef.Total.temp
@@ -56,11 +59,10 @@ done
 
 cp readcounts.$basef.Total.temp readcounts.$basef.log
 
-echo -n " Done: generating readcounts.$1.Total.log report"
-date
+echo -e "$(date)\t$scriptname\tDone: generating readcounts.$1.Total.log report"
 END1=$(date +%s)
 diff=$(( END1 - START1 ))
-echo "Generating Total read count report Took $diff seconds"
+echo -e "$(date)\t$scriptname\tGenerating Total read count report Took $diff seconds"
 
 #### Generating # reads by barcode ########
 if [ $multiplexed = "Y" ]
@@ -74,7 +76,7 @@ then
 	do
 		headeridwithprefix=$(grep -m 1 "$headerid" $f | sed 's/'$headerid'/'$headerid' /g' | awk '{print$1}')
 
-		echo "counting number of reads per barcode in $f using $headerwithprefix"
+		echo -e "$(date)\t$scriptname\tcounting number of reads per barcode in $f using $headerwithprefix"
 		echo "$f" > $f.readcounts.$basef.Barcode.temp
 		grep "$headeridwithprefix" $f | sed 's/#/ /g' | awk '{print$2}' | sort | uniq -c >> $f.readcounts.$basef.Barcode.temp 
 		
@@ -102,8 +104,7 @@ fi
 #rm -f *readcounts*$basef.*tmp
 
 rm -f *readcounts*$basef.*temp
-echo -n "done readcount generation "
-date
+echo -e "$(date)\t$scriptname\tdone readcount generation "
 END2=$(date +%s)
 diff=$(( END2 - START1 ))
-echo " readcount generation took $diff"
+echo -e "$(date)\t$scriptname\treadcount generation took $diff"

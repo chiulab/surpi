@@ -38,18 +38,18 @@ cores=$3
 free_cache_cutoff=$4
 SNAP_d_cutoff=$5
 ###
+scriptname=${0##*/}
 
-echo -n "starting: "
-date
+echo -e "$(date)\t$scriptname\tstarting"
 START1=$(date +%s)
 
-echo "Found file $inputfile"
+echo -e "$(date)\t$scriptname\tFound file $inputfile"
 nopathf=${inputfile##*/} # remove the path to file
-echo "After removing path: $nopathf"
+echo -e "$(date)\t$scriptname\tAfter removing path: $nopathf"
 basef=${nopathf%.fastq} # remove FASTQextension
-echo "After removing FASTQ extension: $basef"
+echo -e "$(date)\t$scriptname\tAfter removing FASTQ extension: $basef"
 
-echo "Mapping $basef to NT..."
+echo -e "$(date)\t$scriptname\tMapping $basef to NT..."
 
 rm -f $basef.prev.sam
 rm -f $basef.tmp.sam
@@ -60,16 +60,15 @@ counter=0
 
 for snap_index in $SNAP_NT_index_directory/* ; do
 	freemem=`free -g | awk '{print $4}' | head -n 2 | tail -1 | more`
-	echo "There is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
+	echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
 	if [ $freemem -lt $free_cache_cutoff ]
 	then
-		echo "Clearing cache..."
+		echo -e "$(date)\t$scriptname\tClearing cache..."
 		dropcache
 	fi
 	nopathsnap_index=${snap_index##*/} # remove the path to file
-	echo "Found $snap_index ... processing ..."
-	echo -n "starting: "
-	date
+	echo -e "$(date)\t$scriptname\tFound $snap_index ... processing ..."
+	echo -n -e "$(date)\t$scriptname\tstarting: "
 	START2=$(date +%s)
 
 ######################## RUN SNAP ##########################
@@ -93,10 +92,9 @@ for snap_index in $SNAP_NT_index_directory/* ; do
     
 	END2=$(date +%s)
 
-	echo -n "Done with $snap_index "
-	date
+	echo -e "$(date)\t$scriptname\tDone with $snap_index "
 	diff=$(( $END2 - $START2 ))
-	echo "Mapping of $snap_index took $diff seconds"
+	echo -e "$(date)\t$scriptname\tMapping of $snap_index took $diff seconds"
 done
 
 # need to restore the hits
@@ -105,11 +103,9 @@ update_sam.py $basef.prev.sam $basef.NT.sam
 rm -f $basef.tmp.sam
 rm -f $basef.tmp.fastq
 rm -f $basef.prev.sam
-#convertSam2Fastq.sh $basef.NT.sam
 
 END1=$(date +%s)
-echo -n "Done with SNAP_NT "
-date
+echo -e "$(date)\t$scriptname\tDone with SNAP_NT "
 diff=$(( $END1 - $START1 ))
-echo "output written to $basef.NT.sam"
-echo "SNAP_NT took $diff seconds"
+echo -e "$(date)\t$scriptname\toutput written to $basef.NT.sam"
+echo -e "$(date)\t$scriptname\tSNAP_NT took $diff seconds"

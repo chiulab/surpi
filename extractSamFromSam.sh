@@ -24,26 +24,26 @@ baseg=$2
 output_file=$3
 cores=$4
 ###
+scriptname=${0##*/}
 
-echo -n "starting: "
-date
+echo -e "$(date)\t$scriptname\tstarting: "
 START1=$(date +%s)
 
 if [ $# -lt 4 ]; then  # using 1 core only
-    echo "extracting reads from "$baseg" using headers from "$basef...
+    echo -e "$(date)\t$scriptname\textracting reads from $baseg using headers from $basef..."
     # associative array for lookup
     awk 'FNR==NR { a[$1]=$1; next} $1 in a {print $0}' "$basef" "$baseg" > $output_file
-    echo "done"
+    echo -e "$(date)\t$scriptname\tdone"
 else
 # splitting input SAM header file by number of cores
-    echo "splitting $basef..."
+    echo -e "$(date)\t$scriptname\tsplitting $basef..."
     let "numlines = `wc -l basef | awk '{print $1}'`"
     let "LinesPerCore = numlines / $cores"
-    echo "will use $cores cores with $LinesPerCore entries per core"
+    echo -e "$(date)\t$scriptname\twill use $cores cores with $LinesPerCore entries per core"
     
     split -l $LinesPerCore $basef
 
-    echo "extracting reads from "$baseg" using headers from "$basef
+    echo -e "$(date)\t$scriptname\textracting reads from $baseg using headers from $basef"
     rm -f $output_file  # delete previous output file, if present
 
     for f in `ls x??`
@@ -54,15 +54,14 @@ else
 
     for job in `jobs -p`
     do
-	wait $job
+		wait $job
     done
 
-    echo "done extracting reads for each chunk"
+    echo -e "$(date)\t$scriptname\tdone extracting reads for each chunk"
     rm -f x??
 fi
 
 END1=$(date +%s)
-echo -n "Done with extractSamFromSam.sh"
-date
+echo -e "$(date)\t$scriptname\tDone with extractSamFromSam.sh"
 diff=$(( $END1 - $START1 ))
-echo "extractSamFromSam.sh took $diff seconds"
+echo -e "$(date)\t$scriptname\textractSamFromSam.sh took $diff seconds"

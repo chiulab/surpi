@@ -16,12 +16,13 @@ if [ $# -lt 1 ]; then
     echo "Usage: fastq-extractBarcodedSRA.sh <SRA file>"
     exit
 fi
+scriptname=${0##*/}
 
 # 
 # gets absolute path to SRA file
 #
 SRA_PATH=$(readlink -e $1)
-echo "Extracting individually barcoded FASTQ files from "$SRA_PATH
+echo -e "$(date)\t$scriptname\tExtracting individually barcoded FASTQ files from $SRA_PATH"
 #
 # extract SRA to FASTQ files
 fastq-dump --split-files -G $SRA_PATH
@@ -36,7 +37,7 @@ for f in "${files[@]}"
 do 
     barcode=$(echo "$f" | sed 's/_[12]//g' | sed 's/.fastq//g' | sed 's/.*_//g')
     readnum=$(echo "$f" | sed 's/.*_\([12]\).fastq/\1/g' | sed '/'$header'/d')
-    echo "Restoring barcode #"$barcode" and R1/R2 designation to "$f
+    echo -e "$(date)\t$scriptname\tRestoring barcode # $barcode and R1/R2 designation to $f"
     OUTPUTF=$(echo "$f" | sed 's/^/bc/g')
     if [ "$readnum" = "1" ] || [ "$readnum" = "2" ]
     then

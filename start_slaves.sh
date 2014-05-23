@@ -32,6 +32,7 @@ availability_zone=$6
 file_with_slave_ips=$7
 placement_group=$8
 ###
+scriptname=${0##*/}
 
 #This is the time (in seconds) this script waits after starting up the AWS machines. 
 #It allows the instances time to start up. In practice, 120s appears to be sufficient.
@@ -92,12 +93,12 @@ result=$(	ec2-run-instances $ami_id \
 				-b /dev/xvdb=ephemeral0 -b /dev/xvdc=ephemeral1 \
 				| egrep ^INSTANCE | cut -f2 )
 
-echo "---------------------------"
-echo "Instance ids"
-echo "$result"
-echo "---------------------------"
+echo -e "$(date)\t$scriptname\t---------------------------"
+echo -e "$(date)\t$scriptname\tInstance ids"
+echo -e "$(date)\t$scriptname\t$result"
+echo -e "$(date)\t$scriptname\t---------------------------"
 #give AWS some time to start up the slaves
-echo "Waiting $WAIT_TIME seconds for slaves to start up..."
+echo -e "$(date)\t$scriptname\tWaiting $WAIT_TIME seconds for slaves to start up..."
 # sleep $WAIT_TIME
 for i in $(seq 1 $WAIT_TIME)
 do
@@ -119,12 +120,12 @@ COUNTER=0
 for instance_id in $result
 do
 	touch slave.$COUNTER.log
-	echo "---------------------------" >> slave.$COUNTER.log 2>&1
-	echo "instance $COUNTER: $instance_id" >> slave.$COUNTER.log 2>&1
-	echo "---------------------------" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\t---------------------------" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tinstance $COUNTER: $instance_id" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\t---------------------------" >> slave.$COUNTER.log 2>&1
 
 	# wait for the instance to be fully operational
-	echo -n "Waiting for instance to start running..." >> slave.$COUNTER.log 2>&1
+	echo -n -e "$(date)\t$scriptname\tWaiting for instance to start running..." >> slave.$COUNTER.log 2>&1
 	while host=$(ec2-describe-instances "$instance_id" | egrep ^INSTANCE | cut -f4) && test -z $host; do echo -n . >> slave.$COUNTER.log 2>&1; sleep 1; done
 # 	echo >> slave.$COUNTER.log 2>&1
 	while true; do
@@ -132,26 +133,26 @@ do
 		# get private dns
 		SLAVE_HOST=`ec2-describe-instances $instance_id | grep running | awk '{print $5}'`
 		if [ ! -z $SLAVE_HOST ]; then
-			echo "Started as $SLAVE_HOST" >> slave.$COUNTER.log 2>&1
+			echo -e "$(date)\t$scriptname\tStarted as $SLAVE_HOST" >> slave.$COUNTER.log 2>&1
 			break;
 		fi
 		sleep 1
 	done
 
 	#remove this line before release.
-	echo "ssh -l ubuntu -i /Users/sfederman/.ssh/surpi.pem $host" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tssh -l ubuntu -i /Users/sfederman/.ssh/surpi.pem $host" >> slave.$COUNTER.log 2>&1
 
-	echo "Running with host=$host" >> slave.$COUNTER.log 2>&1
-	echo -n "Verifying ssh connection to $host..." >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tRunning with host=$host" >> slave.$COUNTER.log 2>&1
+	echo -n -e "$(date)\t$scriptname\tVerifying ssh connection to $host..." >> slave.$COUNTER.log 2>&1
 	while ssh -o StrictHostKeyChecking=no -q -i $pemkey ubuntu@$host true && test; do echo -n . >> slave.$COUNTER.log 2>&1; sleep 1; done
 	echo >> slave.$COUNTER.log 2>&1
-	echo "Attaching EBS ${ebs_volumes[$COUNTER]} to $instance_id" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tAttaching EBS ${ebs_volumes[$COUNTER]} to $instance_id" >> slave.$COUNTER.log 2>&1
 	attached=$(ec2-attach-volume -d /dev/sdf -i $instance_id ${ebs_volumes[$COUNTER]})
 
-	echo $attached >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\t$attached" >> slave.$COUNTER.log 2>&1
 	#verify $attached here to verify that EBS was attached
 	
-	echo "connecting and running $slave_script script..." >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tconnecting and running $slave_script script..." >> slave.$COUNTER.log 2>&1
 	ssh -o StrictHostKeyChecking=no -i $pemkey ubuntu@$host "/home/ubuntu/$slave_script" >> slave.$COUNTER.log 2>&1 &
 	let COUNTER=COUNTER+1
 done

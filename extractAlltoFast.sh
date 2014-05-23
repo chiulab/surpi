@@ -28,13 +28,14 @@ parentfile_type=$4
 outputfile=$5
 output_format=$6
 ###
+scriptname=${0##*/}
 
-echo "prepare $inputfile_type file"
+echo -e "$(date)\t$scriptname\tprepare $inputfile_type file"
 
 if [ $inputfile_type = BLASTN ]
 then
 	awk '{print$1}' $inputfile > $inputfile.header
-	echo "uniqued blastn file, replaced beginning with @"
+	echo -e "$(date)\t$scriptname\tuniqued blastn file, replaced beginning with @"
 	
 	if [ $parentfile_type = FASTA ]
 	then
@@ -55,7 +56,7 @@ then
 elif [ $inputfile_type = FASTA ]
 then
 	grep ">" $inputfile | sed 's/>//g' > $inputfile.header
-	echo "Done preparing input Fasta file "
+	echo -e "$(date)\t$scriptname\tDone preparing input Fasta file "
 
 	if [ $parentfile_type = FASTA ]
 	then   
@@ -76,7 +77,7 @@ then
 elif [ $inputfile_type = FASTQ ]
 then
 	grep "^@" $inputfile | sed 's/@//g' > $inputfile.header
-	echo "Done preparing input Fastq file "
+	echo -e "$(date)\t$scriptname\tDone preparing input Fastq file"
 
 	if [ $parentfile_type = FASTA ]
 	then

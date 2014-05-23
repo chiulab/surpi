@@ -12,20 +12,21 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014    
+# Last revised 5/20/2014    
 
 if [ $# -lt 5 ]; then
     echo "Usage: <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"    
     echo "not uniquing Blastn anymore 9/13/13 given a fasta file and the GI or FASTA of the reference to assemble to -> makes an assembly.  blastn e value in 1e-8 format . jedi has 16 cores available"
     exit
 fi
+scriptname=${0##*/}
 
 plot_log="B" # set coveragePlotLog.py to display both log and linear plots
 
 if [ $3 != "FA" ]
 then
 	get_genbankfasta.pl $2 > $3.$2.fasta
-	echo "Reference fasta retrieved from genbank"
+	echo -e "$(date)\t$scriptname\tReference fasta retrieved from genbank"
 	formatdb -p F -i $3.$2.fasta
 fi
 
@@ -38,8 +39,8 @@ fi
 ###### split query ####
 let "numreads = `grep -c ">" $1`" ###
 let "numreadspercore = numreads / $5" ###
-echo "number of read $numreads"
-echo "number of reads per core $numreadspercore"
+echo -e "$(date)\t$scriptname\tnumber of read $numreads"
+echo -e "$(date)\t$scriptname\tnumber of reads per core $numreadspercore"
 if [ $numreadspercore = 0 ]
 then
 	split_fasta.pl -i $1 -o $1 -n 1
@@ -47,7 +48,7 @@ else
 	split_fasta.pl -i $1 -o $1 -n $numreadspercore
 fi
 
-echo "Blasting fasta file against reference "
+echo -e "$(date)\t$scriptname\tBlasting fasta file against reference "
 for f in $1_* ; do
 	blastall -p blastn -m 8 -a 1 -b 1 -K 1 -d $3.$2.fasta -i $f -o $f.$2.$3.$4.blastn -e $4 >& $f.$2.$3.$4.error &
 done
@@ -58,30 +59,30 @@ done
 
 cat $1*.$2.$3.$4.blastn > $1.$2.$3.$4.Blastn
 
-uniq_blastn_nopipes.csh $1.$2.$3.$4.Blastn  
+uniq_blastn_nopipes.sh $1.$2.$3.$4.Blastn  
 extractAlltoFast.sh $1.$2.$3.$4.Blastn.uniq BLASTN $1 FASTA $1.$2.$3.$4.Blastn.uniq.ex.fa FASTA
 
 ####figuring out length of sequence in gi#######
 
 let "gilength = `sed '/>/d' $3.$2.fasta | awk 'BEGIN{FS=""}{for(i=1;i<=NF;i++)c++}END{print c}'`"         ##from internets http://stackoverflow.com/questions/5026214/counting-number-of-characters-in-a-file-through-shell-script
-echo "Reference sequence length = $gilength bp"
+echo -e "$(date)\t$scriptname\tReference sequence length = $gilength bp"
 mapPerfectBLASTtoGenome.py $1.$2.$3.$4.Blastn $1.$2.$3.$4.map $gilength
-echo "Done mapping to reference"
+echo -e "$(date)\t$scriptname\tDone mapping to reference"
 
 #####
 let "notcoverage = `awk '{print$2}' $1.$2.$3.$4.map | grep -c "^0$"`"
 #echo "Number of bp not covered = $notcoverage"
 
 let "coverage = $gilength - $notcoverage"
-echo "Number of bp covered = $coverage bp"
-echo -n "%Coverage = "
+echo -e "$(date)\t$scriptname\tNumber of bp covered = $coverage bp"
+echo -e -n "$(date)\t$scriptname\t%Coverage = "
 echo "scale=6;100*$coverage/$gilength" | bc
 
 let "sumofcolumntwo = `awk '{print$2}' $1.$2.$3.$4.map | awk '{sum += $1} END{print sum}'`"
-echo -n "Average depth of coverage (x) = " 
+echo -e -n "$(date)\t$scriptname\tAverage depth of coverage (x) = " 
 echo "scale=6;$sumofcolumntwo/$gilength" | bc
 let "numberBlastnReads = `egrep -c "^SCS|^HWI|gi|^M00|^kmer|^SRR" $1.$2.$3.$4.Blastn.uniq`"
-echo "Number of reads contributing to assembly  $numberBlastnReads"
+echo -e "$(date)\t$scriptname\tNumber of reads contributing to assembly  $numberBlastnReads"
 
 #####generating report#########
 echo "mapping $1" > $1.$2.$3.$4.report

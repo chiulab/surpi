@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 5/19/2014
 
-SURPI_version="1.0.13" #SURPI version
+SURPI_version="1.0.13"
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
@@ -682,10 +682,10 @@ curdate=$(date)
 # tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ###########################################################
-echo "#################### STARTING SURPI PIPELINE ##################"
+echo -e "$(date)\t$scriptname\t########## STARTING SURPI PIPELINE ##########"
 START0=$(date +%s)
-echo "Found file $FASTQ_file"
-echo "After removing path: $nopathf"
+echo -e "$(date)\t$scriptname\tFound file $FASTQ_file"
+echo -e "$(date)\t$scriptname\tAfter removing path: $nopathf"
 ############ Start up AWS slave machines ##################
 
 #move below parameters to config file before publishing code
@@ -701,40 +701,36 @@ fi
 ############ PREPROCESSING ##################
 if [ "$preprocess" != "skip" ]
 then
-	echo "############ PREPROCESSING ##################"
-	echo -n "Starting: preprocessing using $cores cores "
-	date
+	echo -e "$(date)\t$scriptname\t############### PREPROCESSING ###############"
+	echo -e "$(date)\t$scriptname\tStarting: preprocessing using $cores cores "
 	START2=$(date +%s)
-	echo "Parameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log"
+	echo -e "$(date)\t$scriptname\tParameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log"
 	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log
-	echo -n "Done: preprocessing "
-	date
+	echo -e "$(date)\t$scriptname\tDone: preprocessing "
 	END2=$(date +%s)
 	diff=$(( END2 - START2 ))
-	echo "$FASTQ_file Preprocessing Took $diff seconds" | tee timing.$basef.log
+	echo -e "$(date)\t$scriptname\t$FASTQ_file Preprocessing Took $diff seconds" | tee timing.$basef.log
 fi
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
-echo "There is $freemem GB available free memory...[cutoff=$cache_reset GB]"
+echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
 if [ "$freemem" -lt "$cache_reset" ]
 then
-	echo "Clearing cache..."
+	echo -e "$(date)\t$scriptname\tClearing cache..."
 	dropcache
 fi
 ############# HUMAN MAPPING #################
 if [ "$human_mapping" != "skip" ]
 then
-	echo "############# SNAP TO HUMAN  #################"
+	echo -e "$(date)\t$scriptname\t############### SNAP TO HUMAN ###############"
 	for d_human in $d_human; do
 		basef_h=${nopathf%.fastq}.preprocessed.s20.h250n25d${d_human}xfu # remove fastq extension
-		echo "Base file: $basef_h"
-		echo -n "Starting: $basef_h human mapping"
-		date
+		echo -e "$(date)\t$scriptname\tBase file: $basef_h"
+		echo -e "$(date)\t$scriptname\tStarting: $basef_h human mapping"
 		START6=$(date +%s)
-		echo "Parameters: snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
+		echo -e "$(date)\t$scriptname\tParameters: snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
 		snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u     
-		echo -n "Done: SNAP to human"
-		date
+		echo -e "$(date)\t$scriptname\tDone: SNAP to human"
 		END6=$(date +%s)
 		diff=$(( END6 - START6 ))
 		echo "$basef.preprocessed.fastq Human mapping Took $diff seconds" | tee -a timing.$basef.log
@@ -743,10 +739,10 @@ then
 fi
 ######dropcache?#############
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
-echo "There is $freemem GB available free memory...[cutoff=$cache_reset GB]"
+echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
 if [ "$freemem" -lt "$cache_reset" ]
 then
-	echo "Clearing cache..."
+	echo -e "$(date)\t$scriptname\tClearing cache..."
 	dropcache
 fi
 ############################# SNAP TO NT ##############################       
@@ -754,12 +750,10 @@ if [ "$alignment" != "skip" ]
 then
 	if [ ! -f $basef.NT.snap.sam ];
 	then
-		echo "############# SNAP UNMATCHED SEQUENCES TO NT #################"
-		echo -n "Calculating number of sequences to analyze using SNAP to NT..."
-		date
+		echo -e "$(date)\t$scriptname\t####### SNAP UNMATCHED SEQUENCES TO NT ######"
+		echo -e -n "$(date)\t$scriptname\tCalculating number of sequences to analyze using SNAP to NT: "
 		echo $(awk 'NR%4==1' "$basef_h".human.snap.unmatched.fastq | wc -l)
-		echo -n "Starting: Mapping  by SNAP to NT from $basef_h.human.snap.unmatched.fastq"
-		date
+		echo -e "$(date)\t$scriptname\tStarting: Mapping  by SNAP to NT from $basef_h.human.snap.unmatched.fastq"
 		START11=$(date +%s)
 		# SNAP to NT for unmatched reads (d value threshold cutoff = 12)
 
@@ -767,7 +761,7 @@ then
 		then
 			if [ $snap_integrator = "inline" ]
 			then
-				echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human"
+				echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human"
 				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human
 			elif [ $snap_integrator = "end" ]
 			then
@@ -779,51 +773,45 @@ then
 					# transfer data to slave, start SNAP on each slave, and wait for results
 					#check if slave_setup is running before progressing to snap_on_slave.sh
 					#slave_setup should be responsible for verifying that all slaves are properly running.
-					echo -n "Waiting for slave_setup to complete."
+					echo -n -e "$(date)\t$scriptname\tWaiting for slave_setup to complete."
 					while [ ! -f $file_with_slave_ips ]
 					do
 						echo -n "."
 						sleep 2
 					done
 					echo
-					echo "snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_human"
+					echo -e "$(date)\t$scriptname\tParameters: snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_human"
 					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> $basef.AWS.log 2>&1
 					
 				elif [ "$snap_nt_procedure" = "solo" ]
 				then
-					echo "Parameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
+					echo -e "$(date)\t$scriptname\tParameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
 					snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
 				fi
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo "Parameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human"
+			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human"
 			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human
 		fi
 		
-		echo -n "Done:  SNAP to NT"
-		date
+		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
 		END11=$(date +%s)
 		diff=$(( END11 - START11 ))
-		echo "$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" | tee -a timing.$basef.log
+		echo -e "$(date)\t$scriptname\t$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" | tee -a timing.$basef.log
 		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
-	echo -n "Starting: parsing $basef.NT.snap.sam "
-	date
-	echo -n "extract matched/unmatched $basef.NT.snap.sam"
-	date
+	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam "
+	echo -e "$(date)\t$scriptname\textract matched/unmatched $basef.NT.snap.sam"
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 != "*") print }' > $basef.NT.snap.matched.sam
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 == "*") print }' > $basef.NT.snap.unmatched.sam
-	echo -n "convert sam to fastq from $basef.NT.snap.sam "
-	date
-	echo -n "Done: parsing $basef.NT.snap.unmatched.sam  "
-	date
+	echo -e "$(date)\t$scriptname\tconvert sam to fastq from $basef.NT.snap.sam "
+	echo -e "$(date)\t$scriptname\tDone: parsing $basef.NT.snap.unmatched.sam  "
 	if [ ! -f "$basef.NT.snap.matched.all.annotated" ];
 	then
 		## convert to FASTQ and retrieve full-length sequences
-		echo -n "convert to FASTQ and retrieve full-length sequences for SNAP NT matched hits "
-		date
-
+		echo -e "$(date)\t$scriptname\tconvert to FASTQ and retrieve full-length sequences for SNAP NT matched hits"
+		echo -e "$(date)\t$scriptname\tParameters: extractHeaderFromFastq_ncores.sh $cores $basef.cutadapt.fastq $basef.NT.snap.matched.sam $basef.NT.snap.matched.fulllength.fastq $basef.NT.snap.unmatched.sam $basef.NT.snap.unmatched.fulllength.fastq"
 		extractHeaderFromFastq_ncores.sh "$cores" "$basef.cutadapt.fastq" "$basef.NT.snap.matched.sam" "$basef.NT.snap.matched.fulllength.fastq" "$basef.NT.snap.unmatched.sam" "$basef.NT.snap.unmatched.fulllength.fastq"   #SNN140507
 		sort -k1,1 "$basef.NT.snap.matched.sam"  > "$basef.NT.snap.matched.sorted.sam"
 		cut -f1-9 "$basef.NT.snap.matched.sorted.sam" > "$basef.NT.snap.matched.sorted.sam.tmp1"
@@ -831,8 +819,8 @@ then
 		awk '(NR%4==1) {printf("%s\t",$0)} (NR%4==2) {printf("%s\t", $0)} (NR%4==0) {printf("%s\n",$0)}' "$basef.NT.snap.matched.fulllength.fastq" | sort -k1,1 | awk '{print $2 "\t" $3}' > "$basef.NT.snap.matched.fulllength.sequence.txt" #SNN140507 change this to bring in quality lines as well
 		paste "$basef.NT.snap.matched.sorted.sam.tmp1" "$basef.NT.snap.matched.fulllength.sequence.txt" "$basef.NT.snap.matched.sorted.sam.tmp2" > "$basef.NT.snap.matched.fulllength.sam"
 		###retrieve taxonomy matched to NT ###
-		echo -n "taxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
-		date
+		echo -e "$(date)\t$scriptname\ttaxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
+		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory >& $basef.taxonomy.SNAPNT.log"
 		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory >& "$basef.taxonomy.SNAPNT.log"
 		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
@@ -841,7 +829,8 @@ then
 	grep "Viruses;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Viruses.annotated"
 	grep "Bacteria;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Bacteria.annotated"
 	
-	##SNN140507 cleanup bacterial reads 
+	##SNN140507 cleanup bacterial reads
+	echo -e "$(date)\t$scriptname\tParameters: ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory"
 	ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory #SNN140507
 	
 	if [ $run_mode = "Comprehensive" ]
@@ -850,19 +839,17 @@ then
 		grep -v "Primates" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Mammalia" > "$basef.NT.snap.matched.fl.nonPrimMammal.annotated"
 		grep -v "Mammalia" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Chordata" > "$basef.NT.snap.matched.fl.nonMammalChordat.annotated"
 		grep -v "Chordata" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Eukaryota" > "$basef.NT.snap.matched.fl.nonChordatEuk.annotated"
-	
-		fi
-	echo "Done taxonomy retrieval"
-	#Table generation
+	fi
+	echo -e "$(date)\t$scriptname\tDone taxonomy retrieval"
+	echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.NT.snap.matched.fl.Viruses.annotated SNAP Y Y Y Y>& $basef.table_generator_snap.matched.fl.log"
 	table_generator.sh "$basef.NT.snap.matched.fl.Viruses.annotated" SNAP Y Y Y Y>& "$basef.table_generator_snap.matched.fl.log"
 	if [ $run_mode = "Comprehensive" ]
 	then
 		### convert to FASTQ and retrieve full-length sequences to add to unmatched SNAP for viral RAPSearch###
 		egrep -v "^@" "$basef.NT.snap.matched.fl.Viruses.annotated" | awk '{if($3 != "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef.NT.snap.matched.fl.Viruses.annotated" | sed 's/\(.*\)\..*/\1/').fastq
-		echo -n "Done: convert to FASTQ and retrieve full-length sequences for SNAP NT hits "
+		echo -e "$(date)\t$scriptname\tDone: convert to FASTQ and retrieve full-length sequences for SNAP NT hits "
 	fi
-	date
-	echo "############# SORTING unmatched to NT BY LENGTH AND UNIQ AND LOOKUP ORIGINAL SEQUENCES  #################"
+	echo -e "$(date)\t$scriptname\t############# SORTING unmatched to NT BY LENGTH AND UNIQ AND LOOKUP ORIGINAL SEQUENCES  #################"
 	if [ $run_mode = "Comprehensive" ]
 	then
 		#SNN 140507 extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fastq" FASTQ "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.fulllength.fastq"
@@ -871,16 +858,16 @@ then
 	cat "$basef.NT.snap.unmatched.fulllength.fasta" | perl -e 'while (<>) {$h=$_; $s=<>; $seqs{$h}=$s;} foreach $header (reverse sort {length($seqs{$a}) <=> length($seqs{$b})} keys %seqs) {print $header.$seqs{$header}}' > $basef.NT.snap.unmatched.fulllength.sorted.fasta
 	if [ $run_mode = "Comprehensive" ]
 	then
-		echo "we will be using 50 as the length of the cropped read for removing unique and low-complexity reads"
+		echo -e "$(date)\t$scriptname\twe will be using 50 as the length of the cropped read for removing unique and low-complexity reads"
+		echo -e "$(date)\t$scriptname\tParameters: crop_reads.csh $basef.NT.snap.unmatched.fulllength.sorted.fasta 25 50 > $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
 		crop_reads.csh "$basef.NT.snap.unmatched.fulllength.sorted.fasta" 25 50 > "$basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
-		echo "*** reads cropped ***"
+		echo -e "$(date)\t$scriptname\t*** reads cropped ***"
+		echo -e "$(date)\t$scriptname\tParameters: gt sequniq -seqit -force -o $basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
 		gt sequniq -seqit -force -o "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" "$basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta"
-#SNN140507              extractHeaderFromFastq.csh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.cutadapt.fastq" "$basef.NT.snap.unmatched.uniq.fl.fastq"
-#SNN140507             sed "n;n;n;d" "$basef.NT.snap.unmatched.uniq.fl.fastq" | sed "n;n;d" | sed "s/^@/>/g" > "$basef.NT.snap.unmatched.uniq.fl.fasta"
-      	 extractAlltoFast.sh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.NT.snap.unmatched.fulllength.fasta" FASTA "$basef.NT.snap.unmatched.uniq.fl.fasta" FASTA #SNN140507
-
+		echo -e "$(date)\t$scriptname\tParameters: extractAlltoFast.sh $basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta FASTA $basef.NT.snap.unmatched.fulllength.fasta FASTA $basef.NT.snap.unmatched.uniq.fl.fasta FASTA"
+		extractAlltoFast.sh "$basef.NT.snap.unmatched.fulllength.sorted.cropped.uniq.fasta" FASTA "$basef.NT.snap.unmatched.fulllength.fasta" FASTA "$basef.NT.snap.unmatched.uniq.fl.fasta" FASTA #SNN140507
 	fi
-	echo " Done uniquing full length sequences of unmatched to NT "
+	echo -e "$(date)\t$scriptname\tDone uniquing full length sequences of unmatched to NT"
 fi
 curdate=$(date)
 # tweet.pl "Finished SNAP mapping on $host: $FASTQ_file ($curdate) ($scriptname)"
@@ -888,18 +875,17 @@ curdate=$(date)
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
 then
-	echo "############# Running ABYSS and Minimus #################"
-	echo -n "Starting assembly process "
-	date
+	echo -e "$(date)\t$scriptname\t######### Running ABYSS and Minimus #########"
+	echo -e "$(date)\t$scriptname\tStarting assembly process "
 	START40=$(date +%s)
-	echo " adding matched viruses to NT unmatched" 
+	echo -e "$(date)\t$scriptname\tadding matched viruses to NT unmatched" 
 	sed "n;n;n;d" "$basef.NT.snap.matched.fl.Viruses.fastq" | sed "n;n;d" | sed "s/^@/>/g" | sed 's/>/>Vir/g' > "$basef.NT.snap.matched.fl.Viruses.fasta"
 	gt sequniq -seqit -force -o "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" "$basef.NT.snap.matched.fl.Viruses.fasta"
 	cat "$basef.NT.snap.unmatched.uniq.fl.fasta" "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" > "$basef.NT.snap.unmatched_addVir_uniq.fasta"
 	echo "starting deNovo assembly"
+	echo -e "$(date)\t$scriptname\tParameters: abyss_minimus.sh $basef.NT.snap.unmatched_addVir_uniq.fasta $length $contigcutoff $cores $abysskmer"
 	abyss_minimus.sh "$basef.NT.snap.unmatched_addVir_uniq.fasta" "$length" "$contigcutoff" "$cores" "$abysskmer"
-	echo -n "Completed deNovo assembly: generated all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa"
-	date
+	echo -e "$(date)\t$scriptname\tCompleted deNovo assembly: generated all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa"
 	END40=$(date +%s)
 	diff=$(( END40 - START40 ))
 fi
@@ -911,75 +897,75 @@ then
 	then
 		if [ -f "$basef.NT.snap.unmatched.uniq.fl.fasta" ]
 		then
-			echo "############# RAPSearch to ${RAPSearch_VIRUS_db} ON NT-UNMATCHED SEQUENCES #################"
+			echo -e "$(date)\t$scriptname\t############# RAPSearch to ${RAPSearch_VIRUS_db} ON NT-UNMATCHED SEQUENCES #################"
 			dropcache
-			echo -n "Starting: RAPSearch $basef.NT.snap.unmatched.uniq.fl.fasta "
-			date
+			echo -e "$(date)\t$scriptname\tStarting: RAPSearch $basef.NT.snap.unmatched.uniq.fl.fasta "
 			START14=$(date +%s)
-			echo "rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
+			echo -e "$(date)\t$scriptname\tParameters: rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
 			rapsearch -q "$basef.NT.snap.unmatched.uniq.fl.fasta" -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir} -z "$cores" -e "$ecutoff_Vir" -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log
-			echo -n "Done RAPSearch: "
-			date
+			echo -e "$(date)\t$scriptname\tDone RAPSearch"
 			END14=$(date +%s)
 			diff=$(( END14 - START14 ))
-			echo "RAPSearch to Vir Took $diff seconds"
-			echo -n "Starting: add FASTA sequences to RAPSearch m8 output file "
-			date
+			echo -e "$(date)\t$scriptname\tRAPSearch to Vir Took $diff seconds"
+			echo -e "$(date)\t$scriptname\tStarting: add FASTA sequences to RAPSearch m8 output file "
 			START15=$(date +%s)
 			sed -i '/^#/d' $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8
 			seqtk subseq $basef.NT.snap.unmatched.uniq.fl.fasta $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8 > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta
 
 			sed '/>/d' $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta >  $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta.seq
 			paste $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8 $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta.seq > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8
+			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores $taxonomy_db_directory"
 			taxonomy_lookup.pl $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.all.annotated $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated
-	
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y"
 			table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y
-			echo -n "Done: converting RAPSearch Vir output to fasta "
-			date
+			echo -e "$(date)\t$scriptname\tDone: converting RAPSearch Vir output to fasta"
 			END15=$(date +%s)
 			diff=$(( END15 - START15 ))
-			echo "converting RAPSearch Vir output to fasta sequences Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tconverting RAPSearch Vir output to fasta sequences Took $diff seconds" | tee -a timing.$basef.log
 			cat "$basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta" "all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa" > "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta"
 		else
-			echo "Cannot run viral RAPSearch - necessary input file ($basef.$rapsearch_database.RAPSearch.e$ecutoff_Vir.m8) does not exist"
-			echo "concatenating RAPSearchvirus output and Contigs"
+			echo -e "$(date)\t$scriptname\tCannot run viral RAPSearch - necessary input file ($basef.$rapsearch_database.RAPSearch.e$ecutoff_Vir.m8) does not exist"
+			echo -e "$(date)\t$scriptname\tconcatenating RAPSearchvirus output and Contigs"
 		fi
-		echo "############# Cleanup RAPSearch Vir by RAPSearch to NR #################"
+		echo -e "$(date)\t$scriptname\t############# Cleanup RAPSearch Vir by RAPSearch to NR #################"
 		if [ -f $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta ]
 		then
-			echo -n "Starting: RAPSearch to $RAPSearch_NR_db of $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta :"
-			date
+			echo -e "$(date)\t$scriptname\tStarting: RAPSearch to $RAPSearch_NR_db of $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta :"
 			START16=$(date +%s)
+			echo -e "$(date)\t$scriptname\tParameters: rapsearch -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
 			rapsearch -q $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
-			echo "rapsearch to nr done"
+			echo -e "$(date)\t$scriptname\trapsearch to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8
-			echo "removed extra #"
+			echo -e "$(date)\t$scriptname\tremoved extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
-			echo -n "Starting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}  :"
-			date
+			echo -e "$(date)\t$scriptname\t$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tStarting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}"
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8  > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta
-			echo " $(date) retrieved sequences"
+			echo -e "$(date)\t$scriptname\tretrieved sequences"
 			cat $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta | awk '{if (substr($0,1,1)==">"){if (p){print "\n";} print $0} else printf("%s",$0);p++;}END{print "\n"}' | sed '/^$/d' | sed '/>/d' > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta.seq
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e$ecutoff_Vir.NR.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8
-			echo "made addseq file $(date)"
-			echo "############# RAPSearch Taxonomy $(date)"
+			echo -e "$(date)\t$scriptname\tmade addseq file"
+			echo -e "$(date)\t$scriptname\t############# RAPSearch Taxonomy"
+			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory"
 			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
-			echo "retrieved taxonomy"
+			echo -e "$(date)\t$scriptname\tretrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated
 			egrep "^contig" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.NR.RAPSearch.e${ecutoff_NR}.annotated
-			echo "extracted RAPSearch taxonomy $(date) "
-			echo "Starting Readcount table $(date)"
+			echo -e "$(date)\t$scriptname\textracted RAPSearch taxonomy"
+			echo -e "$(date)\t$scriptname\tStarting Readcount table"
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated RAP Y Y Y Y"
 			table_generator.sh $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated RAP Y Y Y Y
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.Contigs.NR.RAPSearch.e${ecutoff_NR}.annotated RAP Y Y Y Y"
 			table_generator.sh $basef.Contigs.NR.RAPSearch.e${ecutoff_NR}.annotated RAP Y Y Y Y
 			#allow contigs to be incorporated into coverage maps by making contig barcodes the same as non-contig barcodes (removing the @)
 			sed 's/@//g' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc
-			echo "making coverage maps"
+			echo -e "$(date)\t$scriptname\tmaking coverage maps"
 			# coverage_generator_bp.sh (divides each fasta file into $cores cores then runs BLASTn using one core each.
+			echo -e "$(date)\t$scriptname\tParameters: coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn $cores 10 1 $basef"
 			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn $cores 10 1 $basef
 
 			awk '{print$1}'  $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header
@@ -989,75 +975,76 @@ then
 			rm -r $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
 			split -l 400 -a 6 $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.header $basef.not.in.NR.
 			for f in $basef.not.in.NR.[a-z][a-z][a-z][a-z][a-z][a-z]
-			do grep  -f "$f" $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated > $f.annotated
+			do grep -f "$f" $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated > $f.annotated
 			done
 			cat $basef.not.in.NR.[a-z][a-z][a-z][a-z][a-z][a-z].annotated > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.annotated
 			rm -r $basef.not.in.NR.[a-z][a-z][a-z][a-z][a-z][a-z]
 			rm -r $basef.not.in.NR.[a-z][a-z][a-z][a-z][a-z][a-z].annotated
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.annotated RAP N Y N N"
 			table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.annotated RAP N Y N N
-			
-		
+
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo "RAPSearch seq retrieval, taxonomy and readcount Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and readcount Took $diff seconds" | tee -a timing.$basef.log
 		else
-			echo "Cannot run RAPSearch to NR - necessary input file ($basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta) does not exist"
+			echo -e "$(date)\t$scriptname\tCannot run RAPSearch to NR - necessary input file ($basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta) does not exist"
 		fi
 	fi
 	##################RAPSearch to NR #######
 	if [ "$rapsearch_database" == "NR" ]
 	then
-		echo "#################### RAPSearch to NR ###########"
+		echo -e "$(date)\t$scriptname\t#################### RAPSearch to NR ###########"
 		cat "$basef.NT.snap.unmatched.uniq.fl.fasta" "all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa" > "$basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 		if [ -f $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta ]
 		then
-			echo "############# RAPSearch to NR #################"
-			echo -n "Starting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
-			date
+			echo -e "$(date)\t$scriptname\t############# RAPSearch to NR #################"
+			echo -e "$(date)\t$scriptname\tStarting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			START16=$(date +%s)
+			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
 			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
-			echo "rapsearch  to nr done"
+			echo -e "$(date)\t$scriptname\trapsearch  to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8
-			echo "removed extra #"
+			echo -e "$(date)\t$scriptname\tremoved extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
-			echo -n "Starting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}"
-			date
+			echo -e "$(date)\t$scriptname\t$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tStarting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}"
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta
-			echo " $(date) retrieved sequences"
+			echo -e "$(date)\t$scriptname\tretrieved sequences"
 			sed '/>/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8
-			echo "made addseq file $(date)"
-			echo "############# RAPSearch Taxonomy $(date)"
+			echo -e "$(date)\t$scriptname\tmade addseq file"
+			echo -e "$(date)\t$scriptname\t############# RAPSearch Taxonomy"
+			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory"
 			taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated
-			echo "retrieved taxonomy"
+			echo -e "$(date)\t$scriptname\tretrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated
 			egrep "^contig" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated 
-			echo "extracted RAPSearch taxonomy $(date) "
-			echo "Starting Readcount table $(date)"
+			echo -e "$(date)\t$scriptname\textracted RAPSearch taxonomy"
+			echo -e "$(date)\t$scriptname\tStarting Readcount table"
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated RAP Y Y Y Y"
 			table_generator.sh $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated RAP Y Y Y Y
 			grep -v Viruses $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.noVir.annotated
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.noVir.annotated RAP N Y N N"
 			table_generator.sh $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.noVir.annotated RAP N Y N N
 			sed 's/@//g' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated.bar.inc
-			echo "making coverage maps"
-			
+			echo -e "$(date)\t$scriptname\tmaking coverage maps"
+			echo -e "$(date)\t$scriptname\tParameters: coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn 10 10 1 $basef"
 			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn 10 10 1 $basef
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo "RAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds" | tee -a timing.$basef.log
 		else
-			echo "Cannot run RAPSearch to NR - necessary input file ($basef.Contigs.NT.snap.unmatched.uniq.fl.fasta) does not exist"
+			echo -e "$(date)\t$scriptname\tCannot run RAPSearch to NR - necessary input file ($basef.Contigs.NT.snap.unmatched.uniq.fl.fasta) does not exist"
 		fi
 	fi
 	dropcache
 fi
 
 ############################# OUTPUT FINAL COUNTS ##############################       
-echo -n " Starting: generating readcounts.$basef.log report"
-date
+echo -e "$(date)\t$scriptname\tStarting: generating readcounts.$basef.log report"
 START17=$(date +%s)
 
 headerid_top=$(head -1 $basef.fastq | cut -c1-4)
@@ -1068,23 +1055,22 @@ if [ "$headerid_top" == "$headerid_bottom" ]
 # We should adjust this code to check that all headers are unique, rather than just the first and last
 then
 	headerid=$(head -1 $basef.fastq | cut -c1-4 | sed 's/@//g')
-	echo " headerid_top $headerid_top = headerid_bottom $headerid_bottom and headerid = $headerid"
-	readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated  
-	echo -n " Done: generating readcounts.$basef.log report"
-	date
+	echo -e "$(date)\t$scriptname\theaderid_top $headerid_top = headerid_bottom $headerid_bottom and headerid = $headerid"
+	echo -e "$(date)\t$scriptname\tParameters: readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated"
+	readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated
+	echo -e "$(date)\t$scriptname\tDone: generating readcounts.$basef.log report"
 	END17=$(date +%s)
 	diff=$(( END17 - START17 ))
-	echo "Generating read count report Took $diff seconds" | tee -a timing.$basef.log
+	echo -e "$(date)\t$scriptname\tGenerating read count report Took $diff seconds" | tee -a timing.$basef.log
 else
-	echo "readcount.sh aborted due to non-unique header id"
+	echo -e "$(date)\t$scriptname\treadcount.sh aborted due to non-unique header id"
 fi
 
-echo "#################### SURPI PIPELINE COMPLETE ##################"
+echo -e "$(date)\t$scriptname\t#################### SURPI PIPELINE COMPLETE ##################"
 END0=$(date +%s)
-echo -n "Done: "
-date
+echo -e "$(date)\t$scriptname\tDone: "
 diff=$(( END0 - START0 ))
-echo "Total run time of pipeline Took $diff seconds" | tee -a timing.$basef.log
+echo -e "$(date)\t$scriptname\tTotal run time of pipeline Took $diff seconds" | tee -a timing.$basef.log
 
 echo "Script and Parameters = $0 $@ " > $basef.pipeline_parameters.log
 echo "Raw Read quality = $quality" >> $basef.pipeline_parameters.log
@@ -1125,7 +1111,7 @@ mv $basef.NT.snap.sam $dataset_folder
 mv $basef.NT.snap.matched.fulllength.sam $dataset_folder
 mv $basef.NT.snap.matched.fulllength.fastq $dataset_folder
 mv $basef.NT.snap.unmatched.fulllength.fastq $dataset_folder
-mv $basef.NT.snap.unmatched.uniq.fl.fastq $dataset_folder
+if [ -e $basef.NT.snap.unmatched.uniq.fl.fastq ]; then mv $basef.NT.snap.unmatched.uniq.fl.fastq $dataset_folder; fi
 mv $basef.NT.snap.unmatched.fulllength.fasta $dataset_folder
 mv $basef.NT.snap.matched.fl.Viruses.uniq.fasta $dataset_folder
 mv $basef.NT.snap.unmatched_addVir_uniq.fasta $dataset_folder
@@ -1181,8 +1167,8 @@ mv $basef.NT.snap.unmatched.sam $trash_folder
 mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $trash_folder
 mv $basef.NT.snap.matched.sorted.sam $trash_folder
 mv $basef.NT.snap.matched.sorted.sam.tmp2 $trash_folder
-mv $basef.NT.snap.unmatched.fastq $trash_folder
-mv $basef.NT.snap.matched.fastq $trash_folder
+if [ -e $basef.NT.snap.unmatched.fastq ]; then mv $basef.NT.snap.unmatched.fastq $trash_folder; fi
+if [ -e $basef.NT.snap.matched.fastq ]; then mv $basef.NT.snap.matched.fastq $trash_folder; fi
 mv $basef.NT.snap.matched.sorted.sam.tmp1 $trash_folder
 mv $basef.NT.snap.matched.fulllength.sequence.txt $trash_folder
 mv $basef.NT.snap.matched.fulllength.gi.taxonomy $trash_folder

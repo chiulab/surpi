@@ -23,6 +23,7 @@ inputfile_type=$2
 cores=$3
 directory=$4
 ###
+scriptname=${0##*/}
 
 if [ $inputfile_type == "BAC" ]
 then
@@ -43,11 +44,11 @@ crop_reads.csh $inputfile.fakq 10 75 > $inputfile.fakq.crop
 # snap against large ribosomal subunit
 snap single $SNAP_index_Large $inputfile.fakq.crop -o $inputfile.noLargeS.unmatched.sam -t $cores -x -f -h 250 -d 18 -n 200 -F u
 egrep -v "^@" $inputfile.noLargeS.unmatched.sam | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$inputfile".noLargeS.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
-echo "Done: first snap alignment"
+echo -e "$(date)\t$scriptname\tDone: first snap alignment"
 
 # snap against small ribosomal subunit
 snap single $SNAP_index_Small $inputfile.noLargeS.unmatched.fastq -o $inputfile.noSmallS_LargeS.sam -t $cores -h 250 -d 18 -n 200 -F u
-echo "Done: second snap alignment"
+echo -e "$(date)\t$scriptname\tDone: second snap alignment"
 
 # convert snap unmatched to ribo output to header format 
 awk '{print$1}' $inputfile.noSmallS_LargeS.sam | sed '/^@/d' > $inputfile.noSmallS_LargeS.header.sam
@@ -55,7 +56,7 @@ awk '{print$1}' $inputfile.noSmallS_LargeS.sam | sed '/^@/d' > $inputfile.noSmal
 # retrieve reads from original $inputfile 
 
 extractSamFromSam.sh $inputfile.noSmallS_LargeS.header.sam $inputfile $inputfile.noRibo.annotated
-echo "Created $inputfile.noRibo.annotated" 
+echo -e "$(date)\t$scriptname\tCreated $inputfile.noRibo.annotated" 
 table_generator.sh $inputfile.noRibo.annotated SNAP N Y N N 
 
 dropcache

@@ -28,45 +28,40 @@ output="$4"
 queryfile2="$5"
 output2="$6"
 ###
+scriptname=${0##*/}
 
-date=$(date)
-
-echo "$date | Starting splitting $inputfile "
+echo -e "$(date)\t$scriptname\tStarting splitting $inputfile "
 
 #deriving # of lines to split
 headerid=$(head -1 $parentfile | cut -c1-4)
 date=$(date)
-echo "$date | headerid = $headerid"
-echo "$date | Starting grep of FASTQentries"
+echo -e "$(date)\t$scriptname\theaderid = $headerid"
+echo -e "$(date)\t$scriptname\tStarting grep of FASTQentries"
 FASTQentries=$(grep -c "$headerid" $parentfile)
 date=$(date)
-echo "$date | there are $FASTQentries FASTQ entries in $queryfile"
+echo -e "$(date)\t$scriptname\tthere are $FASTQentries FASTQ entries in $queryfile"
 let "numlines = $FASTQentries * 4"
-echo "$date | numlines = $numlines"
+echo -e "$(date)\t$scriptname\tnumlines = $numlines"
 let "FASTQPerCore = $FASTQentries / $cores"
-echo "$date | FASTQPerCore = $FASTQPerCore"
+echo -e "$(date)\t$scriptname\tFASTQPerCore = $FASTQPerCore"
 let "LinesPerCore = $FASTQPerCore * 4"
-echo "$date | LinesPerCore = $LinesPerCore"
+echo -e "$(date)\t$scriptname\tLinesPerCore = $LinesPerCore"
 
 #splitting
-date=$(date)
-echo "$date | splitting $parentfile into $cores parts with prefix $parentfile.SplitXS"
+echo -e "$(date)\t$scriptname\tSplitting $parentfile into $cores parts with prefix $parentfile.SplitXS"
 split -l $LinesPerCore -a 3 $parentfile $parentfile.SplitXS &
 awk '{print$1}' $queryfile > $queryfile.header &
-date=$(date)
-echo "$date | extracting header from $queryfile" &
+echo -e "$(date)\t$scriptname\textracting header from $queryfile" &
 
 for job in `jobs -p`
 do
 	wait $job
 done
 
-date=$(date)
-echo "$date | Done splitting $parentfile into $cores parts with prefix $parentfile.SplitXS, and Done extracting $queryfile.header"
+echo -e "$(date)\t$scriptname\tDone splitting $parentfile into $cores parts with prefix $parentfile.SplitXS, and Done extracting $queryfile.header"
 
 # retrieving fastqs
-date=$(date)
-echo "$date | Starting retrieval of $queryfile headers from each $parentfile subsection"
+echo -e "$(date)\t$scriptname\tStarting retrieval of $queryfile headers from each $parentfile subsection"
 for f in $parentfile.SplitXS[a-z][a-z][a-z]
 do
 	cat $f | fqextract $queryfile.header > $queryfile.$f &
@@ -78,14 +73,12 @@ do
 done
 
 # concatenating split retrieves into output file
-date=$(date)
-echo "$date | Starting concatenation of all $queryfile.$parentfile.SplitXS"
+echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile.$parentfile.SplitXS"
 cat $queryfile.$parentfile.SplitXS[a-z][a-z][a-z] > $output
-date=$(date)
-echo "$date | Done generating $output"
+echo -e "$(date)\t$scriptname\tDone generating $output"
 
 # need to fix this so that there's a conditional trigger of this second query file retrieval
-echo "processing second query file"
+echo -e "$(date)\t$scriptname\tprocessing second query file"
 awk '{print$1}' $queryfile2 > $queryfile2.header
 
 for f in $parentfile.SplitXS[a-z][a-z][a-z]
@@ -98,13 +91,10 @@ do
 	wait $job
 done
 
-date=$(date)
-echo "$date | Done retrieval of $queryfile2 headers from each $parentfile subsection"
-date=$(date)
-echo "$date | Starting concatenation of all $queryfile2.$parentfile.SplitXS"
+echo -e "$(date)\t$scriptname\tDone retrieval of $queryfile2 headers from each $parentfile subsection"
+echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile2.$parentfile.SplitXS"
 cat $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z] > $output2
-date=$(date)
-echo "$date | Done generating $output2"
+echo -e "$(date)\t$scriptname\tDone generating $output2"
 rm -f $queryfile2.header
 rm -f $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z]	
 

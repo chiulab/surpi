@@ -22,7 +22,7 @@ getopts('f:h');
 if ($opt_h) {
 	print <<USAGE;
 	
-create_table.pl
+create_tab_delimited_table.pl
 
 This program will return a simpler version of a SNAP or RAP output file that has been produced via the SURPI pipeline.
 Output file is in the following format:
@@ -32,9 +32,9 @@ Output file is in the following format:
 
 Usage:
 
-create_table.pl -f RAP sample8.Ecutoff1.virus.RAPSearch.annotated.sorted
+create_tab_delimited_table.pl -f RAP sample8.Ecutoff1.virus.RAPSearch.annotated.sorted
 
-create_table.pl -f SNAP sample8.NT.snap.matched.Viruses.sorted
+create_tab_delimited_table.pl -f SNAP sample8.NT.snap.matched.Viruses.sorted
 
 Command Line Switches:
 

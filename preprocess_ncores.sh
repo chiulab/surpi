@@ -32,6 +32,7 @@ start_nt=$9
 crop_length=${10}
 temporary_files_directory=${11}
 ###
+scriptname=${0##*/}
 
 if [ ! -f $inputfile ];
 then
@@ -51,34 +52,32 @@ echo "splitting $inputfile..."
 
 let "numlines = `wc -l $inputfile | awk '{print $1}'`"
 let "FASTQentries = numlines / 4"
-echo "there are $FASTQentries FASTQ entries in $inputfile"
+echo -e "$(date)\t$scriptname\tthere are $FASTQentries FASTQ entries in $inputfile"
 let "LinesPerCore = numlines / $cores"
 let "FASTQperCore = LinesPerCore / 4"
 let "SplitPerCore = FASTQperCore * 4"
-echo "will use $cores cores with $FASTQperCore entries per core"
-echo "quality is $quality"
-echo "uniq is $run_uniq"
-echo "length cutoff is $length_cutoff"
-echo "keep short reads? $keep_short_reads"
-echo "adapter_set is $adapter_set"
-echo "cropping will start at: $start_nt and extend for $crop_length more nt"
+echo -e "$(date)\t$scriptname\twill use $cores cores with $FASTQperCore entries per core"
+echo -e "$(date)\t$scriptname\tquality is $quality"
+echo -e "$(date)\t$scriptname\tuniq is $run_uniq"
+echo -e "$(date)\t$scriptname\tlength cutoff is $length_cutoff"
+echo -e "$(date)\t$scriptname\tkeep short reads? $keep_short_reads"
+echo -e "$(date)\t$scriptname\tadapter_set is $adapter_set"
+echo -e "$(date)\t$scriptname\tcropping will start at: $start_nt and extend for $crop_length more nt"
 
 split -l $SplitPerCore $inputfile
 
 END1=$(date +%s)
-echo -n "Done splitting: "
-echo `date`
+echo -e "$(date)\t$scriptname\tDone splitting: "
 diff=$(( $END1 - $START1 ))
-echo "SPLITTING took $diff seconds"
-echo ""
+echo -e "$(date)\t$scriptname\tSPLITTING took $diff seconds"
 
-echo "running preprocess script for each chunk..."
+echo -e "$(date)\t$scriptname\trunning preprocess script for each chunk..."
 
 for f in `ls x??` 
 do
 	mv $f $f.fastq
-	echo "preprocessing $f.fastq..."
-	echo "preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length >& $f.preprocess.log &"
+	echo -e "$(date)\t$scriptname\tpreprocessing $f.fastq..."
+	echo -e "$(date)\t$scriptname\tpreprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length >& $f.preprocess.log &"
 	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &
 done
 
@@ -87,7 +86,7 @@ do
 	wait $job
 done
 
-echo "done preprocessing for each chunk..."
+echo -e "$(date)\t$scriptname\tdone preprocessing for each chunk..."
 
 nopathf2=${1##*/}
 basef2=${nopathf2%.fastq}
@@ -127,12 +126,11 @@ do
 	rm -f $basef.cutadapt.cropped.dusted.bad.fastq 
 done
 
-echo "done concatenating output..."
-
+echo -e "$(date)\t$scriptname\tdone concatenating output..."
 
 if [ $run_uniq == "Y" ]; # selecting unique reads
 then
-	echo "selecting unique reads"
+	echo -e "$(date)\t$scriptname\tselecting unique reads"
 	START3=$(date +%s)
 	date
 	# selecting unique reads
@@ -143,40 +141,31 @@ then
 	END3=$(date +%s)
 	date
 	diff3=$(( $END3 - $START3 ))
-	echo "UNIQ took $diff3 seconds"
+	echo -e "$(date)\t$scriptname\tUNIQ took $diff3 seconds"
 else
-	echo "including duplicates (did not run UNIQ)"
+	echo -e "$(date)\t$scriptname\tincluding duplicates (did not run UNIQ)"
 fi
 
 END2=$(date +%s)
 date
 diff2=$(( $END2 - $START1 ))
 
-echo "***********************"
-echo -n "SPLITTING time: "
-echo "$diff seconds"
+echo -e "$(date)\t$scriptname\tSPLITTING time: $diff seconds"
 
-echo -n "median CUTADAPT time per core: "
 let "avgtime1=`cat $basef2.preprocess.log | grep "CUTADAPT" | awk '{print $3}' | sort | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
-echo "$avgtime1 seconds"
+echo -e "$(date)\t$scriptname\tmedian CUTADAPT time per core: $avgtime1 seconds"
 
 if [ $run_uniq = "Y" ]; then
-	echo -n "UNIQ time: "
 	let "avgtime2 = $diff3"
-	echo "$diff3 seconds"
+	echo -e "$(date)\t$scriptname\tUNIQ time: $diff3 seconds"
 else
 	let "avgtime2=0"
 fi
 
-echo -n "median DUST time per core: "
 let "avgtime3=`cat $basef2.preprocess.log | grep "DUST" | awk '{print $3}' | sort | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
-echo "$avgtime3 seconds"
+echo -e "$(date)\t$scriptname\tmedian DUST time per core: $avgtime3 seconds"
 
-echo -n "TOTAL TIME: "
 let "totaltime = diff + avgtime1 + avgtime2 + avgtime3"
-echo "$totaltime seconds"
+echo -e "$(date)\t$scriptname\tTOTAL TIME: $totaltime seconds"
 
-echo -n "TOTAL CLOCK TIME (INCLUDING OVERHEAD): "
-echo "$diff2 seconds"
-
-echo "***********************"
+echo -e "$(date)\t$scriptname\tTOTAL CLOCK TIME (INCLUDING OVERHEAD): $diff2 seconds"
