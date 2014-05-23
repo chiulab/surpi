@@ -679,8 +679,6 @@ then
 fi
 curdate=$(date)
 
-# tweet.pl "Starting SURPI Pipeline on $host: $FASTQ_file ($curdate) ($scriptname)"
-
 ###########################################################
 echo -e "$(date)\t$scriptname\t########## STARTING SURPI PIPELINE ##########"
 START0=$(date +%s)
@@ -709,7 +707,7 @@ then
 	echo -e "$(date)\t$scriptname\tDone: preprocessing "
 	END2=$(date +%s)
 	diff=$(( END2 - START2 ))
-	echo -e "$(date)\t$scriptname\t$FASTQ_file Preprocessing Took $diff seconds" | tee timing.$basef.log
+	echo -e "$(date)\t$scriptname\tPreprocessing took $diff seconds" | tee timing.$basef.log
 fi
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
@@ -733,7 +731,7 @@ then
 		echo -e "$(date)\t$scriptname\tDone: SNAP to human"
 		END6=$(date +%s)
 		diff=$(( END6 - START6 ))
-		echo "$basef.preprocessed.fastq Human mapping Took $diff seconds" | tee -a timing.$basef.log
+		echo -e "$(date)\t$scriptname\tHuman mapping took $diff seconds" | tee -a timing.$basef.log
 		egrep -v "^@" $basef_h.human.snap.unmatched.sam | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef_h".human.snap.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
 	done
 fi
@@ -798,7 +796,7 @@ then
 		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
 		END11=$(date +%s)
 		diff=$(( END11 - START11 ))
-		echo -e "$(date)\t$scriptname\t$basef_h.human.snap.unmatched.fastq SNAP to NT all dbs Took $diff seconds" | tee -a timing.$basef.log
+		echo -e "$(date)\t$scriptname\tSNAP to NT took $diff seconds." | tee -a timing.$basef.log
 		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
 	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam "
@@ -870,7 +868,6 @@ then
 	echo -e "$(date)\t$scriptname\tDone uniquing full length sequences of unmatched to NT"
 fi
 curdate=$(date)
-# tweet.pl "Finished SNAP mapping on $host: $FASTQ_file ($curdate) ($scriptname)"
 
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
@@ -922,7 +919,7 @@ then
 			echo -e "$(date)\t$scriptname\tDone: converting RAPSearch Vir output to fasta"
 			END15=$(date +%s)
 			diff=$(( END15 - START15 ))
-			echo -e "$(date)\t$scriptname\tconverting RAPSearch Vir output to fasta sequences Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tConverting RAPSearch Vir output to fasta sequences took $diff seconds." | tee -a timing.$basef.log
 			cat "$basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta" "all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa" > "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta"
 		else
 			echo -e "$(date)\t$scriptname\tCannot run viral RAPSearch - necessary input file ($basef.$rapsearch_database.RAPSearch.e$ecutoff_Vir.m8) does not exist"
@@ -940,7 +937,7 @@ then
 			echo -e "$(date)\t$scriptname\tremoved extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo -e "$(date)\t$scriptname\t$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch to NR took $diff seconds." | tee -a timing.$basef.log
 			echo -e "$(date)\t$scriptname\tStarting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}"
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8  > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.m8.fasta
@@ -985,7 +982,7 @@ then
 
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and readcount Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and readcount took $diff seconds" | tee -a timing.$basef.log
 		else
 			echo -e "$(date)\t$scriptname\tCannot run RAPSearch to NR - necessary input file ($basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.m8.fasta) does not exist"
 		fi
@@ -1007,7 +1004,7 @@ then
 			echo -e "$(date)\t$scriptname\tremoved extra #"
 			END16=$(date +%s)
 			diff=$(( END16 - START16 ))
-			echo -e "$(date)\t$scriptname\t$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} RAPSearch to NR Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch to NR took $diff seconds" | tee -a timing.$basef.log
 			echo -e "$(date)\t$scriptname\tStarting: Seq retrieval and Taxonomy $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}"
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta
@@ -1035,7 +1032,7 @@ then
 			coverage_generator_bp.sh $basef.NT.snap.matched.fl.Viruses.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated.bar.inc $eBLASTn 10 10 1 $basef
 			END17=$(date +%s)
 			diff=$(( END17 - START17 ))
-			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and table readcount and coverage Took $diff seconds" | tee -a timing.$basef.log
+			echo -e "$(date)\t$scriptname\tRAPSearch seq retrieval, taxonomy and table readcount and coverage took $diff seconds." | tee -a timing.$basef.log
 		else
 			echo -e "$(date)\t$scriptname\tCannot run RAPSearch to NR - necessary input file ($basef.Contigs.NT.snap.unmatched.uniq.fl.fasta) does not exist"
 		fi
@@ -1070,7 +1067,7 @@ echo -e "$(date)\t$scriptname\t#################### SURPI PIPELINE COMPLETE ####
 END0=$(date +%s)
 echo -e "$(date)\t$scriptname\tDone: "
 diff=$(( END0 - START0 ))
-echo -e "$(date)\t$scriptname\tTotal run time of pipeline Took $diff seconds" | tee -a timing.$basef.log
+echo -e "$(date)\t$scriptname\tTotal run time of pipeline took $diff seconds" | tee -a timing.$basef.log
 
 echo "Script and Parameters = $0 $@ " > $basef.pipeline_parameters.log
 echo "Raw Read quality = $quality" >> $basef.pipeline_parameters.log
@@ -1198,8 +1195,5 @@ cp SURPI.$basef.log $output_folder
 cp SURPI.$basef.err $output_folder
 cp $basef.config $output_folder
 cp $log_folder/quality.$basef.log $output_folder
-# mv $basef*log $log_folder
 
 curdate=$(date)
-
-# tweet.pl "Completed SURPI Pipeline on $host: $FASTQ_file. ($curdate) ($scriptname)"

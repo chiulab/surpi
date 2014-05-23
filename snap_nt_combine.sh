@@ -109,6 +109,7 @@ for snap_index in $SNAP_NT_index_directory/* ; do
 	FILEARRAY=("${FILEARRAY[@]}" "$basef.$nopathsnap_index.noheader.sam.sorted")
 done
 
+echo -e "$(date)\t$scriptname\tStarting comparison of all SAM files."
 START_COMPARE=$(date +%s)
 FILEARRAY=("${FILEARRAY[@]}" "$basef.NT.sam")
 # find the best alignment hit for each line
