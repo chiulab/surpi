@@ -45,24 +45,17 @@ then
     dropcache
 fi
 
-echo `date`
 START1=$(date +%s)
 
-echo "splitting $inputfile..."
+echo -e "$(date)\t$scriptname\tsplitting $inputfile..."
 
 let "numlines = `wc -l $inputfile | awk '{print $1}'`"
 let "FASTQentries = numlines / 4"
-echo -e "$(date)\t$scriptname\tthere are $FASTQentries FASTQ entries in $inputfile"
+echo -e "$(date)\t$scriptname\tThere are $FASTQentries FASTQ entries in $inputfile"
 let "LinesPerCore = numlines / $cores"
 let "FASTQperCore = LinesPerCore / 4"
 let "SplitPerCore = FASTQperCore * 4"
 echo -e "$(date)\t$scriptname\twill use $cores cores with $FASTQperCore entries per core"
-echo -e "$(date)\t$scriptname\tquality is $quality"
-echo -e "$(date)\t$scriptname\tuniq is $run_uniq"
-echo -e "$(date)\t$scriptname\tlength cutoff is $length_cutoff"
-echo -e "$(date)\t$scriptname\tkeep short reads? $keep_short_reads"
-echo -e "$(date)\t$scriptname\tadapter_set is $adapter_set"
-echo -e "$(date)\t$scriptname\tcropping will start at: $start_nt and extend for $crop_length more nt"
 
 split -l $SplitPerCore $inputfile
 

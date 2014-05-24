@@ -681,12 +681,10 @@ curdate=$(date)
 
 ###########################################################
 echo -e "$(date)\t$scriptname\t########## STARTING SURPI PIPELINE ##########"
-START0=$(date +%s)
+START_PIPELINE=$(date +%s)
 echo -e "$(date)\t$scriptname\tFound file $FASTQ_file"
 echo -e "$(date)\t$scriptname\tAfter removing path: $nopathf"
 ############ Start up AWS slave machines ##################
-
-#move below parameters to config file before publishing code
 
 file_with_slave_ips="slave_list.txt"
 
@@ -701,16 +699,16 @@ if [ "$preprocess" != "skip" ]
 then
 	echo -e "$(date)\t$scriptname\t############### PREPROCESSING ###############"
 	echo -e "$(date)\t$scriptname\tStarting: preprocessing using $cores cores "
-	START2=$(date +%s)
+	START_PREPROC=$(date +%s)
 	echo -e "$(date)\t$scriptname\tParameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log"
 	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log
 	echo -e "$(date)\t$scriptname\tDone: preprocessing "
-	END2=$(date +%s)
-	diff=$(( END2 - START2 ))
-	echo -e "$(date)\t$scriptname\tPreprocessing took $diff seconds" | tee timing.$basef.log
+	END_PREPROC=$(date +%s)
+	diff_PREPROC=$(( END_PREPROC - START_PREPROC ))
+	echo -e "$(date)\t$scriptname\tPreprocessing took $diff_PREPROC seconds" | tee timing.$basef.log
 fi
 ############# BEGIN SNAP PIPELINE #################
-freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
+freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
 if [ "$freemem" -lt "$cache_reset" ]
 then
@@ -725,18 +723,18 @@ then
 		basef_h=${nopathf%.fastq}.preprocessed.s20.h250n25d${d_human}xfu # remove fastq extension
 		echo -e "$(date)\t$scriptname\tBase file: $basef_h"
 		echo -e "$(date)\t$scriptname\tStarting: $basef_h human mapping"
-		START6=$(date +%s)
+		START_SUBTRACTION=$(date +%s)
 		echo -e "$(date)\t$scriptname\tParameters: snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
 		snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u     
 		echo -e "$(date)\t$scriptname\tDone: SNAP to human"
-		END6=$(date +%s)
-		diff=$(( END6 - START6 ))
-		echo -e "$(date)\t$scriptname\tHuman mapping took $diff seconds" | tee -a timing.$basef.log
+		END_SUBTRACTION=$(date +%s)
+		diff_SUBTRACTION=$(( END_SUBTRACTION - START_SUBTRACTION ))
+		echo -e "$(date)\t$scriptname\tHuman mapping took $diff_SUBTRACTION seconds" | tee -a timing.$basef.log
 		egrep -v "^@" $basef_h.human.snap.unmatched.sam | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef_h".human.snap.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
 	done
 fi
 ######dropcache?#############
-freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1 | more)
+freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
 if [ "$freemem" -lt "$cache_reset" ]
 then
@@ -752,7 +750,7 @@ then
 		echo -e -n "$(date)\t$scriptname\tCalculating number of sequences to analyze using SNAP to NT: "
 		echo $(awk 'NR%4==1' "$basef_h".human.snap.unmatched.fastq | wc -l)
 		echo -e "$(date)\t$scriptname\tStarting: Mapping  by SNAP to NT from $basef_h.human.snap.unmatched.fastq"
-		START11=$(date +%s)
+		START_SNAPNT=$(date +%s)
 		# SNAP to NT for unmatched reads (d value threshold cutoff = 12)
 
 		if [ $run_mode = "Comprehensive" ]
@@ -794,9 +792,9 @@ then
 		fi
 		
 		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
-		END11=$(date +%s)
-		diff=$(( END11 - START11 ))
-		echo -e "$(date)\t$scriptname\tSNAP to NT took $diff seconds." | tee -a timing.$basef.log
+		END_SNAPNT=$(date +%s)
+		diff_SNAPNT=$(( END_SNAPNT - START_SNAPNT ))
+		echo -e "$(date)\t$scriptname\tSNAP to NT took $diff_SNAPNT seconds." | tee -a timing.$basef.log
 		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
 	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam "
@@ -818,8 +816,8 @@ then
 		paste "$basef.NT.snap.matched.sorted.sam.tmp1" "$basef.NT.snap.matched.fulllength.sequence.txt" "$basef.NT.snap.matched.sorted.sam.tmp2" > "$basef.NT.snap.matched.fulllength.sam"
 		###retrieve taxonomy matched to NT ###
 		echo -e "$(date)\t$scriptname\ttaxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
-		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory >& $basef.taxonomy.SNAPNT.log"
-		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory >& "$basef.taxonomy.SNAPNT.log"
+		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory
+		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory
 		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
 	fi
@@ -873,18 +871,18 @@ curdate=$(date)
 if [ $run_mode = "Comprehensive" ]
 then
 	echo -e "$(date)\t$scriptname\t######### Running ABYSS and Minimus #########"
-	echo -e "$(date)\t$scriptname\tStarting assembly process "
-	START40=$(date +%s)
-	echo -e "$(date)\t$scriptname\tadding matched viruses to NT unmatched" 
+	START_deNovo=$(date +%s)
+	echo -e "$(date)\t$scriptname\tAdding matched viruses to NT unmatched" 
 	sed "n;n;n;d" "$basef.NT.snap.matched.fl.Viruses.fastq" | sed "n;n;d" | sed "s/^@/>/g" | sed 's/>/>Vir/g' > "$basef.NT.snap.matched.fl.Viruses.fasta"
 	gt sequniq -seqit -force -o "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" "$basef.NT.snap.matched.fl.Viruses.fasta"
 	cat "$basef.NT.snap.unmatched.uniq.fl.fasta" "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" > "$basef.NT.snap.unmatched_addVir_uniq.fasta"
-	echo "starting deNovo assembly"
+	echo -e "$(date)\t$scriptname\tStarting deNovo assembly"
 	echo -e "$(date)\t$scriptname\tParameters: abyss_minimus.sh $basef.NT.snap.unmatched_addVir_uniq.fasta $length $contigcutoff $cores $abysskmer"
 	abyss_minimus.sh "$basef.NT.snap.unmatched_addVir_uniq.fasta" "$length" "$contigcutoff" "$cores" "$abysskmer"
 	echo -e "$(date)\t$scriptname\tCompleted deNovo assembly: generated all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa"
-	END40=$(date +%s)
-	diff=$(( END40 - START40 ))
+	END_deNovo=$(date +%s)
+	diff_deNovo=$(( END_deNovo - START_deNovo ))
+	echo -e "$(date)\t$scriptname\tdeNovo Assembly took $diff_deNovo seconds."
 fi
 #######RAPSearch#####
 #################### RAPSearch to Vir ###########
@@ -1042,7 +1040,7 @@ fi
 
 ############################# OUTPUT FINAL COUNTS ##############################       
 echo -e "$(date)\t$scriptname\tStarting: generating readcounts.$basef.log report"
-START17=$(date +%s)
+START_READCOUNT=$(date +%s)
 
 headerid_top=$(head -1 $basef.fastq | cut -c1-4)
 headerid_bottom=$(tail -4 $basef.fastq | cut -c1-4 | head -n 1)
@@ -1056,18 +1054,18 @@ then
 	echo -e "$(date)\t$scriptname\tParameters: readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated"
 	readcount.sh $basef $headerid Y $basef.fastq $basef.preprocessed.fastq $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.fastq $basef.NT.snap.matched.fulllength.all.annotated.sorted $basef.NT.snap.matched.fl.Viruses.annotated $basef.NT.snap.matched.fl.Bacteria.annotated $basef.NT.snap.matched.fl.nonChordatEuk.annotated $basef.NT.snap.unmatched.sam $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.Viruses.annotated
 	echo -e "$(date)\t$scriptname\tDone: generating readcounts.$basef.log report"
-	END17=$(date +%s)
-	diff=$(( END17 - START17 ))
-	echo -e "$(date)\t$scriptname\tGenerating read count report Took $diff seconds" | tee -a timing.$basef.log
+	END_READCOUNT=$(date +%s)
+	diff_READCOUNT=$(( END_READCOUNT - START_READCOUNT ))
+	echo -e "$(date)\t$scriptname\tGenerating read count report Took $diff_READCOUNT seconds" | tee -a timing.$basef.log
 else
 	echo -e "$(date)\t$scriptname\treadcount.sh aborted due to non-unique header id"
 fi
 
 echo -e "$(date)\t$scriptname\t#################### SURPI PIPELINE COMPLETE ##################"
-END0=$(date +%s)
+END_PIPELINE=$(date +%s)
 echo -e "$(date)\t$scriptname\tDone: "
-diff=$(( END0 - START0 ))
-echo -e "$(date)\t$scriptname\tTotal run time of pipeline took $diff seconds" | tee -a timing.$basef.log
+diff_PIPELINE=$(( END_PIPELINE - START_PIPELINE ))
+echo -e "$(date)\t$scriptname\tTotal run time of pipeline took $diff_PIPELINE seconds" | tee -a timing.$basef.log
 
 echo "Script and Parameters = $0 $@ " > $basef.pipeline_parameters.log
 echo "Raw Read quality = $quality" >> $basef.pipeline_parameters.log
@@ -1128,7 +1126,6 @@ mv $basef.cutadapt.summary.log $log_folder
 mv $basef.adapterinfo.log $log_folder
 mv $basef.cutadapt.cropped.fastq.log $log_folder
 mv $basef.preprocess.log $log_folder
-mv $basef.taxonomy.SNAPNT.log $log_folder
 mv $basef.pipeline_parameters.log $log_folder
 mv $basef.table_generator_snap.matched.fl.log $log_folder
 mv $basef*.snap.log $log_folder
@@ -1195,5 +1192,3 @@ cp SURPI.$basef.log $output_folder
 cp SURPI.$basef.err $output_folder
 cp $basef.config $output_folder
 cp $log_folder/quality.$basef.log $output_folder
-
-curdate=$(date)
