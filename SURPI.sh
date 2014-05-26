@@ -744,12 +744,12 @@ fi
 ############################# SNAP TO NT ##############################       
 if [ "$alignment" != "skip" ]
 then
-	if [ ! -f $basef.NT.snap.sam ];
+	if [ ! -f $basef.NT.snap.sam ]
 	then
 		echo -e "$(date)\t$scriptname\t####### SNAP UNMATCHED SEQUENCES TO NT ######"
 		echo -e -n "$(date)\t$scriptname\tCalculating number of sequences to analyze using SNAP to NT: "
 		echo $(awk 'NR%4==1' "$basef_h".human.snap.unmatched.fastq | wc -l)
-		echo -e "$(date)\t$scriptname\tStarting: Mapping  by SNAP to NT from $basef_h.human.snap.unmatched.fastq"
+		echo -e "$(date)\t$scriptname\tStarting: Mapping by SNAP to NT from $basef_h.human.snap.unmatched.fastq"
 		START_SNAPNT=$(date +%s)
 		# SNAP to NT for unmatched reads (d value threshold cutoff = 12)
 
@@ -797,12 +797,12 @@ then
 		echo -e "$(date)\t$scriptname\tSNAP to NT took $diff_SNAPNT seconds." | tee -a timing.$basef.log
 		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
 	fi
-	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam "
+	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam"
 	echo -e "$(date)\t$scriptname\textract matched/unmatched $basef.NT.snap.sam"
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 != "*") print }' > $basef.NT.snap.matched.sam
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 == "*") print }' > $basef.NT.snap.unmatched.sam
-	echo -e "$(date)\t$scriptname\tconvert sam to fastq from $basef.NT.snap.sam "
-	echo -e "$(date)\t$scriptname\tDone: parsing $basef.NT.snap.unmatched.sam  "
+	echo -e "$(date)\t$scriptname\tconvert sam to fastq from $basef.NT.snap.sam"
+	echo -e "$(date)\t$scriptname\tDone: parsing $basef.NT.snap.unmatched.sam"
 	if [ ! -f "$basef.NT.snap.matched.all.annotated" ];
 	then
 		## convert to FASTQ and retrieve full-length sequences
@@ -816,7 +816,7 @@ then
 		paste "$basef.NT.snap.matched.sorted.sam.tmp1" "$basef.NT.snap.matched.fulllength.sequence.txt" "$basef.NT.snap.matched.sorted.sam.tmp2" > "$basef.NT.snap.matched.fulllength.sam"
 		###retrieve taxonomy matched to NT ###
 		echo -e "$(date)\t$scriptname\ttaxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
-		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory
+		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory"
 		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory
 		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
@@ -866,7 +866,6 @@ then
 	echo -e "$(date)\t$scriptname\tDone uniquing full length sequences of unmatched to NT"
 fi
 curdate=$(date)
-
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
 then
