@@ -297,8 +297,10 @@ temporary_files_directory="/tmp/"
 #ami-5ef61936 = custom AMI (ami-b93264d0 + SNAP setup)
 ami_id="ami-5ef61936"
 
-#needs to match the number of divisions of nt in SNAP db (29, currently). Can test process with fewer.
-number_of_instances=29
+#Number of slave instances will not exceed this value. Useful for testing, in order to restrict instance count.
+#Otherwise, number of instances should be equal to number of SNAP-NT database divisions. This value is 
+#automatically calculated by SURPI.
+max_slave_instances=29
 
 instance_type="c3.8xlarge"
 
@@ -586,6 +588,12 @@ then
 else
 	echo -e "${green}All dependencies and reference data pass.${endColor}"
 fi
+actual_slave_instances=$(ls -1 "$SNAP_COMPREHENSIVE_db_dir" | wc -l)
+if [ $max_slave_instances -lt $actual_slave_instances ]
+then
+	actual_slave_instances=$max_slave_instances
+fi
+
 length=$( expr length $( head $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
 contigcutoff=$(perl -le "print int(1.75 * $length)")
 echo "-----------------------------------------------------------------------------------------"
@@ -636,7 +644,8 @@ echo "Cluster settings"
 
 echo "snap_nt_procedure: $snap_nt_procedure"
 echo "ami_id: $ami_id"
-echo "number_of_instances: $number_of_instances"
+echo "max_slave_instances: $max_slave_instances"
+echo "actual_slave_instances: $actual_slave_instances"
 echo "instance_type: $instance_type"
 echo "keypair: $keypair"
 echo "security_group: $security_group"
@@ -691,7 +700,7 @@ file_with_slave_ips="slave_list.txt"
 if [ "$snap_nt_procedure" = "AWS_master_slave" ]
 then
 	# start the slaves as a background process. They should be ready to run at the SNAP to NT step in the pipeline.
-	start_slaves.sh $ami_id $number_of_instances $instance_type $keypair $security_group $availability_zone $file_with_slave_ips $placement_group & # > $basef.AWS.log 2>&1
+	start_slaves.sh $ami_id $actual_slave_instances $instance_type $keypair $security_group $availability_zone $file_with_slave_ips $placement_group & # > $basef.AWS.log 2>&1
 fi
 
 ############ PREPROCESSING ##################
