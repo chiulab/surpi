@@ -38,7 +38,7 @@ then
 fi
 
 awk '{print ">"$1"\n"$10}' $inputfile > $inputfile.fasta # if Bacteria.annotated file has full quality, convert from Sam -> Fastq at this step
-fasta_to_fastq.pl $inputfile.fasta > $inputfile.fakq # if Bacteria.annotated file has full quality, convert from Sam -> Fastq at this step
+fasta_to_fastq $inputfile.fasta > $inputfile.fakq # if Bacteria.annotated file has full quality, convert from Sam -> Fastq at this step
 
 crop_reads.csh $inputfile.fakq 10 75 > $inputfile.fakq.crop
 # snap against large ribosomal subunit
