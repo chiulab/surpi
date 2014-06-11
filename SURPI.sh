@@ -335,19 +335,19 @@ then # use config file
 		#verify that config file version matches SURPI version
 		if [ "$config_file_version" != "$SURPI_version" ]
 		then
-			echo "The config file $config_file was created with SURPI $config_file_version."
-			echo "The current version of SURPI running is $SURPI_version."
-			echo "Please generate a new config file with SURPI $SURPI_version in order to run SURPI."
+			echo "The config file $config_file was created with SURPI $config_file_version." >&2
+			echo "The current version of SURPI running is $SURPI_version." >&2
+			echo "Please generate a new config file with SURPI $SURPI_version in order to run SURPI." >&2
 			exit 65
 		fi
 	else
-		echo "The config file specified: $config_file is not present."
+		echo "The config file specified: $config_file is not present." >&2
 		exit 65
 	fi
 else # parameters must be specified
 	if [ ! -r $inputfile ]
 	then
-		echo "The inputfile specified: $inputfile is not present."
+		echo "The inputfile specified: $inputfile is not present." >&2
 		exit 65
 	fi
 fi
@@ -384,8 +384,8 @@ fi
 
 if [ "$run_mode" != "Comprehensive" -a "$run_mode" != "Fast" ]
 then
-	echo "${bold}$run_mode${normal} is not a valid run mode - must be Comprehensive or Fast."
-	echo "Please specify a valid run mode using the -u switch."
+	echo "${bold}$run_mode${normal} is not a valid run mode - must be Comprehensive or Fast." >&2
+	echo "Please specify a valid run mode using the -u switch." >&2
 	exit 65
 fi
 
@@ -421,15 +421,15 @@ fi
 
 if [ "$adapter_set" != "Truseq" -a "$adapter_set" != "Nextera" -a "$adapter_set" != "NexSolB" ]
 then
-	echo "${bold}$adapter_set${normal} is not a valid adapter_set - must be Truseq, Nextera, or NexSolB."
-	echo "Please specify a valid adapter set using the -a switch."
+	echo "${bold}$adapter_set${normal} is not a valid adapter_set - must be Truseq, Nextera, or NexSolB." >&2
+	echo "Please specify a valid adapter set using the -a switch." >&2
 	exit 65
 fi
 
 if [ "$quality" != "Sanger" -a "$quality" != "Illumina" ]
 then
-	echo "${bold}$quality${normal} is not a valid quality - must be Sanger or Illumina."
-	echo "Please specify a valid quality using the -q switch."
+	echo "${bold}$quality${normal} is not a valid quality - must be Sanger or Illumina." >&2
+	echo "Please specify a valid quality using the -q switch." >&2
 	exit 65
 fi
 if [ $quality = "Sanger" ]
@@ -457,15 +457,15 @@ fi
 
 if [ ! $length_cutoff ]
 then
-	echo "${bold}length_cutoff${normal} was not specified."
-	echo "Please specify a valid length_cutoff using the -x switch."
+	echo "${bold}length_cutoff${normal} was not specified." >&2
+	echo "Please specify a valid length_cutoff using the -x switch." >&2
 	exit 65
 fi
 
 if [ "$rapsearch_database" != "Viral" -a "$rapsearch_database" != "NR" ]
 then
-	echo "${bold}$rapsearch_database${normal} is not a valid RAPSearch database - must be Viral or NR."
-	echo "Please specify a valid rapsearch_database using the -r switch, or place one of the above options in your config file."
+	echo "${bold}$rapsearch_database${normal} is not a valid RAPSearch database - must be Viral or NR." >&2
+	echo "Please specify a valid rapsearch_database using the -r switch, or place one of the above options in your config file." >&2
 	exit 65
 fi
 
@@ -583,7 +583,7 @@ else
 fi
 if [[ ($dependency_check = "FAIL" || $reference_check = "FAIL") ]]
 then
-	echo -e "${red}There is an issue with one of the dependencies or reference databases above.${endColor}"
+	echo -e "${red}There is an issue with one of the dependencies or reference databases above.${endColor}" >&2
 	exit 65
 else
 	echo -e "${green}All dependencies and reference data pass.${endColor}"
@@ -663,8 +663,8 @@ then
 	then
 		echo -e "${green}$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
 	else
-		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
-		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}"
+		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}" >&2
+		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}" >&2
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 2 ]
@@ -674,8 +674,8 @@ then
 	then
 		echo -e "${green}$FASTQ_file appears to be a valid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
 	else
-		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}"
-		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}"
+		echo -e "${red}$FASTQ_file appears to be a invalid FASTQ file. Check the quality.$basef.log file for details.${endColor}" >&2
+		echo -e "${red}You can bypass the quality check by not using the -v switch.${endColor}" >&2
 		exit 65
 	fi
 elif [ "$VERIFY_FASTQ" = 3 ]
