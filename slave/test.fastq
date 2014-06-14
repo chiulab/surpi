@@ -1,8 +1,9 @@
 @Test_Sequence1
-TTCGAGGACGAGAGAATGGCCAAC
-+
-~~~~~~~~~~~~~~~~~~~~~~~
-@Test_Sequence2
 AACGCCTGCTGCGCCTGCCACGAG
 +
 ~~~~~~~~~~~~~~~~~~~~~~~
+@Test_Sequence2
+TTCGAGGACGAGAGAATGGCCAAC
++
+~~~~~~~~~~~~~~~~~~~~~~~
+
