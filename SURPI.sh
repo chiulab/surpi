@@ -237,7 +237,7 @@ VERIFY_FASTQ=1
 #				also allows for concurrent SNAP runs.
 #end	: compares all SNAP iterations once they have all completed.
 #These two methods should give identical results, but may have different performance.
-snap_integrator="end"
+snap_integrator="inline"
 
 #only used if snap_integrator=end
 #if using this parameter, the SNAP databases should reside on separate disks in order to increase throughput.
@@ -297,6 +297,7 @@ temporary_files_directory="/tmp/"
 #ami-5ef61936 = custom AMI (ami-b93264d0 + SNAP setup)
 ami_id="ami-5ef61936"
 
+
 #Number of slave instances will not exceed this value. Useful for testing, in order to restrict instance count.
 #Otherwise, number of instances should be equal to number of SNAP-NT database divisions. This value is 
 #automatically calculated by SURPI.
@@ -304,6 +305,8 @@ max_slave_instances=29
 
 instance_type="c3.8xlarge"
 
+#this parameter is currently tied to the $keypair used during slave_setup.sh. should be cleaned up prior to release
+pemkey="/home/ubuntu/.ssh/surpi.pem"
 keypair="surpi"
 
 security_group="SURPI"
@@ -686,8 +689,6 @@ if [[ $VERIFICATION -eq 1 ]]
 then
 	exit
 fi
-curdate=$(date)
-
 ###########################################################
 echo -e "$(date)\t$scriptname\t########## STARTING SURPI PIPELINE ##########"
 START_PIPELINE=$(date +%s)
@@ -772,9 +773,6 @@ then
 			then
 				if [ "$snap_nt_procedure" = "AWS_master_slave" ]
 				then
-					#this parameter is currently tied to the $keypair used during slave_setup.sh. should be cleaned up prior to release
-					pemkey="/home/ubuntu/.ssh/surpi.pem"
-
 					# transfer data to slave, start SNAP on each slave, and wait for results
 					#check if slave_setup is running before progressing to snap_on_slave.sh
 					#slave_setup should be responsible for verifying that all slaves are properly running.
@@ -874,7 +872,6 @@ then
 	fi
 	echo -e "$(date)\t$scriptname\tDone uniquing full length sequences of unmatched to NT"
 fi
-curdate=$(date)
 ####################### DENOVO CONTIG ASSEMBLY #####
 if [ $run_mode = "Comprehensive" ]
 then
@@ -1071,7 +1068,6 @@ fi
 
 echo -e "$(date)\t$scriptname\t#################### SURPI PIPELINE COMPLETE ##################"
 END_PIPELINE=$(date +%s)
-echo -e "$(date)\t$scriptname\tDone: "
 diff_PIPELINE=$(( END_PIPELINE - START_PIPELINE ))
 echo -e "$(date)\t$scriptname\tTotal run time of pipeline took $diff_PIPELINE seconds" | tee -a timing.$basef.log
 

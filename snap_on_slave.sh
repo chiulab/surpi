@@ -57,7 +57,7 @@ echo -e "$(date)\t$scriptname\tdone compressing file to transfer to slaves in $d
 START2=$(date +%s)
 COUNTER=0
 while read line; do
-	rsync -azv -e 'ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/surpi.pem' "$file_to_transfer.gz" ubuntu@$line:$working_directory_on_slave >> slave.$COUNTER.log 2>&1 &
+	rsync -azv -e "ssh -o StrictHostKeyChecking=no -i $pemkey" "$file_to_transfer.gz" ubuntu@$line:$working_directory_on_slave >> slave.$COUNTER.log 2>&1 &
 	let COUNTER=COUNTER+1
 done < $file_with_slave_ips
 

@@ -140,7 +140,7 @@ do
 	done
 
 	#remove this line before release.
-	echo -e "$(date)\t$scriptname\tssh -l ubuntu -i /Users/sfederman/.ssh/surpi.pem $host" >> slave.$COUNTER.log 2>&1
+	echo -e "$(date)\t$scriptname\tssh -l ubuntu -i $pemkey $host" >> slave.$COUNTER.log 2>&1
 
 	echo -e "$(date)\t$scriptname\tRunning with host=$host" >> slave.$COUNTER.log 2>&1
 	echo -n -e "$(date)\t$scriptname\tVerifying ssh connection to $host..." >> slave.$COUNTER.log 2>&1
