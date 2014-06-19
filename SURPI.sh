@@ -523,7 +523,10 @@ do
 		echo -e "$f: ${green}OK${endColor}"
 	else
 		echo -e "$f: ${red}BAD${endColor}"
-		reference_check="FAIL"
+		if [ "$run_mode" = "Comprehensive" ]
+		then
+			reference_check="FAIL"
+		fi
 	fi
 done
 
@@ -534,7 +537,10 @@ do
 		echo -e "$f: ${green}OK${endColor}"
 	else
 		echo -e "$f: ${red}BAD${endColor}"
-		reference_check="FAIL"
+		if [ "$run_mode" = "Fast" ]
+		then
+			reference_check="FAIL"
+		fi
 	fi
 done
 
