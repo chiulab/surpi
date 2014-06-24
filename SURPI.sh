@@ -11,9 +11,9 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014
+# Last revised 6/24/2014
 
-SURPI_version="1.0.13"
+SURPI_version="1.0.14"
 
 optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
 bold=$(tput bold)
