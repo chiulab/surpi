@@ -45,11 +45,11 @@ then
 
 ${bold}SURPI version ${SURPI_version}${normal}
 
-This program will run the SURPI pipeline with the parameters supplied by either the config file, or specified on the command line.
+This program will run the SURPI pipeline with the parameters supplied by the config file.
 
 ${bold}Usage:${normal}
 
-Run SURPI pipeline with a config file:
+Run SURPI pipeline with the config file:
 	$scriptname -f config
 
 Run SURPI pipeline in verification mode:
