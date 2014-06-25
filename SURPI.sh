@@ -13,9 +13,9 @@
 # Please see license file for details.
 # Last revised 6/24/2014
 
-SURPI_version="1.0.14"
+SURPI_version="1.0.15"
 
-optspec=":a:c:d:f:hi:l:m:n:p:q:r:s:vw:x:z:"
+optspec=":f:hvz:"
 bold=$(tput bold)
 normal=$(tput sgr0)
 green='\e[0;32m'
@@ -27,23 +27,9 @@ scriptname=${0##*/}
 
 while getopts "$optspec" option; do
 	case "${option}" in
-		a) adapter_set=${OPTARG};;	#Truseq/Nextera
-		c) cores=${OPTARG};;	# use all cores if not specified
-		d) cache_reset=${OPTARG};;
 		f) config_file=${OPTARG};; # get parameters from config file if specified
 		h) HELP=1;;
-		i) inputfile=${OPTARG};; # input FASTQ file to pipeline
-		l) crop_length=${OPTARG};; #75 is default
-		m) human_mapping=${OPTARG};;
-		n) alignment=${OPTARG};;
-		p) preprocess=${OPTARG};;
-		q) quality=${OPTARG};;	#Sanger/Illumina
-		r) rapsearch_database=${OPTARG};;	#Viral/NR
-		s) start_nt=${OPTARG};;	#10 is default
-		u) run_mode=${OPTARG};; #Comprehensive/Fast
 		v) VERIFICATION=1;;
-		w) VERIFY_FASTQ=${OPTARG};; #1 is default
-		x) length_cutoff=${OPTARG};;
 		z)	create_config_file=${OPTARG}
 			configprefix=${create_config_file%.fastq}
 			;;
@@ -69,9 +55,6 @@ Run SURPI pipeline with a config file:
 Run SURPI pipeline in verification mode:
 	$scriptname -f config -v
 
-Run SURPI pipeline specifying parameters on command line:
-	$scriptname -i test.fastq -q Sanger -a Truseq -x 50 -r Viral
-
 Create default config and go file
 	$scriptname -z test.fastq
 
@@ -86,37 +69,6 @@ ${bold}Command Line Switches:${normal}
 			• FASTQ file (if requested in config file)
 
 	-f	Specify config file & ignore all other switches
-	-i	Specify FASTQ input file
-
-	The below options may be mandatory or optional.
-	Mandatory: option must be present in either config file or on command line
-	Optional: option may be present in either config file or command line.
-				A default value may be applied if not specified.
-
-	-q	Specify quality type [mandatory] (Sanger/Illumina)
-	-x	Specify length_cutoff [mandatory]
-	-a	Specify adapter_set [mandatory] (Truseq/Nextera)
-	-r	Specify final RAPSearch database [mandatory] (Viral/NR)
-
-	-s	Specify crop - startnt [optional] (default: 10)
-	-l	Specify crop - crop_length [optional] (default: 75)
-	-c	Specify cores [optional] (default: use all cores on machine)
-	-d	Specify cache_reset [optional] (default: use a calculated value, 200, 100, or 50GB)
-
-	-p	Skip preprocessing [Currently only a placeholder - not functional]
-	-m	Skip Human Mapping [Currently only a placeholder - not functional]
-	-n	Skip Snap to NT [Currently only a placeholder - not functional]
-
-	-u	SURPI Run mode [optional] (Comprehensive [default], Fast)
-	-w	Verify FASTQ quality [optional] (0 / 1 [default] / 2 / 3)
-		FASTQ validation uses FastQValidator. See http://genome.sph.umich.edu/wiki/FastQ_Validation_Criteria for details.
-		If quality fails, then pipeline run may end depending on selection. Details will be logged in the .quality file.
-
-		0 - Skip entire FASTQ validation process
-		1 - Run FASTQ Validation process - do not check for unique names - quit pipeline on failure ${bold}[default]${normal}
-		2 - Run FASTQ Validation process - include check for unique names - quit pipeline on failure
-		3 - Run FASTQ Validation process - include check for unique names - pipeline proceeds on failure
-
 	-z	Create default config file and go file. [optional] (specify fastq filename)
 		This option will create a standard .config file, and go file.
 
@@ -329,30 +281,20 @@ echo
 exit
 fi
 
-#Check if config file is specified, and grab parameters from it
-if [[ $config_file ]]
-then # use config file
-	if [[ -r $config_file ]]
+if [[ -r $config_file ]]
+then
+	source "$config_file"
+	#verify that config file version matches SURPI version
+	if [ "$config_file_version" != "$SURPI_version" ]
 	then
-		source "$config_file"
-		#verify that config file version matches SURPI version
-		if [ "$config_file_version" != "$SURPI_version" ]
-		then
-			echo "The config file $config_file was created with SURPI $config_file_version."
-			echo "The current version of SURPI running is $SURPI_version."
-			echo "Please generate a new config file with SURPI $SURPI_version in order to run SURPI."
-			exit 65
-		fi
-	else
-		echo "The config file specified: $config_file is not present."
+		echo "The config file $config_file was created with SURPI $config_file_version."
+		echo "The current version of SURPI running is $SURPI_version."
+		echo "Please generate a new config file with SURPI $SURPI_version in order to run SURPI."
 		exit 65
 	fi
-else # parameters must be specified
-	if [ ! -r $inputfile ]
-	then
-		echo "The inputfile specified: $inputfile is not present."
-		exit 65
-	fi
+else
+	echo "The config file specified: $config_file is not present."
+	exit 65
 fi
 
 #check that $inputfile is a FASTQ file, and has a FASTQ suffix.
@@ -483,9 +425,6 @@ then
 fi
 nopathf=${FASTQ_file##*/} # remove the path to file
 basef=${nopathf%.fastq}
-
-#This is the point to verify all input before the SURPI run initiates
-# add verification for all databases and access to all dependencies
 
 #verify that all software dependencies are properly installed
 declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "snap" "rapsearch" "fastQValidator" "abyss-pe" "Minimo")
@@ -723,6 +662,15 @@ then
 	diff_PREPROC=$(( END_PREPROC - START_PREPROC ))
 	echo -e "$(date)\t$scriptname\tPreprocessing took $diff_PREPROC seconds" | tee timing.$basef.log
 fi
+# verify preprocessing step
+if [ ! -s $basef.cutadapt.fastq ] || [ ! -s $basef.preprocessed.fastq ]
+then
+	echo -e "$(date)\t$scriptname\t${red}Preprocessing appears to have failed. One of the following files does not exist, or is of 0 size:${endColor}"
+	echo "$basef.cutadapt.fastq"
+	echo "$basef.preprocessed.fastq"
+	exit
+fi
+
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
@@ -1099,10 +1047,10 @@ output_folder="OUTPUT_$basef"
 trash_folder="TRASH_$basef"
 denovo_folder="deNovoASSEMBLY_$basef"
 
+mkdir $dataset_folder
 mkdir $log_folder
 mkdir $output_folder
 mkdir $trash_folder
-mkdir $dataset_folder
 if [ $run_mode = "Comprehensive" ]
 then
 	mkdir $denovo_folder
