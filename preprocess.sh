@@ -100,10 +100,10 @@ START1=$(date +%s)
 
 if [ $run_uniq == "Y" ] 
 then
-	echo -e "$(date)\t$scriptname\tWe will be using 75 as the length of the cropped read"
+	echo -e "$(date)\t$scriptname\tWe will be using $crop_length as the length of the cropped read"
 	crop_reads.csh $basef.cutadapt.uniq.fastq $start_nt $crop_length > $basef.cutadapt.uniq.cropped.fastq
 else
-	echo -e "$(date)\t$scriptname\tWe will be using 75 as the length of the cropped read"
+	echo -e "$(date)\t$scriptname\tWe will be using $crop_length as the length of the cropped read"
 	crop_reads.csh $basef.cutadapt.fastq $start_nt $crop_length > $basef.cutadapt.cropped.fastq
 fi
 
