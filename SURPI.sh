@@ -47,31 +47,44 @@ ${bold}SURPI version ${SURPI_version}${normal}
 
 This program will run the SURPI pipeline with the parameters supplied by the config file.
 
-${bold}Usage:${normal}
-
-Run SURPI pipeline with the config file:
-	$scriptname -f config
-
-Run SURPI pipeline in verification mode:
-	$scriptname -f config -v
-
-Create default config and go file
-	$scriptname -z test.fastq
-
 ${bold}Command Line Switches:${normal}
 
-	-h	Show help & ignore all other switches
-	-v	Verification mode
-		SURPI will verify the following:
-			• software dependencies
-			• reference data specified in config file
-			• taxonomy lookup functionality
-			• FASTQ file (if requested in config file)
+	-h	Show this help & ignore all other switches
 
-	-f	Specify config file & ignore all other switches
+	-f	Specify config file
+	
+		This switch is used to initiate a SURPI run using a specified config file. Verification (see -v switch) will occur at the beginning of the run.
+		The pipeline will cease if SURPI fails to find a software dependency or necessary reference data.
+
+	-v	Verification mode
+	
+		When using verification mode, SURPI will verify necessary dependencies, but will
+		stop after verification. This same verification is also done
+		before each SURPI run.
+		
+			• software dependencies
+				SURPI will check for the presence of all software dependencies.
+			• reference data specified in config file
+				SURPI does a cursory check for the presence of reference data. This check is
+				not a comprehensive test of the reference data.
+			• taxonomy lookup functionality
+				SURPI verifies the functionality of the taxonomy lookup.
+			• FASTQ file (if requested in config file)
+				SURPI uses fastQValidator to check the integrity of the FASTQ file.
+				
 	-z	Create default config file and go file. [optional] (specify fastq filename)
 		This option will create a standard .config file, and go file.
 
+${bold}Usage:${normal}
+
+	Create default config and go file.
+		$scriptname -z test.fastq
+
+	Run SURPI pipeline in verification mode:
+		$scriptname -f config -v
+
+	Run SURPI pipeline with the config file:
+		$scriptname -f config
 
 USAGE
 	exit
@@ -107,6 +120,8 @@ inputtype="FASTQ"
 #FASTQ quality score type: [Sanger/Illumina]
 #Sanger = Sanger score (ASCII-33)
 #Illumina = Illumina score (ASCII-64)
+#Counterintuitively, the Sanger quality format is likely the method your data is encoded in if you are generating data on an Illumina machine after early 2011.
+#Selecting Illumina quality on Sanger data will likely lead to improper preprocessing, resulting in preprocessed files of 0 length.
 quality="Sanger"
 
 #length_cutoff: after quality and adaptor trimming, any sequence with length smaller than length_cutoff will be discarded
@@ -150,8 +165,8 @@ run_mode="Comprehensive"
 # runs each NT division through SNAP serially on a single machine.
 # If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
 # set properly.
+#6/24/14 AWS_master_slave option is currently experimental and incomplete. Please use "solo" for the time being.
 snap_nt_procedure="solo"
-# snap_nt_procedure="AWS_master_slave"
 
 #Number of cores to use. Will use all cores on machine if unspecified.
 #Uncomment the parameter to set explicitly.
@@ -180,7 +195,6 @@ VERIFY_FASTQ=1
 # If skipping preprocessing, be sure these files exist in the working directory.
 # $basef.cutadapt.fastq
 # $basef.preprocessed.fastq
-# $basef.preprocessed.s20.h250n25d12xfu.human.unmatched.fastq
 #preprocess="skip"
 
 #snap_nt iterator to use. [inline/end]
@@ -189,12 +203,13 @@ VERIFY_FASTQ=1
 #				also allows for concurrent SNAP runs.
 #end	: compares all SNAP iterations once they have all completed.
 #These two methods should give identical results, but may have different performance.
+#Note: use inline for now (6/24/14), there is a bug with "end"
 snap_integrator="inline"
 
 #only used if snap_integrator=end
 #if using this parameter, the SNAP databases should reside on separate disks in order to increase throughput.
 #(Mechanism for doing this is not yet in place)
-num_simultaneous_SNAP_runs=1;
+num_simultaneous_SNAP_runs=1
 
 ##########################
 # Server related values
@@ -238,6 +253,7 @@ temporary_files_directory="/tmp/"
 ##########################
 
 # These values are only used if the "AWS_master_slave" option is set above.
+# Note: this method is currently incomplete and experimental.
 
 # AWS_master_slave will start up a slave instance on AWS for each division of the nt database
 # It will be more costly, but should run significantly faster than the solo method, which 
@@ -567,7 +583,7 @@ echo "SNAP human indexed database (for subtraction): $SNAP_subtraction_db"
 
 echo "SNAP_db_directory housing the reference databases for Comprehensive Mode: $SNAP_COMPREHENSIVE_db_dir"
 echo "SNAP_db_directory housing the reference databases for Fast Mode: $SNAP_FAST_db_dir"
-
+echo "snap_integrator: $snap_integrator"
 echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human: $d_human"
 
 echo "RAPSearch indexed viral db used: $RAPSearch_VIRUS_db"
@@ -587,20 +603,23 @@ echo "crop_length: $crop_length"
 
 echo "e value for BLASTn used in coverage map generation: $eBLASTn"
 
-echo "---------------------------------------------"
-echo "Cluster settings"
+if [ $snap_nt_procedure = "AWS_master_slave"]
+then
+	echo "---------------------------------------------"
+	echo "Cluster settings"
 
-echo "snap_nt_procedure: $snap_nt_procedure"
-echo "ami_id: $ami_id"
-echo "max_slave_instances: $max_slave_instances"
-echo "actual_slave_instances: $actual_slave_instances"
-echo "instance_type: $instance_type"
-echo "keypair: $keypair"
-echo "security_group: $security_group"
-echo "placement_group: $placement_group"
-echo "availability_zone: $availability_zone"
-echo "incoming_dir: $incoming_dir"
-echo "---------------------------------------------"
+	echo "snap_nt_procedure: $snap_nt_procedure"
+	echo "ami_id: $ami_id"
+	echo "max_slave_instances: $max_slave_instances"
+	echo "actual_slave_instances: $actual_slave_instances"
+	echo "instance_type: $instance_type"
+	echo "keypair: $keypair"
+	echo "security_group: $security_group"
+	echo "placement_group: $placement_group"
+	echo "availability_zone: $availability_zone"
+	echo "incoming_dir: $incoming_dir"
+	echo "---------------------------------------------"
+fi
 
 echo "-----------------------------------------------------------------------------------------"
 
@@ -630,7 +649,7 @@ elif [ "$VERIFY_FASTQ" = 3 ]
 then
 	fastQValidator --file $FASTQ_file --printBaseComp --avgQual > quality.$basef.log
 fi
-if [[ $VERIFICATION -eq 1 ]]
+if [[ $VERIFICATION -eq 1 ]] #stop pipeline if using verification mode
 then
 	exit
 fi
@@ -954,8 +973,8 @@ then
 			echo -e "$(date)\t$scriptname\t############# RAPSearch to NR #################"
 			echo -e "$(date)\t$scriptname\tStarting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			START16=$(date +%s)
-			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
-			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
+			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
 			echo -e "$(date)\t$scriptname\trapsearch  to nr done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8
 			echo -e "$(date)\t$scriptname\tremoved extra #"
