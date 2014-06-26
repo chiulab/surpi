@@ -603,7 +603,7 @@ echo "crop_length: $crop_length"
 
 echo "e value for BLASTn used in coverage map generation: $eBLASTn"
 
-if [ $snap_nt_procedure = "AWS_master_slave"]
+if [ $snap_nt_procedure = "AWS_master_slave" ]
 then
 	echo "---------------------------------------------"
 	echo "Cluster settings"
