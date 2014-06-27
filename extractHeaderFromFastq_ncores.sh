@@ -81,15 +81,19 @@ echo -e "$(date)\t$scriptname\tDone generating $output"
 echo -e "$(date)\t$scriptname\tprocessing second query file"
 awk '{print$1}' $queryfile2 > $queryfile2.header
 
-for f in $parentfile.SplitXS[a-z][a-z][a-z]
-do
-	cat $f | fqextract $queryfile2.header > $queryfile2.$f &
-done
+let "adjusted_cores = $cores / 4"
 
-for job in `jobs -p`
-do
-	wait $job
-done
+parallel -j $adjusted_cores -i bash -c "cat {} | fqextract $queryfile2.header > $queryfile2.{}" -- $parentfile.SplitXS[a-z][a-z][a-z]
+
+# for f in $parentfile.SplitXS[a-z][a-z][a-z]
+# do
+# 	cat $f | fqextract $queryfile2.header > $queryfile2.$f &
+# done
+#
+# for job in `jobs -p`
+# do
+# 	wait $job
+# done
 
 echo -e "$(date)\t$scriptname\tDone retrieval of $queryfile2 headers from each $parentfile subsection"
 echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile2.$parentfile.SplitXS"
