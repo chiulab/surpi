@@ -890,8 +890,8 @@ then
 			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores $taxonomy_db_directory"
 			taxonomy_lookup.pl $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 blast prot $cores $taxonomy_db_directory
 			mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.all.annotated $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated
-			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y"
-			table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP Y Y Y Y
+			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP N Y N N"
+			table_generator.sh $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated RAP N Y N N
 			echo -e "$(date)\t$scriptname\tDone: converting RAPSearch Vir output to fasta"
 			END15=$(date +%s)
 			diff=$(( END15 - START15 ))
