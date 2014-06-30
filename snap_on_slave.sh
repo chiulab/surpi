@@ -20,7 +20,7 @@
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
-# Last revised 5/14/2014
+# Last revised 6/30/2014
 
 
 expected_args=6
@@ -91,17 +91,7 @@ echo -e "$(date)\t$scriptname\tdone running SNAP on slaves and transferring data
 START4=$(date +%s)
 
 # this will run pigz, no more than 4 simultaneous (specified by -j)
-parallel -j 4 -i bash -c "echo pigz {}; pigz -d {}; echo done {};" -- $incoming_dir_for_results/*.gz
-
-# for f in $incoming_dir_for_results/*
-# do
-# 	pigz -d $f &
-# done
-# 
-# for job in `jobs -p`
-# do
-# 	wait $job
-# done
+parallel --gnu -j 4 "echo pigz {}; pigz -d {}; echo done {};" ::: $incoming_dir_for_results/*.gz
 
 END4=$(date +%s)
 diff4=$(( END4 - START4 ))
