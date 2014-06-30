@@ -83,7 +83,8 @@ awk '{print$1}' $queryfile2 > $queryfile2.header
 
 let "adjusted_cores = $cores / 4"
 
-parallel -j $adjusted_cores -i bash -c "cat {} | fqextract $queryfile2.header > $queryfile2.{}" -- $parentfile.SplitXS[a-z][a-z][a-z]
+echo -e "$(date)\t$scriptname\tparallel -j $adjusted_cores -i bash -c cat {} | fqextract $queryfile2.header > $queryfile2.{} -- $parentfile.SplitXS[a-z][a-z][a-z]"
+parallel --gnu -j $adjusted_cores "cat {} | fqextract $queryfile2.header > $queryfile2.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
 
 # for f in $parentfile.SplitXS[a-z][a-z][a-z]
 # do
