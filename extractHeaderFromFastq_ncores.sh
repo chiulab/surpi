@@ -86,16 +86,6 @@ let "adjusted_cores = $cores / 4"
 echo -e "$(date)\t$scriptname\tparallel -j $adjusted_cores -i bash -c cat {} | fqextract $queryfile2.header > $queryfile2.{} -- $parentfile.SplitXS[a-z][a-z][a-z]"
 parallel --gnu -j $adjusted_cores "cat {} | fqextract $queryfile2.header > $queryfile2.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
 
-# for f in $parentfile.SplitXS[a-z][a-z][a-z]
-# do
-# 	cat $f | fqextract $queryfile2.header > $queryfile2.$f &
-# done
-#
-# for job in `jobs -p`
-# do
-# 	wait $job
-# done
-
 echo -e "$(date)\t$scriptname\tDone retrieval of $queryfile2 headers from each $parentfile subsection"
 echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile2.$parentfile.SplitXS"
 cat $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z] > $output2
