@@ -141,7 +141,7 @@ cd $CWD
 mkdir fqextract
 cd fqextract
 wget https://raw.github.com/attractivechaos/klib/master/khash.h
-wget https://raw.github.com/avilella/hashbrown/master/scripts/fqextract.c
+wget http://chiulab.ucsf.edu/SURPI/software/fqextract.c
 gcc fqextract.c -o fqextract
 sudo mv fqextract "$bin_folder/"
 sudo chmod +x "$bin_folder/fqextract"
