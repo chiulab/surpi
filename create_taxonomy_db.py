@@ -10,11 +10,12 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014  
+# Last revised 7/2/2014  
 
 import sqlite3
 
 # Create names_nodes_scientific.db
+print ("Creating names_nodes_scientific.db...")
 conn = sqlite3.connect('names_nodes_scientific.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE names (
@@ -27,7 +28,6 @@ with open('names_scientificname.dmp', 'r') as map_file:
 		taxid = line[0].strip()
 		name = line[1].strip()
 		
-# 		print taxid + ":" + name
 		c.execute ("INSERT INTO names VALUES (?,?)", (taxid, name))
 
 d = conn.cursor()
@@ -43,12 +43,12 @@ with open('nodes.dmp', 'r') as map_file:
 		parent_taxid = line[1].strip()
 		rank = line[2].strip()
 		
-# 		print taxid + ":" + parent_taxid + ":" + rank
 		d.execute ("INSERT INTO nodes VALUES (?,?,?)", (taxid, parent_taxid, rank))
 conn.commit()
 conn.close()
 
 # Create gi_taxid_nucl.db
+print ("Creating gi_taxid_nucl.db...")
 conn = sqlite3.connect('gi_taxid_nucl.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE gi_taxid (
@@ -58,12 +58,12 @@ c.execute('''CREATE TABLE gi_taxid (
 with open('gi_taxid_nucl.dmp', 'r') as map_file:
 	for line in map_file:
 		line = line.split()
-# 		print line[0], line[1]
 		c.execute("INSERT INTO gi_taxid VALUES ("+line[0]+","+line[1]+")")
 conn.commit()
 conn.close()
 
 # Create gi_taxid_prot.db
+print ("Creating gi_taxid_prot.db...")
 conn = sqlite3.connect('gi_taxid_prot.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE gi_taxid (
@@ -73,7 +73,6 @@ c.execute('''CREATE TABLE gi_taxid (
 with open('gi_taxid_prot.dmp', 'r') as map_file:
 	for line in map_file:
 		line = line.split()
-# 		print line[0], line[1]
 		c.execute("INSERT INTO gi_taxid VALUES ("+line[0]+","+line[1]+")")
 
 conn.commit()
