@@ -51,23 +51,15 @@ USAGE
 	exit
 fi
 
-if [ ! -f "$db_directory/nt.gz" ]; then
-	echo "nt database not found. Exiting..."
-	exit
-else
-	echo "nt.gz database present."
-fi
-
-
 #check if all 3 files are present
 if [ -f "$db_directory/taxdump.tar.gz" ] && [ -f "$db_directory/gi_taxid_nucl.dmp.gz" ] && [ -f "$db_directory/gi_taxid_prot.dmp.gz" ]; then
-	echo "Necessary files found."
+	echo -e "$(date)\t$scriptname\Taxonomy files found."
 else
-	echo "Necessary files not found. Exiting..."
+	echo -e "$(date)\t$scriptname\tNecessary files not found. Exiting..."
 	exit
 fi
 
-echo "Unzipping downloads..."
+echo -e "$(date)\t$scriptname\tUnzipping downloads..."
 tar xfz "$db_directory/taxdump.tar.gz"
 pigz -dc -k "$db_directory/gi_taxid_nucl.dmp.gz" > gi_taxid_nucl.dmp
 pigz -dc -k "$db_directory/gi_taxid_prot.dmp.gz" > gi_taxid_prot.dmp
@@ -75,14 +67,12 @@ pigz -dc -k "$db_directory/gi_taxid_prot.dmp.gz" > gi_taxid_prot.dmp
 # the below grep "fixes" the issue whereby aliases, mispellings, and other alternate names are returned.
 # We could simply look for a name that is a "scientific name", 
 # but this shrinks the db a bit, speeding up lookups, and removes data we do not need at this time.
-echo "retaining scientific names..."
+echo -e "$(date)\t$scriptname\tRetaining scientific names..."
 grep "scientific name" names.dmp > names_scientificname.dmp
 
-START_indexing=$(date +%s)
+echo -e "$(date)\t$scriptname\tStarting creation of taxonomy SQLite databases..."
 create_taxonomy_db.py
-END_indexing=$(date +%s)
-db_construct_time=$(( END_indexing - START_indexing ))
-echo "Database construction took $db_construct_time seconds"
+echo -e "$(date)\t$scriptname\tCompleted creation of taxonomy SQLite databases."
 
 rm *.dmp
 rm gc.prt

@@ -115,38 +115,38 @@ if [ ! -d "$destination_dir" ]; then
 fi
 
 if [ ! -f "$destination_dir/$nt" ]; then
-	echo "Downloading $nt"
+	echo -e "$(date)\t$scriptname\tDownloading $nt"
 	download_file "$destination_dir" "$NCBI$FASTA_dir" "$nt" "$nt_md5"
 else
-	echo "$nt already present."
+	echo -e "$(date)\t$scriptname\t$nt already present."
 fi
 
 if [ ! -f "$destination_dir/$nr" ]; then
-	echo "Downloading $nr"
+	echo -e "$(date)\t$scriptname\tDownloading $nr"
 	download_file "$destination_dir" "$NCBI$FASTA_dir" "$nr" "$nr_md5"
 else
-	echo "$nr already present."
+	echo -e "$(date)\t$scriptname\t$nr already present."
 fi
 
 if [ ! -f "$destination_dir/$taxdump" ]; then
-	echo "Downloading $taxdump"
+	echo -e "$(date)\t$scriptname\tDownloading $taxdump"
 	download_file "$destination_dir" "$NCBI$TAXONOMY_dir" "$taxdump" "$taxdump_md5"
 else
-	echo "$taxdump already present."
+	echo -e "$(date)\t$scriptname\t$taxdump already present."
 fi
 
 if [ ! -f "$destination_dir/$gi_taxid_nucl" ]; then
-	echo "Downloading $gi_taxid_nucl"
+	echo -e "$(date)\t$scriptname\tDownloading $gi_taxid_nucl"
 	download_file "$destination_dir" "$NCBI$TAXONOMY_dir" "$gi_taxid_nucl"
 else
-	echo "$gi_taxid_nucl already present."
+	echo -e "$(date)\t$scriptname\t$gi_taxid_nucl already present."
 fi
 
 if [ ! -f "$destination_dir/$gi_taxid_prot" ]; then
-	echo "Downloading $gi_taxid_prot"
+	echo -e "$(date)\t$scriptname\tDownloading $gi_taxid_prot"
 	download_file "$destination_dir" "$NCBI$TAXONOMY_dir" "$gi_taxid_prot"
 else
-	echo "$gi_taxid_prot already present."
+	echo -e "$(date)\t$scriptname\t$gi_taxid_prot already present."
 fi
 
 #
@@ -161,11 +161,11 @@ fi
 for download in "${download_list[@]}"
 do
 	if [ ! -f "$curated_dir/$download" ]; then
-		echo "Downloading $download"
+		echo -e "$(date)\t$scriptname\tDownloading $download"
 		download_file "$curated_dir" "$chiulab_dir" "$download" "$download.md5"
 	else
-		echo "$download already present."
+		echo -e "$(date)\t$scriptname\t$download already present."
 	fi
 done
 
-echo -e "${green}Download complete.${endColor}"
+echo -e "$(date)\t$scriptname\t{green}Download complete.${endColor}"

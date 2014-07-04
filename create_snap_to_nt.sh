@@ -71,54 +71,57 @@ fi
 
 if [[ "$num_chunks" > 0 && "$chunk_size" > 0 ]]
 then
-	echo "Please set either the -n or the -s option, not both."
+	echo -e "$(date)\t$scriptname\tPlease set either the -n or the -s option, not both."
 	exit
 fi
 
 if [ ! -f "$db_directory/nt.gz" ]; then
-	echo "nt database not found. Exiting..."
+	echo -e "$(date)\t$scriptname\tnt database not found. Exiting..."
 	exit
 else
-	echo "nt.gz database present."
+	echo -e "$(date)\t$scriptname\tnt.gz database present."
 fi
 
 if [ ! -f "nt" ]; then
-	echo "Decompressing nt..."
+	echo -e "$(date)\t$scriptname\tDecompressing nt..."
 	pigz -dc -k "$db_directory/nt.gz" > nt
 else
-	echo "nt database present, and already decompressed."
+	echo -e "$(date)\t$scriptname\tnt database present, and already decompressed."
 fi
 
 #clean up headers to remove all except for gi
 if [ ! -f nt.noheader ]; then
-	echo "Shrinking headers..."
+	echo -e "$(date)\t$scriptname\tShrinking headers..."
 	sed "s/\(>gi|[0-9]*|\).*/\1/g" nt > nt.noheader
 else
-	echo "Headers already shrunk."
+	echo -e "$(date)\t$scriptname\tHeaders already shrunk."
 fi
 
 #split nt into chunks (since SNAP currently has maximum database size)
 if [ ! -f nt.noheader.1 ]; then
-	echo "Splitting file..."
+	echo -e "$(date)\t$scriptname\tSplitting file..."
 	if [[ $chunk_size > 0 ]]
 	then
-		echo "gt splitfasta -targetsize $chunk_size nt.noheader"
+		echo -e "$(date)\t$scriptname\tgt splitfasta -targetsize $chunk_size nt.noheader"
 		gt splitfasta -targetsize $chunk_size nt.noheader
 	elif [[ $num_chunks > 0 ]]
 	then
-		echo "gt splitfasta -numfiles $num_chunks nt.noheader"
+		echo -e "$(date)\t$scriptname\tgt splitfasta -numfiles $num_chunks nt.noheader"
 		gt splitfasta -numfiles $num_chunks nt.noheader
 	fi
 else
-	echo "Split file already present."
-	echo "$scriptname is currently not capable of verifying the split files."
-	echo "In order to complete the indexing, please delete, or move the split files out of this directory."
+	echo -e "$(date)\t$scriptname\tSplit file already present."
+	echo -e "$(date)\t$scriptname\t$scriptname is currently not capable of verifying the split files."
+	echo -e "$(date)\t$scriptname\tIn order to complete the indexing, please delete, or move the split files out of this directory."
 	exit
 fi
 
 #SNAP index each chunk
+echo -e "$(date)\t$scriptname\tSStarting SNAP indexing of nt..."
 for f in nt.noheader.*
 do
+	echo -e "$(date)\t$scriptname\tSStarting SNAP indexing of $f..."
     snap index $f snap_index_$f -O$Ofactor
+	echo -e "$(date)\t$scriptname\tSCompleted SNAP indexing of $f..."
 done
-
+echo -e "$(date)\t$scriptname\tSCompleted SNAP indexing of nt."
