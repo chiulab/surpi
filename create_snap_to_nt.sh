@@ -120,8 +120,8 @@ fi
 echo -e "$(date)\t$scriptname\tSStarting SNAP indexing of nt..."
 for f in nt.noheader.*
 do
-	echo -e "$(date)\t$scriptname\tSStarting SNAP indexing of $f..."
+	echo -e "$(date)\t$scriptname\tStarting SNAP indexing of $f..."
     snap index $f snap_index_$f -O$Ofactor
-	echo -e "$(date)\t$scriptname\tSCompleted SNAP indexing of $f..."
+	echo -e "$(date)\t$scriptname\tCompleted SNAP indexing of $f..."
 done
-echo -e "$(date)\t$scriptname\tSCompleted SNAP indexing of nt."
+echo -e "$(date)\t$scriptname\tCompleted SNAP indexing of nt."

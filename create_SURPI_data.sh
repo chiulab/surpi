@@ -70,8 +70,8 @@ if [ ! -d "$reference_dir/$RAPSearch_dir" ]; then
 	mkdir "$reference_dir/$RAPSearch_dir"
 fi
 
-echo -e "$(date)\t$scriptname\tDecompresing nr..."
-pigz -dc -k "$db_directory/nr.gz" > nr
+echo -e "$(date)\t$scriptname\tDecompressing nr..."
+pigz -dc -k "$db_dir/nr.gz" > nr
 
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
 prerapsearch -d nr -n "nr_db_$DATE"
@@ -107,7 +107,7 @@ fi
 
 echo -e "$(date)\t$scriptname\tMoving curated data into place..."
 mv snap_index_hg19_rRNA_mito_Hsapiens_rna "$reference_dir"
-mv snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq "$reference_dir/$FAST_dir"
+mv snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq_s16 "$reference_dir/$FAST_dir"
 mv rapsearch_viral_aa_130628_db_v2.12 "$reference_dir/$RAPSearch_dir"
 mv rapsearch_viral_aa_130628_db_v2.12.info "$reference_dir/$RAPSearch_dir"
 mv snap_index_viruses-5-2012_trimmedgi-MOD_addedgi "$reference_dir/$FAST_dir"
