@@ -11,7 +11,7 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014
+# Last revised 7/4/2014
 
 
 if [ $# -lt 4 ]
@@ -30,15 +30,13 @@ output2="$6"
 ###
 scriptname=${0##*/}
 
-echo -e "$(date)\t$scriptname\tStarting splitting $inputfile "
+echo -e "$(date)\t$scriptname\tStarting splitting $inputfile"
 
 #deriving # of lines to split
 headerid=$(head -1 $parentfile | cut -c1-4)
-date=$(date)
 echo -e "$(date)\t$scriptname\theaderid = $headerid"
 echo -e "$(date)\t$scriptname\tStarting grep of FASTQentries"
 FASTQentries=$(grep -c "$headerid" $parentfile)
-date=$(date)
 echo -e "$(date)\t$scriptname\tthere are $FASTQentries FASTQ entries in $queryfile"
 let "numlines = $FASTQentries * 4"
 echo -e "$(date)\t$scriptname\tnumlines = $numlines"
@@ -51,7 +49,7 @@ echo -e "$(date)\t$scriptname\tLinesPerCore = $LinesPerCore"
 echo -e "$(date)\t$scriptname\tSplitting $parentfile into $cores parts with prefix $parentfile.SplitXS"
 split -l $LinesPerCore -a 3 $parentfile $parentfile.SplitXS &
 awk '{print$1}' $queryfile > $queryfile.header &
-echo -e "$(date)\t$scriptname\textracting header from $queryfile" &
+echo -e "$(date)\t$scriptname\textracting header from $queryfile"
 
 for job in `jobs -p`
 do
