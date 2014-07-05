@@ -55,7 +55,7 @@ for snap_index in $SNAP_NT_index_directory/*; do
 	START2=$(date +%s)
 	nopathsnap_index=${snap_index##*/} # remove the path to file
 	echo -e "$(date)\t$scriptname\tStarting SNAP on $nopathsnap_index"
-	
+
 	freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 	echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
 	if [ $freemem -lt $free_cache_cutoff ]
@@ -63,20 +63,20 @@ for snap_index in $SNAP_NT_index_directory/*; do
 		echo -e "$(date)\t$scriptname\tClearing cache..."
 		dropcache
 	fi
-	
+
 	START_SNAP=$(date +%s)
 	/usr/bin/time -o $basef.$nopathsnap_index.snap.log snap single $snap_index $basef.fastq -o $basef.$nopathsnap_index.sam -t $cores -x -f -h 250 -d $SNAP_d_cutoff -n 25 > $basef.$nopathsnap_index.time.log
 	SNAP_DONE=$(date +%s)
 	snap_time=$(( SNAP_DONE - START_SNAP ))
 	echo -e "$(date)\t$scriptname\tCompleted running SNAP using $snap_index in $snap_time seconds."
-	
+
 	echo -e "$(date)\t$scriptname\tRemoving headers..."
 	START_HEADER_REMOVAL=$(date +%s)
 	sed '/^@/d' $basef.$nopathsnap_index.sam > $basef.$nopathsnap_index.noheader.sam
 	END_HEADER_REMOVAL=$(date +%s)
 	header_removal_time=$(( END_HEADER_REMOVAL - START_HEADER_REMOVAL ))
 	echo -e "$(date)\t$scriptname\tCompleted removing headers in $header_removal_time seconds."
-	
+
 	END2=$(date +%s)
 	diff=$(( END2 - START2 ))
 	echo -e "$(date)\t$scriptname\tMapping to $snap_index took $diff seconds"
@@ -87,7 +87,7 @@ echo -e "$(date)\t$scriptname\tSorting..."
 START_SORT=$(date +%s)
 
 # did some testing with optimizing the number of simultaneous sorts - maximizing this number was the speediest, so no need for GNU parallel - SMF 5/22/14
-# parallel.moreutils -j $cores -i bash -c "sort {} > {}.sorted;" -- *.noheader.sam 
+# parallel -j $cores "sort {} > {}.sorted;" ::: *.noheader.sam
 
 for file in *.noheader.sam
 do

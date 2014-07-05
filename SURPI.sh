@@ -11,9 +11,9 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 6/24/2014
+# Last revised 6/30/2014
 
-SURPI_version="1.0.15"
+SURPI_version="1.0.16"
 
 optspec=":f:hvz:"
 bold=$(tput bold)
@@ -137,9 +137,12 @@ adapter_set="Truseq"
 #NR contains all NR proteins
 rapsearch_database="Viral"
 
-#SNAP edit distance [Highly recommended default: d_human=12]
+#SNAP edit distance for Computational Subtraction of host genome [Highly recommended default: d_human=12]
 #see Section 3.1.2 MaxDist description: http://snap.cs.berkeley.edu/downloads/snap-1.0beta-manual.pdf
 d_human=12
+
+#SNAP edit distance for alignment to NCBI nt DB [validated only at: d=12]
+d_NT_alignment=12
 
 #RAPSearch e_cutoffs
 #E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1).
@@ -584,7 +587,8 @@ echo "SNAP human indexed database (for subtraction): $SNAP_subtraction_db"
 echo "SNAP_db_directory housing the reference databases for Comprehensive Mode: $SNAP_COMPREHENSIVE_db_dir"
 echo "SNAP_db_directory housing the reference databases for Fast Mode: $SNAP_FAST_db_dir"
 echo "snap_integrator: $snap_integrator"
-echo "SNAP edit distance for SNAP to Human and SNAP to NT d_human: $d_human"
+echo "SNAP edit distance for SNAP to Human: d_human: $d_human"
+echo "SNAP edit distance for SNAP to NT: d_NT_alignment: $d_NT_alignment"
 
 echo "RAPSearch indexed viral db used: $RAPSearch_VIRUS_db"
 echo "RAPSearch indexed NR db used: $RAPSearch_NR_db"
@@ -740,8 +744,8 @@ then
 		then
 			if [ $snap_integrator = "inline" ]
 			then
-				echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human"
-				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human
+				echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment"
+				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment
 			elif [ $snap_integrator = "end" ]
 			then
 				if [ "$snap_nt_procedure" = "AWS_master_slave" ]
@@ -756,19 +760,19 @@ then
 						sleep 2
 					done
 					echo
-					echo -e "$(date)\t$scriptname\tParameters: snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_human"
+					echo -e "$(date)\t$scriptname\tParameters: snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_NT_alignment"
 					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> $basef.AWS.log 2>&1
 					
 				elif [ "$snap_nt_procedure" = "solo" ]
 				then
-					echo -e "$(date)\t$scriptname\tParameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs"
-					snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_human $num_simultaneous_SNAP_runs
+					echo -e "$(date)\t$scriptname\tParameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $num_simultaneous_SNAP_runs"
+					snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $num_simultaneous_SNAP_runs
 				fi
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_human
+			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment"
+			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment
 		fi
 		
 		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
