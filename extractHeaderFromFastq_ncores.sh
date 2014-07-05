@@ -62,15 +62,10 @@ echo -e "$(date)\t$scriptname\tDone splitting $parentfile into $cores parts with
 
 # retrieving fastqs
 echo -e "$(date)\t$scriptname\tStarting retrieval of $queryfile headers from each $parentfile subsection"
-for f in $parentfile.SplitXS[a-z][a-z][a-z]
-do
-	cat $f | fqextract $queryfile.header > $queryfile.$f &
-done
 
-for job in `jobs -p`
-do
-	wait $job
-done
+let "adjusted_cores = $cores / 4"
+
+parallel -gnu -j $adjusted_cores "cat {} | fqextract $queryfile.header > $queryfile.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
 
 # concatenating split retrieves into output file
 echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile.$parentfile.SplitXS"
@@ -80,8 +75,6 @@ echo -e "$(date)\t$scriptname\tDone generating $output"
 # need to fix this so that there's a conditional trigger of this second query file retrieval
 echo -e "$(date)\t$scriptname\tprocessing second query file"
 awk '{print$1}' $queryfile2 > $queryfile2.header
-
-let "adjusted_cores = $cores / 4"
 
 echo -e "$(date)\t$scriptname\tparallel -j $adjusted_cores -i bash -c cat {} | fqextract $queryfile2.header > $queryfile2.{} -- $parentfile.SplitXS[a-z][a-z][a-z]"
 parallel --gnu -j $adjusted_cores "cat {} | fqextract $queryfile2.header > $queryfile2.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
