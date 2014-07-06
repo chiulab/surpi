@@ -168,4 +168,4 @@ do
 	fi
 done
 
-echo -e "$(date)\t$scriptname\t{green}Download complete.${endColor}"
+echo -e "$(date)\t$scriptname\t${green}Download complete.${endColor}"

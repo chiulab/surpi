@@ -39,7 +39,7 @@ SNAP_nt_dir="COMP_SNAP"
 # and may not allow its individual chunks to be as large as SNAP 0.15.4.
 # This number may be able to be reduced if manually curating NT to reduce the number of sequences.
 
-$SNAP_nt_chunks="20"
+SNAP_nt_chunks="20"
 
 if [ ! -d "$reference_dir" ]; then
 	mkdir "$reference_dir"
@@ -76,8 +76,8 @@ pigz -dc -k "$db_dir/nr.gz" > nr
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
 prerapsearch -d nr -n "nr_db_$DATE"
 echo -e "$(date)\t$scriptname\tCompleted prerapsearch on nr."
-mv nr_db "$reference_dir/$RAPSearch_dir"
-mv nr_db.info "$reference_dir/$RAPSearch_dir"
+mv nr_db_$DATE "$reference_dir/$RAPSearch_dir"
+mv nr_db_$DATE.info "$reference_dir/$RAPSearch_dir"
 
 #
 ## Index curated data
@@ -116,5 +116,6 @@ mv snap_index_viruses-5-2012_trimmedgi-MOD_addedgi "$reference_dir/$FAST_dir"
 ## index SNAP-nt
 #
 echo -e "$(date)\t$scriptname\tStarting creation of SNAP-nt..."
+echo -e "$(date)\t$scriptname\tcreate_snap_to_nt.sh -n $SNAP_nt_chunks -d $db_dir"
 create_snap_to_nt.sh -n "$SNAP_nt_chunks" -d "$db_dir"
 echo -e "$(date)\t$scriptname\tCompleted creation of SNAP-nt."

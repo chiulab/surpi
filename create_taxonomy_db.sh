@@ -53,7 +53,7 @@ fi
 
 #check if all 3 files are present
 if [ -f "$db_directory/taxdump.tar.gz" ] && [ -f "$db_directory/gi_taxid_nucl.dmp.gz" ] && [ -f "$db_directory/gi_taxid_prot.dmp.gz" ]; then
-	echo -e "$(date)\t$scriptname\Taxonomy files found."
+	echo -e "$(date)\t$scriptname\tTaxonomy files found."
 else
 	echo -e "$(date)\t$scriptname\tNecessary files not found. Exiting..."
 	exit

@@ -117,7 +117,7 @@ else
 fi
 
 #SNAP index each chunk
-echo -e "$(date)\t$scriptname\tSStarting SNAP indexing of nt..."
+echo -e "$(date)\t$scriptname\tStarting SNAP indexing of nt..."
 for f in nt.noheader.*
 do
 	echo -e "$(date)\t$scriptname\tStarting SNAP indexing of $f..."
