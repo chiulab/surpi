@@ -69,7 +69,9 @@ create_taxonomy_db.sh -d "$db_dir"
 mv gi_taxid_nucl.db "$reference_dir/$taxonomy_dir/gi_taxid_nucl_$DATE.db"
 mv gi_taxid_prot.db "$reference_dir/$taxonomy_dir/gi_taxid_prot_$DATE.db"
 mv names_nodes_scientific.db "$reference_dir/$taxonomy_dir/names_nodes_scientific_$DATE.db"
-
+ln -s "gi_taxid_nucl_$DATE.db" "$reference_dir/$taxonomy_dir/gi_taxid_nucl.db"
+ln -s "gi_taxid_prot_$DATE.db" "$reference_dir/$taxonomy_dir/gi_taxid_prot.db"
+ln -s "names_nodes_scientific_$DATE.db" "$reference_dir/$taxonomy_dir/names_nodes_scientific.db"
 #
 ##create RAPSearch nr db and move into $RAPSearch_dir
 #
