@@ -86,8 +86,8 @@ sudo cpanm Net::OAuth
 # cd $CWD
 
 #Install specific version
-version="surpi-1.0.16"
-wget "https://github.com/chiulab/surpi/releases/download/v1.0.16/$version.tar.gz"
+version="surpi-1.0.17"
+wget "https://github.com/chiulab/surpi/releases/download/v1.0.17/$version.tar.gz"
 tar xvfz $version.tar.gz
 sudo mv $version "$bin_folder/"
 sudo ln -s "$bin_folder/$version" "$bin_folder/surpi"
