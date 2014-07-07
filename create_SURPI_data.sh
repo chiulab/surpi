@@ -136,10 +136,10 @@ mv rapsearch_viral_aa_130628_db_v2.12 "$reference_dir/$RAPSearch_dir"
 mv rapsearch_viral_aa_130628_db_v2.12.info "$reference_dir/$RAPSearch_dir"
 mv snap_index_viruses-5-2012_trimmedgi-MOD_addedgi "$reference_dir/$FAST_dir"
 
-mv snap_index_18s_rRNA_gene_not_partial.fa "$RiboClean_dir"
-mv snap_index_23sRNA "$RiboClean_dir"
-mv snap_index_28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa "$RiboClean_dir"
-mv snap_index_rdp_typed_iso_goodq_9210seqs "$RiboClean_dir"
+mv snap_index_18s_rRNA_gene_not_partial.fa "$reference_dir/$RiboClean_dir"
+mv snap_index_23sRNA "$reference_dir/$RiboClean_dir"
+mv snap_index_28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa "$reference_dir/$RiboClean_dir"
+mv snap_index_rdp_typed_iso_goodq_9210seqs "$reference_dir/$RiboClean_dir"
 
 #
 ## index SNAP-nt
