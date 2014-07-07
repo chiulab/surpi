@@ -18,6 +18,10 @@
 # Last revised 7/7/2014  
 
 scriptname=${0##*/}
+green='\e[0;32m'
+red='\e[0;31m'
+endColor='\e[0m'
+
 DATE=$(date +%m%d%Y)
 db_dir="NCBI_$DATE"
 curated_dir="curated_$DATE"
@@ -77,10 +81,10 @@ echo -e "$(date)\t$scriptname\tDecompressing nr..."
 pigz -dc -k "$db_dir/nr.gz" > nr
 
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
-prerapsearch -d nr -n "nr_db_$DATE"
+prerapsearch -d nr -n "rapsearch_nr_$DATE_db_v2.12"
 echo -e "$(date)\t$scriptname\tCompleted prerapsearch on nr."
-mv nr_db_$DATE "$reference_dir/$RAPSearch_dir"
-mv nr_db_$DATE.info "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_$DATE_db_v2.12 "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_$DATE_db_v2.12.info "$reference_dir/$RAPSearch_dir"
 
 #
 ## Index curated data
@@ -160,3 +164,5 @@ if [ ! -d "$reference_dir/$SNAP_nt_dir" ]; then
 fi
 
 mv "snap_index_$DATE.nt.*" "$reference_dir/$SNAP_nt_dir"
+
+echo -e "$(date)\t$scriptname\t${green}Completed creation of SURPI reference data.${endColor}"
