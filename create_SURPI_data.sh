@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/2/2014  
+# Last revised 7/7/2014  
 
 scriptname=${0##*/}
 DATE=$(date +%m%d%Y)
@@ -41,7 +41,6 @@ RiboClean_dir="RiboClean_SNAP"
 # This will likely have to be increased when using SNAP 1.0, which has different indexing characteristics,
 # and may not allow its individual chunks to be as large as SNAP 0.15.4.
 # This number may be able to be reduced if manually curating NT to reduce the number of sequences.
-
 SNAP_nt_chunks="20"
 
 if [ ! -d "$reference_dir" ]; then
@@ -52,6 +51,7 @@ fi
 Ofactor=1000
 
 #download NCBI data to $db_dir, curated data to $curated_dir
+echo -e "$(date)\t$scriptname\tdownload_SURPI_data.sh -d $db_dir -c $curated_dir"
 download_SURPI_data.sh -d "$db_dir" -c "$curated_dir"
 
 #
