@@ -23,15 +23,17 @@ normal=$(tput sgr0)
 green='\e[0;32m'
 red='\e[0;31m'
 endColor='\e[0m'
+prefix=$(date +%m%d%Y)
 
 #set SNAP index Ofactor. See SNAP documentation for details
 Ofactor=1000
 
-while getopts ":d:n:hs:" option; do
+while getopts ":n:hs:f:" option; do
 	case "${option}" in
-		d) db_directory=${OPTARG};;
+		f) fasta_file_to_index=${OPTARG};;
 		n) num_chunks=${OPTARG};;
 		h) HELP=1;;
+		p) prefix=${OPTARG};;
 		s) chunk_size=${OPTARG};;
 		:)	echo "Option -$OPTARG requires an argument." >&2
 			exit 1
@@ -51,7 +53,7 @@ ${bold}Command Line Switches:${normal}
 
 	-h	Show this help
 
-	-d	Specify directory containing NCBI data
+	-f	Specify path to nt file (or other FASTA file to be indexed)
 	
 	-n	Specify number of chunks
 	
@@ -60,10 +62,10 @@ ${bold}Command Line Switches:${normal}
 ${bold}Usage:${normal}
 
 	Index NCBI nt DB into 16 SNAP indices
-		$scriptname -n 16 -f NCBI_07022014
+		$scriptname -n 16 -f NCBI_07022014/nt
 
 	Index NCBI nt DB into SNAP indices of size 3000MB
-		$scriptname -s 3000 -f NCBI_07022014
+		$scriptname -s 3000 -f NCBI_07022014/nt
 
 USAGE
 	exit
@@ -75,39 +77,32 @@ then
 	exit
 fi
 
-if [ ! -f "$db_directory/nt.gz" ]; then
-	echo -e "$(date)\t$scriptname\tnt database not found. Exiting..."
+if [ ! -f "$fasta_file_to_index" ]; then
+	echo -e "$(date)\t$scriptname\t$fasta_file_to_index database not found. Exiting..."
 	exit
 else
-	echo -e "$(date)\t$scriptname\tnt.gz database present."
-fi
-
-if [ ! -f "nt" ]; then
-	echo -e "$(date)\t$scriptname\tDecompressing nt..."
-	pigz -dc -k "$db_directory/nt.gz" > nt
-else
-	echo -e "$(date)\t$scriptname\tnt database present, and already decompressed."
+	echo -e "$(date)\t$scriptname\t$fasta_file_to_index FASTA file present."
 fi
 
 #clean up headers to remove all except for gi
-if [ ! -f nt.noheader ]; then
+if [ ! -f $prefix.nt ]; then
 	echo -e "$(date)\t$scriptname\tShrinking headers..."
-	sed "s/\(>gi|[0-9]*|\).*/\1/g" nt > nt.noheader
+	sed "s/\(>gi|[0-9]*|\).*/\1/g" $fasta_file_to_index > $prefix.nt
 else
-	echo -e "$(date)\t$scriptname\tHeaders already shrunk."
+	echo -e "$(date)\t$scriptname\t$prefix.nt already present."
 fi
 
 #split nt into chunks (since SNAP currently has maximum database size)
-if [ ! -f nt.noheader.1 ]; then
-	echo -e "$(date)\t$scriptname\tSplitting file..."
+if [ ! -f $prefix.nt.1 ]; then
+	echo -e "$(date)\t$scriptname\tSplitting $prefix.nt..."
 	if [[ $chunk_size > 0 ]]
 	then
-		echo -e "$(date)\t$scriptname\tgt splitfasta -targetsize $chunk_size nt.noheader"
-		gt splitfasta -targetsize $chunk_size nt.noheader
+		echo -e "$(date)\t$scriptname\tgt splitfasta -targetsize $chunk_size $prefix.nt"
+		gt splitfasta -targetsize $chunk_size $prefix.nt
 	elif [[ $num_chunks > 0 ]]
 	then
-		echo -e "$(date)\t$scriptname\tgt splitfasta -numfiles $num_chunks nt.noheader"
-		gt splitfasta -numfiles $num_chunks nt.noheader
+		echo -e "$(date)\t$scriptname\tgt splitfasta -numfiles $num_chunks $prefix.nt"
+		gt splitfasta -numfiles $num_chunks $prefix.nt
 	fi
 else
 	echo -e "$(date)\t$scriptname\tSplit file already present."
@@ -118,7 +113,7 @@ fi
 
 #SNAP index each chunk
 echo -e "$(date)\t$scriptname\tStarting SNAP indexing of nt..."
-for f in nt.noheader.*
+for f in $prefix.nt.*
 do
 	echo -e "$(date)\t$scriptname\tStarting SNAP indexing of $f..."
     snap index $f snap_index_$f -O$Ofactor

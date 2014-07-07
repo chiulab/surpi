@@ -5,12 +5,6 @@
 #	This program will download the data files necessary to construct SURPI reference data.
 #	It verifies the md5sum if available.
 #
-#	Currently, this program downloads:
-#
-#	NCBI nr DB
-#	NCBI nt DB
-#	NCBI taxonomy DB
-#
 #	Chiu Laboratory
 #	University of California, San Francisco
 #	January, 2014

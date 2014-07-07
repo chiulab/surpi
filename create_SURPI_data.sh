@@ -115,7 +115,19 @@ mv snap_index_viruses-5-2012_trimmedgi-MOD_addedgi "$reference_dir/$FAST_dir"
 #
 ## index SNAP-nt
 #
-echo -e "$(date)\t$scriptname\tStarting creation of SNAP-nt..."
-echo -e "$(date)\t$scriptname\tcreate_snap_to_nt.sh -n $SNAP_nt_chunks -d $db_dir"
-create_snap_to_nt.sh -n "$SNAP_nt_chunks" -d "$db_dir"
-echo -e "$(date)\t$scriptname\tCompleted creation of SNAP-nt."
+if [ ! -f "nt" ]; then
+	echo -e "$(date)\t$scriptname\tDecompressing nt..."
+	pigz -dc -k "$db_dir/nt.gz" > nt
+else
+	echo -e "$(date)\t$scriptname\tnt database present, and already decompressed."
+fi
+echo -e "$(date)\t$scriptname\tStarting indexing of SNAP-nt..."
+echo -e "$(date)\t$scriptname\tcreate_snap_to_nt.sh -n $SNAP_nt_chunks -f nt"
+create_snap_to_nt.sh -n "$SNAP_nt_chunks" -f "nt" -p "$DATE"
+echo -e "$(date)\t$scriptname\tCompleted indexing of SNAP-nt."
+
+if [ ! -d "$reference_dir/$SNAP_nt_dir" ]; then
+	mkdir "$reference_dir/$SNAP_nt_dir"
+fi
+
+mv "snap_index_$DATE.nt.*" "$reference_dir/$SNAP_nt_dir"
