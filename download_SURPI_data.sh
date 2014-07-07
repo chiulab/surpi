@@ -146,7 +146,13 @@ fi
 #
 ## Download Chiulab curated data
 #
-declare -a download_list=("Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq.fa.gz" "hg19_rRNA_mito_Hsapiens_rna.fa.gz" "rapsearch_viral_aa_130628_db_v2.12.fasta.gz" "viruses-5-2012_trimmedgi-MOD_addedgi.fa.gz" )
+declare -a download_list=(	"Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq.fa.gz" \
+							"hg19_rRNA_mito_Hsapiens_rna.fa.gz" \
+							"rapsearch_viral_aa_130628_db_v2.12.fasta.gz" \
+							"viruses-5-2012_trimmedgi-MOD_addedgi.fa.gz" \
+							"18s_rRNA_gene_not_partial.fa.gz" "23s.fa.gz" \
+							"28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa.gz" \
+							"rdp_typed_iso_goodq_9210seqs.fa.gz")
 
 if [ ! -d "$curated_dir" ]; then
 	mkdir "$curated_dir"
