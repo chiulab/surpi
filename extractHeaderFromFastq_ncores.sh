@@ -63,7 +63,7 @@ echo -e "$(date)\t$scriptname\tStarting retrieval of $queryfile headers from eac
 
 let "adjusted_cores = $cores / 4"
 
-parallel -gnu -j $adjusted_cores "cat {} | fqextract $queryfile.header > $queryfile.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
+parallel --gnu -j $adjusted_cores "cat {} | fqextract $queryfile.header > $queryfile.{}" ::: $parentfile.SplitXS[a-z][a-z][a-z]
 
 # concatenating split retrieves into output file
 echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile.$parentfile.SplitXS"
@@ -82,7 +82,7 @@ echo -e "$(date)\t$scriptname\tStarting concatenation of all $queryfile2.$parent
 cat $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z] > $output2
 echo -e "$(date)\t$scriptname\tDone generating $output2"
 rm -f $queryfile2.header
-rm -f $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z]	
+rm -f $queryfile2.$parentfile.SplitXS[a-z][a-z][a-z]
 
 #cleanup
 rm -f $queryfile.header
