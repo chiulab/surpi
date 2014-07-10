@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 6/30/2014
 
-SURPI_version="1.0.17"
+SURPI_version="1.0.18"
 
 optspec=":f:hvz:"
 bold=$(tput bold)
