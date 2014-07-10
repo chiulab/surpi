@@ -83,7 +83,7 @@ echo -e "$(date)\t$scriptname\tDecompressing nr..."
 pigz -dc -k "$db_dir/nr.gz" > nr
 
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
-prerapsearch -d nr -n "rapsearch_nr_$DATE_db_v2.12"
+prerapsearch -d nr -n "rapsearch_nr_${DATE}_db_v2.12"
 echo -e "$(date)\t$scriptname\tCompleted prerapsearch on nr."
 mv rapsearch_nr_$DATE_db_v2.12 "$reference_dir/$RAPSearch_dir"
 mv rapsearch_nr_$DATE_db_v2.12.info "$reference_dir/$RAPSearch_dir"
@@ -165,6 +165,6 @@ if [ ! -d "$reference_dir/$SNAP_nt_dir" ]; then
 	mkdir "$reference_dir/$SNAP_nt_dir"
 fi
 
-mv "snap_index_$DATE.nt.*" "$reference_dir/$SNAP_nt_dir"
+mv "snap_index_${DATE}.nt.*" "$reference_dir/$SNAP_nt_dir"
 
 echo -e "$(date)\t$scriptname\t${green}Completed creation of SURPI reference data.${endColor}"
