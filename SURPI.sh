@@ -446,7 +446,7 @@ nopathf=${FASTQ_file##*/} # remove the path to file
 basef=${nopathf%.fastq}
 
 #verify that all software dependencies are properly installed
-declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "snap" "rapsearch" "fastQValidator" "abyss-pe" "Minimo")
+declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "snap" "rapsearch" "fastQValidator" "abyss-pe" "ABYSS-P" "Minimo")
 echo "-----------------------------------------------------------------------------------------"
 echo "DEPENDENCY VERIFICATION"
 echo "-----------------------------------------------------------------------------------------"
