@@ -26,6 +26,8 @@ DATE=$(date +%m%d%Y)
 db_dir="NCBI_$DATE"
 curated_dir="curated_$DATE"
 
+cleanup_dir="rawdata"
+
 #These parameters specify the folder names for the final databases.
 # $reference_dir is the top level folder name
 # the rest will be created within $reference_dir
@@ -85,8 +87,8 @@ pigz -dc -k "$db_dir/nr.gz" > nr
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
 prerapsearch -d nr -n "rapsearch_nr_${DATE}_db_v2.12"
 echo -e "$(date)\t$scriptname\tCompleted prerapsearch on nr."
-mv rapsearch_nr_$DATE_db_v2.12 "$reference_dir/$RAPSearch_dir"
-mv rapsearch_nr_$DATE_db_v2.12.info "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_${DATE}_db_v2.12 "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_${DATE}_db_v2.12.info "$reference_dir/$RAPSearch_dir"
 
 #
 ## Index curated data
@@ -165,6 +167,20 @@ if [ ! -d "$reference_dir/$SNAP_nt_dir" ]; then
 	mkdir "$reference_dir/$SNAP_nt_dir"
 fi
 
-mv "snap_index_${DATE}.nt.*" "$reference_dir/$SNAP_nt_dir"
+mv "snap_index_${DATE}.nt."* "$reference_dir/$SNAP_nt_dir"
+
+#
+## Cleanup
+#
+
+if [ ! -d "$cleanup_dir" ]; then
+	mkdir "$cleanup_dir"
+fi
+
+mv *.fa "$cleanup_dir"
+mv *.fasta "$cleanup_dir"
+mv nr "$cleanup_dir"
+mv nt "$cleanup_dir"
+mv "$DATE"* "$cleanup_dir"
 
 echo -e "$(date)\t$scriptname\t${green}Completed creation of SURPI reference data.${endColor}"
