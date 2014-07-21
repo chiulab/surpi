@@ -13,7 +13,7 @@
 # Please see license file for details.
 # Last revised 6/30/2014
 
-SURPI_version="1.0.19"
+SURPI_version="1.0.20"
 
 optspec=":f:hvz:"
 bold=$(tput bold)
@@ -977,9 +977,9 @@ then
 			echo -e "$(date)\t$scriptname\t############# RAPSearch to NR #################"
 			echo -e "$(date)\t$scriptname\tStarting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			START16=$(date +%s)
-			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
-			rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearchDB_NR -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}  -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
-			echo -e "$(date)\t$scriptname\trapsearch  to nr done"
+			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
+			rapsearch -q "$basef.Contigs.NT.snap.unmatched.uniq.fl.fasta" -d "$RAPSearch_NR_db" -o "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}" -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			echo -e "$(date)\t$scriptname\tRAPSearch to NR done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8
 			echo -e "$(date)\t$scriptname\tremoved extra #"
 			END16=$(date +%s)
@@ -989,8 +989,19 @@ then
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta
 			echo -e "$(date)\t$scriptname\tretrieved sequences"
-			sed '/>/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
+			
+#replaced sed with multiline cat statement below it (SMF- 7-20-2014)
+#remove sed line once tested
+# 			sed '/>/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
+			cat $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta | \
+				awk '{if (substr($0,1,1)==">"){if (p){print "\n";} print $0} else printf("%s",$0);p++;}END{print "\n"}' | \
+				sed '/^$/d' | \
+				sed '/>/d' > \
+				$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
+
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8
+			# the above 2 files have different number of lines, which causes the RAPSearch NR bug.
+			
 			echo -e "$(date)\t$scriptname\tmade addseq file"
 			echo -e "$(date)\t$scriptname\t############# RAPSearch Taxonomy"
 			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory"
