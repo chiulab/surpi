@@ -561,7 +561,7 @@ then
 	actual_slave_instances=$max_slave_instances
 fi
 
-length=$( expr length $( head -n4 $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
+length=$( expr length $( head -n2 $FASTQ_file | tail -1 ) ) # get length of 1st sequence in FASTQ file
 contigcutoff=$(perl -le "print int(1.75 * $length)")
 echo "-----------------------------------------------------------------------------------------"
 echo "INPUT PARAMETERS"
