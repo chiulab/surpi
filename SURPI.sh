@@ -52,16 +52,16 @@ ${bold}Command Line Switches:${normal}
 	-h	Show this help & ignore all other switches
 
 	-f	Specify config file
-	
+
 		This switch is used to initiate a SURPI run using a specified config file. Verification (see -v switch) will occur at the beginning of the run.
 		The pipeline will cease if SURPI fails to find a software dependency or necessary reference data.
 
 	-v	Verification mode
-	
+
 		When using verification mode, SURPI will verify necessary dependencies, but will
 		stop after verification. This same verification is also done
 		before each SURPI run.
-		
+
 			• software dependencies
 				SURPI will check for the presence of all software dependencies.
 			• reference data specified in config file
@@ -71,7 +71,7 @@ ${bold}Command Line Switches:${normal}
 				SURPI verifies the functionality of the taxonomy lookup.
 			• FASTQ file (if requested in config file)
 				SURPI uses fastQValidator to check the integrity of the FASTQ file.
-				
+
 	-z	Create default config file and go file. [optional] (specify fastq filename)
 		This option will create a standard .config file, and go file.
 
@@ -148,7 +148,7 @@ d_NT_alignment=12
 #E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1).
 #Larger E-values are required to find highly divergent viral sequences.
 ecutoff_Vir="1"
-ecutoff_NR="0"
+ecutoff_NR="1"
 
 #e value for BLASTn used in coverage map generation
 eBLASTn="1e-15"
@@ -728,7 +728,7 @@ then
 	echo -e "$(date)\t$scriptname\tClearing cache..."
 	dropcache
 fi
-############################# SNAP TO NT ##############################       
+############################# SNAP TO NT ##############################
 if [ "$alignment" != "skip" ]
 then
 	if [ ! -f $basef.NT.snap.sam ]
@@ -762,7 +762,7 @@ then
 					echo
 					echo -e "$(date)\t$scriptname\tParameters: snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_NT_alignment"
 					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> $basef.AWS.log 2>&1
-					
+
 				elif [ "$snap_nt_procedure" = "solo" ]
 				then
 					echo -e "$(date)\t$scriptname\tParameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $num_simultaneous_SNAP_runs"
@@ -774,7 +774,7 @@ then
 			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment"
 			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment
 		fi
-		
+
 		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
 		END_SNAPNT=$(date +%s)
 		diff_SNAPNT=$(( END_SNAPNT - START_SNAPNT ))
@@ -808,11 +808,11 @@ then
 # adjust filenames for FAST mode
 	grep "Viruses;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Viruses.annotated"
 	grep "Bacteria;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Bacteria.annotated"
-	
+
 	##SNN140507 cleanup bacterial reads
 	echo -e "$(date)\t$scriptname\tParameters: ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory"
 	ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory #SNN140507
-	
+
 	if [ $run_mode = "Comprehensive" ]
 	then
 		grep "Primates;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Primates.annotated"
@@ -960,7 +960,7 @@ then
 					uniq -d | \
 					sort $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header - | \
 					uniq -u > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.header
-					
+
 			rm -r $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated
 			split -l 400 -a 6 $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.header $basef.not.in.NR.
 			for f in $basef.not.in.NR.[a-z][a-z][a-z][a-z][a-z][a-z]
@@ -1001,7 +1001,7 @@ then
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta
 			echo -e "$(date)\t$scriptname\tretrieved sequences"
-			
+
 # replaced sed with multiline cat statement below it (SMF- 7-20-2014)
 # remove sed line once tested
 # 			sed '/>/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
@@ -1015,7 +1015,7 @@ then
 					$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq > \
 					$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8
 # the above 2 files have different number of lines, which causes the RAPSearch NR bug (SMF 7-20-2014)
-			
+
 			echo -e "$(date)\t$scriptname\tmade addseq file"
 			echo -e "$(date)\t$scriptname\t############# RAPSearch Taxonomy"
 			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory"
@@ -1045,7 +1045,7 @@ then
 	dropcache
 fi
 
-############################# OUTPUT FINAL COUNTS ##############################       
+############################# OUTPUT FINAL COUNTS #############################
 echo -e "$(date)\t$scriptname\tStarting: generating readcounts.$basef.log report"
 START_READCOUNT=$(date +%s)
 
