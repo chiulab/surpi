@@ -41,7 +41,7 @@ CWD=$(pwd)
 
 # Install packages necessary for the SURPI pipeline.
 sudo -E apt-get update -y
-sudo -E apt-get install -y make csh htop python-dev gcc unzip g++ cpanminus ghostscript blast2 python-matplotlib git pigz parallel
+sudo -E apt-get install -y make csh htop python-dev gcc unzip g++ cpanminus ghostscript blast2 python-matplotlib git pigz parallel python-openpyxl
 sudo -E apt-get upgrade -y
 
 #
