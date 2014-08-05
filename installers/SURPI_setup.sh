@@ -70,8 +70,8 @@ sudo cpanm DBI
 sudo cpanm DBD::SQLite
 
 # for twitter updates
-sudo cpanm Net::Twitter::Lite::WithAPIv1_1
-sudo cpanm Net::OAuth
+#sudo cpanm Net::Twitter::Lite::WithAPIv1_1
+#sudo cpanm Net::OAuth
 
 
 #
