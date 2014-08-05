@@ -100,9 +100,9 @@ echo "PATH=\$PATH:$bin_folder/surpi" >> ~/.bashrc
 ### install gt (genometools)
 ##
 #
-curl -O "http://genometools.org/pub/genometools-1.5.1.tar.gz"
-tar xvfz genometools-1.5.1.tar.gz
-cd genometools-1.5.1
+curl -O "http://genometools.org/pub/genometools-1.5.3.tar.gz"
+tar xvfz genometools-1.5.3.tar.gz
+cd genometools-1.5.3
 make 64bit=yes curses=no cairo=no
 sudo make prefix=$install_folder 64bit=yes curses=no cairo=no install
 cd $CWD
