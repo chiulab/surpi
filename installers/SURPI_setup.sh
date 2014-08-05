@@ -259,6 +259,7 @@ sudo cpanm XML::Parser
 curl -O "http://iweb.dl.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz"
 tar xvfz amos-3.1.0.tar.gz
 cd amos-3.1.0
+sed -i '1i#include <getopt.h>' src/Align/find-tandem.cc
 ./configure --prefix=$install_folder
 make
 sudo make install
