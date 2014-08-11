@@ -11,9 +11,9 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 6/30/2014
+# Last revised 8/11/2014
 
-SURPI_version="1.0.20"
+SURPI_version="1.0.21"
 
 optspec=":f:hvz:"
 bold=$(tput bold)
@@ -213,6 +213,10 @@ snap_integrator="inline"
 #if using this parameter, the SNAP databases should reside on separate disks in order to increase throughput.
 #(Mechanism for doing this is not yet in place)
 num_simultaneous_SNAP_runs=1
+
+#Set ignore_barcodes_for_de_novo=0 [default] to deNovo assemble for each barcode independently.
+#Set ignore_barcodes_for_de_novo=1 to assemble all barcodes together into a single assembly.
+ignore_barcodes_for_de_novo=0
 
 ##########################
 # Server related values
@@ -812,13 +816,13 @@ then
 	##SNN140507 cleanup bacterial reads
 	echo -e "$(date)\t$scriptname\tParameters: ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory"
 	ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.Bacteria.annotated BAC $cores $ribo_snap_bac_euk_directory #SNN140507
-
 	if [ $run_mode = "Comprehensive" ]
 	then
 		grep "Primates;" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" > "$basef.NT.snap.matched.fl.Primates.annotated"
 		grep -v "Primates" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Mammalia" > "$basef.NT.snap.matched.fl.nonPrimMammal.annotated"
 		grep -v "Mammalia" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Chordata" > "$basef.NT.snap.matched.fl.nonMammalChordat.annotated"
 		grep -v "Chordata" "$basef.NT.snap.matched.fulllength.all.annotated.sorted" | grep "Eukaryota" > "$basef.NT.snap.matched.fl.nonChordatEuk.annotated"
+		ribo_snap_bac_euk.sh $basef.NT.snap.matched.fl.nonChordatEuk.annotated EUK $cores $ribo_snap_bac_euk_directory
 	fi
 	echo -e "$(date)\t$scriptname\tDone taxonomy retrieval"
 	echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.NT.snap.matched.fl.Viruses.annotated SNAP Y Y Y Y>& $basef.table_generator_snap.matched.fl.log"
@@ -859,8 +863,8 @@ then
 	gt sequniq -seqit -force -o "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" "$basef.NT.snap.matched.fl.Viruses.fasta"
 	cat "$basef.NT.snap.unmatched.uniq.fl.fasta" "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" > "$basef.NT.snap.unmatched_addVir_uniq.fasta"
 	echo -e "$(date)\t$scriptname\tStarting deNovo assembly"
-	echo -e "$(date)\t$scriptname\tParameters: abyss_minimus.sh $basef.NT.snap.unmatched_addVir_uniq.fasta $length $contigcutoff $cores $abysskmer"
-	abyss_minimus.sh "$basef.NT.snap.unmatched_addVir_uniq.fasta" "$length" "$contigcutoff" "$cores" "$abysskmer"
+	echo -e "$(date)\t$scriptname\tParameters: abyss_minimus.sh $basef.NT.snap.unmatched_addVir_uniq.fasta $length $contigcutoff $cores $abysskmer $ignore_barcodes_for_de_novo"
+	abyss_minimus.sh "$basef.NT.snap.unmatched_addVir_uniq.fasta" "$length" "$contigcutoff" "$cores" "$abysskmer" "$ignore_barcodes_for_de_novo"
 	echo -e "$(date)\t$scriptname\tCompleted deNovo assembly: generated all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa"
 	END_deNovo=$(date +%s)
 	diff_deNovo=$(( END_deNovo - START_deNovo ))

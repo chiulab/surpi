@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+# Last revised 8/11/2014    
 
 if [ $# != 9 ]; then
 	echo "Usage: preprocess.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
@@ -67,6 +67,7 @@ then
 	START1=$(date +%s)
 	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
 	mv $basef.modheader.cutadapt.fastq $basef.cutadapt.fastq
+	rm -f $basef.modheader.fastq
 else
 	START1=$(date +%s)
 	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory

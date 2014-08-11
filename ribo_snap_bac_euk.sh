@@ -9,7 +9,7 @@
 # Copyright (C) 2014 Samia Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014
+# Last revised 8/11/2014
 
 if [ $# -lt 4 ]
 then

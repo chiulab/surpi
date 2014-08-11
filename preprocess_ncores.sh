@@ -12,7 +12,7 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+# Last revised 8/11/2014    
 
 if [ $# != 11 ]; then
 	echo "Usage: preprocess_ncores.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <Y/N clear_cache> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
@@ -93,30 +93,25 @@ do
 	nopathf=${f##*/}
 	basef=${nopathf%.fastq}
 	cat $basef.preprocess.log >> $basef2.preprocess.log
+	rm -f $basef.preprocess.log
 	cat $basef.modheader.cutadapt.summary.log >> $basef2.cutadapt.summary.log
+	rm -f $basef.modheader.cutadapt.summary.log
 	cat $basef.modheader.adapterinfo.log >> $basef2.adapterinfo.log
+	rm -f $basef.modheader.adapterinfo.log
 	cat $basef.cutadapt.fastq >> $basef2.cutadapt.fastq
+	rm -f $basef.cutadapt.fastq
 	cat $basef.cutadapt.cropped.fastq.log >> $basef2.cutadapt.cropped.fastq.log
+	rm -f $basef.cutadapt.cropped.fastq.log
 	cat $basef.preprocessed.fastq >> $basef2.preprocessed.fastq
+	rm -f $basef.preprocessed.fastq
 	cat $basef.cutadapt.cropped.dusted.bad.fastq >> $basef2.cutadapt.cropped.dusted.bad.fastq
-done
+	rm -f $basef.cutadapt.cropped.dusted.bad.fastq 
 
-for f in `ls x??.fastq`
-do
-	nopathf=${f##*/}
-	basef=${nopathf%.fastq}
 	rm -f $f
 	rm -f $basef.modheader.fastq
-	rm -f $basef.modheader.cutadapt.summary.log
-	rm -f $basef.modheader.adapterinfo.log
-	rm -f $basef.preprocess.log
 	rm -f $basef.cutadapt.summary.log
 	rm -f $basef.adapterinfo.log
-	rm -f $basef.cutadapt.fastq
 	rm -f $basef.cutadapt.cropped.fastq 
-	rm -f $basef.cutadapt.cropped.fastq.log
-	rm -f $basef.preprocessed.fastq
-	rm -f $basef.cutadapt.cropped.dusted.bad.fastq 
 done
 
 echo -e "$(date)\t$scriptname\tdone concatenating output..."
