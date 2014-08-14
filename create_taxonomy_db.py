@@ -68,7 +68,7 @@ conn = sqlite3.connect('gi_taxid_prot.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE gi_taxid (
 			gi INTEGER PRIMARY KEY, 
-			taxid INTEGERcr)''')
+			taxid INTEGER)''')
 
 with open('gi_taxid_prot.dmp', 'r') as map_file:
 	for line in map_file:
