@@ -146,9 +146,7 @@ close (FINALTAXOUTPUT);
 my $endtaxwrite = tv_interval($starttaxwrite);
 print "time to write taxonomy file: $endtaxwrite seconds\n";
 
-my $elapsedtime = tv_interval($begintime);
-print "total time: $elapsedtime seconds\n";
-
+my $startannotatedwrite = [gettimeofday()];
 
 open (TAXONOMY, "$basef_inputfile.gi.taxonomy");
 open (SAMFILE, "$inputfile");
@@ -162,6 +160,13 @@ while (my $sam_line = <SAMFILE>) {
 close(OUTALL);
 close(SAMFILE);
 close (TAXONOMY);
+
+my $annotatedtime = tv_interval($starttaxwrite);
+print "time to write annotated file: $annotatedtime seconds\n";
+
+my $elapsedtime = tv_interval($begintime);
+print "total time: $elapsedtime seconds\n";
+
 exit;
 
 sub trim ($){

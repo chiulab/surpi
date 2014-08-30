@@ -41,7 +41,7 @@ while getopts ":n:hs:f:" option; do
 	esac
 done
 
-if [[ ${HELP-} -eq 1  ||  $# -lt 1 ]]
+if [[ ${HELP} -eq 1  ||  $# -lt 1 ]]
 then
 	cat <<USAGE
 	
