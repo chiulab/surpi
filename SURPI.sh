@@ -214,9 +214,9 @@ snap_integrator="inline"
 #(Mechanism for doing this is not yet in place)
 num_simultaneous_SNAP_runs=1
 
-#Set ignore_barcodes_for_de_novo=0 [default] to deNovo assemble for each barcode independently.
-#Set ignore_barcodes_for_de_novo=1 to assemble all barcodes together into a single assembly.
-ignore_barcodes_for_de_novo=0
+#Set ignore_barcodes_for_de_novo=N [default] to deNovo assemble for each barcode independently.
+#Set ignore_barcodes_for_de_novo=Y to assemble all barcodes together into a single assembly.
+ignore_barcodes_for_de_novo=N
 
 ##########################
 # Server related values
