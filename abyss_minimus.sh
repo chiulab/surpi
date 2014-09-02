@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 8/11/2014
+# Last revised 9/2/2014
 
 if [ $# -lt 5 ]
 then
@@ -49,7 +49,7 @@ else
 	echo "#" > $1.barcodes
 fi
 
-if [ $ignore_barcodes ]
+if [ $ignore_barcodes = "Y" ]
 then
 	NOBARCODES="1"
 	echo "#" > $1.barcodes
