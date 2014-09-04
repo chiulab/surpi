@@ -39,19 +39,17 @@ START_DEMULTIPLEX=$(date +%s)
 #The sed '/^#$/d' removes a blank #. This is needed in cases where barcodes are present along with reads that have no barcodes
 grep ">" $1 | sed 's/#/ /g' | awk '{print$2}' | sort | uniq | sed 's/\// /g' | awk '{print$1}' | sort | uniq | sed 's/^/#/g' | sed '/^#$/d' > $1.barcodes
 
-if [ -s $1.barcodes ]
+if [ -s $1.barcodes ] #if $1.barcodes exists and has size>0, then we have multiple barcodes, but check if user wants to flatten & run together
 then
-# this takes care of scenario where entire file has no pound delimited barcodes (#12, etc...).
-# It adds a single pound to force the below for loop to treat entire file as 1 "barcode"
-	NOBARCODES="0"
-else
-	NOBARCODES="1"
-	echo "#" > $1.barcodes
-fi
-
-if [ $ignore_barcodes = "Y" ]
-then
-	NOBARCODES="1"
+	if [ $ignore_barcodes = "Y" ]
+	then
+		FLATTEN_BARCODES="1"
+		echo "#" > $1.barcodes
+	else
+		FLATTEN_BARCODES="0"
+	fi
+else #$1.barcodes doesn't exist, or size=0, then we only have 1 barcode, so flatten & assemble entire run together
+	FLATTEN_BARCODES="1"
 	echo "#" > $1.barcodes
 fi
 
@@ -63,7 +61,7 @@ echo -e "$(date)\t$scriptname\tsplit barcode Took $diff_DEMULTIPLEX s"
 ### generate fasta file for every separate barcode (demultiplex)
 
 for f in `cat $1.barcodes` ; do
-	if [ $NOBARCODES ]
+	if [ $FLATTEN_BARCODES = "1" ]
 	then
 		ln -s $1 bar$f.$1
 	else
