@@ -65,12 +65,12 @@ for f in `cat $1.barcodes` ; do
 	then
 		ln -s $1 bar$f.$1
 	else
-		grep -Fw "$f" $1 -A 1 | sed '/--/d' > bar$f.$1
+		grep -E "$f(/|$)" $1 -A 1 --no-group-separator > bar$f.$1
 	fi
 	# split demultiplexed fasta file into 100,000 read sub-fastas
 	echo -e "$(date)\t$scriptname\tStarting split fasta"
 	START_SPLIT=$(date +%s)
-	
+
 	cp bar$f.$1 bar$f.$1_n # So that the unsplit demultiplexed file is also denovo assembled #
 	split_fasta.pl -i bar$f.$1 -o bar$f.$1 -n 100000
 	echo -e "$(date)\t$scriptname\tDone split fasta"
@@ -81,7 +81,7 @@ for f in `cat $1.barcodes` ; do
 	### run abyss (deBruijn assembler) on each 100,000 read demultiplexed fasta file, including the unsplit demultiplexed file 
 	echo -e "$(date)\t$scriptname\tStarting abyss on each 100k"
 	START_ABYSS=$(date +%s)
-	
+
 	for d in bar$f.$1_* ; do 
 		abyss-pe k=$kmer name=$d.f se=$d np=$cores >& $d.abyss.log
 	done
