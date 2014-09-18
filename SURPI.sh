@@ -1011,10 +1011,6 @@ then
 			START17=$(date +%s)
 			seqtk subseq $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta
 			echo -e "$(date)\t$scriptname\tretrieved sequences"
-
-# replaced sed with multiline cat statement below it (SMF- 7-20-2014)
-# remove sed line once tested
-# 			sed '/>/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq
 			cat $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta | \
 				awk '{if (substr($0,1,1)==">"){if (p){print "\n";} print $0} else printf("%s",$0);p++;}END{print "\n"}' | \
 				sed '/^$/d' | \
@@ -1024,8 +1020,6 @@ then
 			paste $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8 \
 					$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8.fasta.seq > \
 					$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8
-# the above 2 files have different number of lines, which causes the RAPSearch NR bug (SMF 7-20-2014)
-
 			echo -e "$(date)\t$scriptname\tmade addseq file"
 			echo -e "$(date)\t$scriptname\t############# RAPSearch Taxonomy"
 			echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.m8 blast prot $cores $taxonomy_db_directory"
