@@ -218,6 +218,12 @@ num_simultaneous_SNAP_runs=1
 #Set ignore_barcodes_for_de_novo=Y to assemble all barcodes together into a single assembly.
 ignore_barcodes_for_de_novo=N
 
+#This parameter sets whether RAPSearch will be run in its fast mode or its normal mode.
+# see RAPSearch -a option for details
+# T will give (10~30 fold) speed improvement, at the cost of sensitivity at high e-values
+# [T: perform fast search, F: perform normal search]
+RAPSearch_NR_fast_mode="T"
+
 ##########################
 # Server related values
 ##########################
@@ -993,8 +999,8 @@ then
 			echo -e "$(date)\t$scriptname\t############# RAPSearch to NR #################"
 			echo -e "$(date)\t$scriptname\tStarting: RAPSearch to NR $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta"
 			START16=$(date +%s)
-			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T"
-			rapsearch -q "$basef.Contigs.NT.snap.unmatched.uniq.fl.fasta" -d "$RAPSearch_NR_db" -o "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}" -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a T
+			echo -e "$(date)\t$scriptname\tParameters:rapsearch -q $basef.Contigs.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_NR_db -o $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR} -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a $RAPSearch_NR_fast_mode"
+			rapsearch -q "$basef.Contigs.NT.snap.unmatched.uniq.fl.fasta" -d "$RAPSearch_NR_db" -o "$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}" -z $cores -e $ecutoff_NR -v 1 -b 1 -t N -a $RAPSearch_NR_fast_mode
 			echo -e "$(date)\t$scriptname\tRAPSearch to NR done"
 			sed -i '/^#/d' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.m8
 			echo -e "$(date)\t$scriptname\tremoved extra #"
