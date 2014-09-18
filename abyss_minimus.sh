@@ -153,7 +153,7 @@ rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.ex.fa
 rm -f all.$1.unitigs.cut$2-contigs.sortlen.seq
 rm -f all-contigs*
 rm -f all.bar*.$1.unitigs.cut$2-minim.fa
-#rm -f $1.barcodes
+rm -f $1.barcodes
 rm -f all.$1.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.fasta
 rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.addseq.gi
 rm -f all.$1.contigs.abyssmini.cut$2.$3.e1.NR.RAPSearch.addseq.gi.uniq
