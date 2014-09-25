@@ -133,7 +133,7 @@ fi
 END=$(date +%s)
 diff_TOTAL=$(( END - START ))
 
-let "avgtime1=`grep CUTADAPT $basef2.preprocess.log | awk '{print $12}' | sort | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
+let "avgtime1=`grep CUTADAPT $basef2.preprocess.log | awk '{print $12}' | sort -n | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
 echo -e "$(date)\t$scriptname\tmedian CUTADAPT time per core: $avgtime1 seconds"
 
 if [ $run_uniq = "Y" ]; then
@@ -143,7 +143,7 @@ else
 	let "avgtime2=0"
 fi
 
-let "avgtime3=`grep DUST $basef2.preprocess.log | awk '{print $12}' | sort | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
+let "avgtime3=`grep DUST $basef2.preprocess.log | awk '{print $12}' | sort -n | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
 echo -e "$(date)\t$scriptname\tmedian DUST time per core: $avgtime3 seconds"
 
 let "totaltime = diff_SPLIT + avgtime1 + avgtime2 + avgtime3"
