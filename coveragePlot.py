@@ -20,6 +20,8 @@ matplotlib.use('Agg')
 from pylab import *
 from pylab import figure, show, legend
 from matplotlib import pyplot as plt
+from distutils.version import LooseVersion
+
 import numpy as np
 
 import sys, os
@@ -44,7 +46,16 @@ if len(sys.argv) < 3:
 
 dataFile = sys.argv[1]
 
-data = mlab.load(dataFile)
+mpl_version=matplotlib.__version__
+
+# print "Installed version is: %s." % mpl_version
+
+#load function is deprecated as of matplotlib v1.3.1, replaced with 
+if (LooseVersion(mpl_version) >= LooseVersion('1.3.1') ):
+	data = np.loadtxt(dataFile)
+else:
+	data = mlab.load(dataFile)
+
 outputFile = os.path.splitext(dataFile)[0]+".ps"
 reportFile = os.path.splitext(dataFile)[0]+".report"
 
