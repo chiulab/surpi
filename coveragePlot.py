@@ -10,12 +10,9 @@
 # Copyright (C) 2014 Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014  
-#
-# Added option 3/22/2014 for log y-axes
+
 
 import matplotlib
-#import matplotlib.numerix as nx
 matplotlib.use('Agg')
 from pylab import *
 from pylab import figure, show, legend

@@ -11,12 +11,12 @@
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/4/2014
 
+scriptname=${0##*/}
 
 if [ $# -lt 4 ]
 then
-	echo "<#cores> <parent file fq> <query1 sam> <output fq> <query2 sam> <output2 fq>"
+	echo "Usage: $scriptname <#cores> <parent file fq> <query1 sam> <output fq> <query2 sam> <output2 fq>"
 	exit 65
 fi
 
@@ -28,7 +28,6 @@ output="$4"
 queryfile2="$5"
 output2="$6"
 ###
-scriptname=${0##*/}
 
 echo -e "$(date)\t$scriptname\tStarting splitting $inputfile"
 

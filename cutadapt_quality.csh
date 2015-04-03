@@ -19,12 +19,9 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
-
-# set TEMPDIR = "/tmp/"
                                                                                                              
-if ($#argv != 6) then
-	echo "Usage: cutadapt_quality.csh <input FASTQ file> <quality S/I> <length cutoff> <keep short reads Y/N> <adapter_set> <temporary_files_directory>"
+if ($#argv != 7) then
+	echo "Usage: cutadapt_quality.csh <input FASTQ file> <quality S/I> <length cutoff> <keep short reads Y/N> <adapter_set> <temporary_files_directory> <quality cutoff>"
 	exit(1)
 endif
 
@@ -35,10 +32,11 @@ set length_cutoff = $argv[3]
 set keep_short_reads = $argv[4]
 set adapter_set = $argv[5]
 set TEMPDIR = $argv[6]
+set quality_cutoff = $argv[7]
 ###
 
-set numreads_start = `egrep -c "@HWI|@M00|@SRR" $inputfile`
-echo $numreads_start" reads at beginning of cutadapt"
+#set numreads_start = `egrep -c "@HWI|@M00|@SRR" $inputfile`
+#echo $numreads_start" reads at beginning of cutadapt"
 
 if ($quality == "S") then
 	echo "Quality is Sanger, quality filtering <15 by default"
@@ -50,13 +48,13 @@ endif
 
 if ($adapter_set == "Truseq") then
 	if ($keep_short_reads == "N") then # delete short reads
-		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -n 15 -O 10 -q 15 -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -n 15 -O 10 -q $quality_cutoff -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		echo -n "****** removing reads of size less than "
 		echo -n $length_cutoff
 		echo " bp ******"
 		sed 's/^$/N/g' $TEMPDIR{$$} > $inputfile:r.cutadapt.fastq
 	else
-		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -n 15 -O 10 -q 15 --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -n 15 -O 10 -q $quality_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		# convert entries <50 to size=1 ("N")
 		echo -n "****** converting reads of size less than "
 		echo -n $length_cutoff
@@ -65,13 +63,28 @@ if ($adapter_set == "Truseq") then
 	endif
 else if ($adapter_set == "Nextera") then
 	if ($keep_short_reads == "N") then # delete short reads
-		cutadapt -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q 15 -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		echo -n "****** removing reads of size less than "
 		echo -n $length_cutoff
 		echo " bp ******"
 		sed 's/^$/N/g' $TEMPDIR{$$} > $inputfile:r.cutadapt.fastq
 	else
-		cutadapt -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q 15 --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		# convert entries <50 to size=1 ("N")
+		echo -n "****** converting reads of size less than "
+		echo -n $length_cutoff
+		echo " bp to N ******"
+		sed 's/^$/N/g' $TEMPDIR{$$} | awk 'NR%2==1 {print $0} NR%2==0 {if ( length ( $0 ) < '$length_cutoff') print "N"; else print $0}' > $inputfile:r.cutadapt.fastq
+	endif
+else if ($adapter_set == "NexSolTruseq") then
+	if ($keep_short_reads == "N") then # delete short reads
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		echo -n "****** removing reads of size less than "
+		echo -n $length_cutoff
+		echo " bp ******"
+		sed 's/^$/N/g' $TEMPDIR{$$} > $inputfile:r.cutadapt.fastq
+	else
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -g GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -a GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		# convert entries <50 to size=1 ("N")
 		echo -n "****** converting reads of size less than "
 		echo -n $length_cutoff
@@ -80,13 +93,13 @@ else if ($adapter_set == "Nextera") then
 	endif
 else if ($adapter_set == "NexSolB") then
 	if ($keep_short_reads == "N") then # delete short reads
-		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q 15 -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff -m $length_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		echo -n "****** removing reads of size less than "
 		echo -n $length_cutoff
 		echo " bp ******"
 		sed 's/^$/N/g' $TEMPDIR{$$} > $inputfile:r.cutadapt.fastq
 	else
-		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q 15 --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
+		cutadapt -g GTTTCCCACTGGAGGATA -a TATCCTCCAGTGGGAAAC -a CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -a CTGTCTCTTATACACATCTGACGCTGCCGACGA -a CTGTCTCTTATACACATCT -n 15 -O 15 -q $quality_cutoff --quality-base=$qual -o $TEMPDIR{$$} --info-file=$inputfile:r.adapterinfo.log $inputfile > $inputfile:r.cutadapt.summary.log
 		# convert entries <50 to size=1 ("N")
 		echo -n "****** converting reads of size less than "
 		echo -n $length_cutoff
@@ -97,9 +110,9 @@ else
 	echo "No adapter set selected!!!!!"
 endif
 
-set numreads_end = `egrep -c "@HWI|@M00|@SRR" $inputfile:r.cutadapt.fastq`
+#set numreads_end = `egrep -c "@HWI|@M00|@SRR" $inputfile:r.cutadapt.fastq`
 
-@ reads_removed = $numreads_start - $numreads_end
-echo $reads_removed" reads removed by cutadapt" 
-echo $numreads_end" reads at end of cutadapt"
+#@ reads_removed = $numreads_start - $numreads_end
+#echo $reads_removed" reads removed by cutadapt" 
+#echo $numreads_end" reads at end of cutadapt"
 rm -f $TEMPDIR{$$}

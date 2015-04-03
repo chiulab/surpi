@@ -5,15 +5,13 @@
 #	This is the main driver script for the SURPI pipeline.
 #	Chiu Laboratory
 #	University of California, San Francisco
-#	January, 2014
 #
 #
 # Copyright (C) 2014 Samia N Naccache, Scot Federman, and Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 8/11/2014
-
-SURPI_version="1.0.21"
+#
+SURPI_version="1.0.22"
 
 optspec=":f:hvz:"
 bold=$(tput bold)
@@ -35,7 +33,7 @@ while getopts "$optspec" option; do
 			;;
 		:)	echo "Option -$OPTARG requires an argument." >&2
 			exit 1
-      		;;
+			;;
 	esac
 done
 
@@ -92,7 +90,9 @@ fi
 
 if [[ $create_config_file ]]
 then
-	echo "nohup $scriptname -f $configprefix.config > SURPI.$configprefix.log 2> SURPI.$configprefix.err" > go_$configprefix
+	echo "PATH=/usr/local/bin/surpi:/usr/local/bin:/usr/bin/:/bin" > go_$configprefix
+	echo "nohup $scriptname -f $configprefix.config > SURPI.$configprefix.log 2> SURPI.$configprefix.err" >> go_$configprefix
+
 	chmod +x go_$configprefix
 #------------------------------------------------------------------------------------------------
 (
@@ -104,9 +104,8 @@ then
 config_file_version="$SURPI_version"
 
 ##########################
-#  Mandatory parameters
+#  Input file
 ##########################
-
 
 #To create this file, concatenate the entirety of a sequencing run into one FASTQ file.
 #SURPI currently does not have paired-end functionality, we routinely concatenate Read 1 and Read 2 into the unified input file.
@@ -124,66 +123,10 @@ inputtype="FASTQ"
 #Selecting Illumina quality on Sanger data will likely lead to improper preprocessing, resulting in preprocessed files of 0 length.
 quality="Sanger"
 
-#length_cutoff: after quality and adaptor trimming, any sequence with length smaller than length_cutoff will be discarded
-length_cutoff="50"
-
-#Adapter set used. [Truseq/Nextera/NexSolB]
+#Adapter set used. [Truseq/Nextera/NexSolB/NexSolTruseq]
 #Truseq = trims truseq adaptors
 #Nextera = trims Nextera adaptors
 adapter_set="Truseq"
-
-#RAPSearch database method to use. [Viral/NR]
-#Viral database contains viral proteins derived from genbank
-#NR contains all NR proteins
-rapsearch_database="Viral"
-
-#SNAP edit distance for Computational Subtraction of host genome [Highly recommended default: d_human=12]
-#see Section 3.1.2 MaxDist description: http://snap.cs.berkeley.edu/downloads/snap-1.0beta-manual.pdf
-d_human=12
-
-#SNAP edit distance for alignment to NCBI nt DB [validated only at: d=12]
-d_NT_alignment=12
-
-#RAPSearch e_cutoffs
-#E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1).
-#Larger E-values are required to find highly divergent viral sequences.
-ecutoff_Vir="1"
-ecutoff_NR="1"
-
-#e value for BLASTn used in coverage map generation
-eBLASTn="1e-15"
-
-##########################
-# Optional Parameters
-##########################
-
-#Run mode to use. [Comprehensive/Fast]
-#Comprehensive mode allows SNAP to NT -> denovo contig assembly -> RAPSearch to Viral proteins or NR
-#Fast mode allows SNAP to curated FAST databases
-run_mode="Comprehensive"
-
-#Which method to use for SNAP to nt [AWS_master_slave/solo]
-# AWS_master_slave will start up a slave instance on AWS for each division of the nt database
-# It will be more costly, but should run significantly faster than the solo method, which 
-# runs each NT division through SNAP serially on a single machine.
-# If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
-# set properly.
-#6/24/14 AWS_master_slave option is currently experimental and incomplete. Please use "solo" for the time being.
-snap_nt_procedure="solo"
-
-#Number of cores to use. Will use all cores on machine if unspecified.
-#Uncomment the parameter to set explicitly.
-#cores=64
-
-#Cropping values. Highly recommended default = 10,75
-#Cropping quality trimmed reads prior to SNAP alignment
-#snapt_nt = Where to start crop
-#crop_length = how long to crop
-start_nt=10
-crop_length=75
-
-#kmer value for ABySS in DeBruijn portion of denovo contig assembly. Highly recommended default=34
-abysskmer=34
 
 #Verify FASTQ quality
 #	0 = skip validation
@@ -192,6 +135,16 @@ abysskmer=34
 #	3 = run validation, check for unique names, do not quit on failure
 VERIFY_FASTQ=1
 
+
+##########################
+# Run Mode
+##########################
+
+#Run mode to use. [Comprehensive/Fast]
+#Comprehensive mode allows SNAP to NT -> denovo contig assembly -> RAPSearch to Viral proteins or NR
+#Fast mode allows SNAP to curated FAST databases
+run_mode="Comprehensive"
+
 #Below options are to skip specific steps.
 #Uncomment preprocess parameter to skip preprocessing
 #(useful for large data sets that have already undergone preprocessing step)
@@ -199,6 +152,39 @@ VERIFY_FASTQ=1
 # $basef.cutadapt.fastq
 # $basef.preprocessed.fastq
 #preprocess="skip"
+
+
+##########################
+# Preprocessing
+##########################
+
+#length_cutoff: after quality and adaptor trimming, any sequence with length smaller than length_cutoff will be discarded
+length_cutoff="50"
+
+#Cropping values. Highly recommended default = 10,75
+#Cropping quality trimmed reads prior to SNAP alignment
+#snapt_nt = Where to start crop
+#crop_length = how long to crop
+start_nt=10
+crop_length=75
+
+#quality cutoff ( -q switch in cutadapt )
+quality_cutoff=18
+
+
+##########################
+# SNAP
+##########################
+
+#SNAP executable
+snap="/usr/local/bin/snap-dev"
+
+#SNAP edit distance for Computational Subtraction of host genome [Highly recommended default: d_human=12]
+#see Section 3.1.2 MaxDist description: http://snap.cs.berkeley.edu/downloads/snap-1.0beta-manual.pdf
+d_human=12
+
+#SNAP edit distance for alignment to NCBI nt DB [validated only at: d=12]
+d_NT_alignment=12
 
 #snap_nt iterator to use. [inline/end]
 #inline : compares each SNAP iteration to the previous as they are completed
@@ -214,9 +200,21 @@ snap_integrator="inline"
 #(Mechanism for doing this is not yet in place)
 num_simultaneous_SNAP_runs=1
 
-#Set ignore_barcodes_for_de_novo=N [default] to deNovo assemble for each barcode independently.
-#Set ignore_barcodes_for_de_novo=Y to assemble all barcodes together into a single assembly.
-ignore_barcodes_for_de_novo=N
+
+##########################
+# RAPSEARCH
+##########################
+
+#RAPSearch database method to use. [Viral/NR]
+#Viral database contains viral proteins derived from genbank
+#NR contains all NR proteins
+rapsearch_database="Viral"
+
+#RAPSearch e_cutoffs
+#E-value of 1e+1, 1e+0 1e-1 is represented by RAPSearch2 http://omics.informatics.indiana.edu/mg/RAPSearch2/ in log form (1,0,-1).
+#Larger E-values are required to find highly divergent viral sequences.
+ecutoff_Vir="1"
+ecutoff_NR="1"
 
 #This parameter sets whether RAPSearch will be run in its fast mode or its normal mode.
 # see RAPSearch -a option for details
@@ -224,12 +222,31 @@ ignore_barcodes_for_de_novo=N
 # [T: perform fast search, F: perform normal search]
 RAPSearch_NR_fast_mode="T"
 
+
 ##########################
-# Server related values
+# de novo Assembly
+##########################
+
+#kmer value for ABySS in DeBruijn portion of denovo contig assembly. Highly recommended default=34
+abysskmer=34
+
+#Set ignore_barcodes_for_de_novo=N [default] to deNovo assemble for each barcode independently.
+#Set ignore_barcodes_for_de_novo=Y to assemble all barcodes together into a single assembly.
+ignore_barcodes_for_de_novo=N
+
+#e value for BLASTn used in coverage map generation
+eBLASTn="1e-15"
+
+
+##########################
+# Reference Data
 ##########################
 
 # SNAP-indexed database of host genome (for subtraction phase)
-SNAP_subtraction_db="/reference/snap_index_hg19_rRNA_mito_Hsapiens_rna"
+# SURPI will subtract all SNAP databases found in this directory from the input sequence
+# Useful if you want to subtract multiple genomes (without combining SNAP databases)
+# or, if you need to split a db if it is larger than available RAM.
+SNAP_subtraction_folder="/reference/hg19"
 
 # directory for SNAP-indexed databases of NCBI NT (for mapping phase in comprehensive mode)
 # directory must ONLY contain snap indexed databases
@@ -248,25 +265,35 @@ taxonomy_db_directory="/reference/taxonomy"
 
 #RAPSearch viral database name: indexed protein dataset (all of Viruses)
 #make sure that directory also includes the .info file 
-RAPSearch_VIRUS_db="/reference/RAPSearch/rapsearch_viral_aa_130628_db_v2.12"
+RAPSearch_VIRUS_db="/reference/RAPSearch/rapsearch_viral_db"
 
 #RAPSearch nr database name: indexed protein dataset (all of NR)
 #make sure that directory also includes the .info file 
-RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_130624_db_v2.12"
+RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_db"
 
 ribo_snap_bac_euk_directory="/reference/RiboClean_SNAP"
+
+##########################
+# Server related values
+##########################
+
+#Number of cores to use. Will use all cores on machine if unspecified.
+#Uncomment the parameter to set explicitly.
+#cores=64
 
 #specify a location for storage of temporary files.
 #Space needed may be up to 10x the size of the input file.
 #This folder will not be created by SURPI, so be sure it already exists with proper permissions.
 temporary_files_directory="/tmp/"
 
+#This parameter controls whether dropcache is used throughout the pipeline. If free RAM is less than cache_reset,
+#	then dropcache. If cache_reset=0, then dropcache will never be used.
+cache_reset="0"
+
+
 ##########################
 # AWS related values
 ##########################
-
-# These values are only used if the "AWS_master_slave" option is set above.
-# Note: this method is currently incomplete and experimental.
 
 # AWS_master_slave will start up a slave instance on AWS for each division of the nt database
 # It will be more costly, but should run significantly faster than the solo method, which 
@@ -274,10 +301,21 @@ temporary_files_directory="/tmp/"
 # If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
 # set properly.
 
+# These values are only used if the "AWS_master_slave" option is set below.
+# Note: this method is currently incomplete and experimental.
+
+#Which method to use for SNAP to nt [AWS_master_slave/solo]
+# AWS_master_slave will start up a slave instance on AWS for each division of the nt database
+# It will be more costly, but should run significantly faster than the solo method, which 
+# runs each NT division through SNAP serially on a single machine.
+# If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
+# set properly.
+#6/24/14 AWS_master_slave option is currently experimental and incomplete. Please use "solo" for the time being.
+snap_nt_procedure="solo"
+
 #ami-b93264d0 = Ubuntu 12.04 HVM 64-bit
 #ami-5ef61936 = custom AMI (ami-b93264d0 + SNAP setup)
 ami_id="ami-5ef61936"
-
 
 #Number of slave instances will not exceed this value. Useful for testing, in order to restrict instance count.
 #Otherwise, number of instances should be equal to number of SNAP-NT database divisions. This value is 
@@ -300,6 +338,7 @@ placement_group="surpi"
 #this directory will not be created by SURPI - it should pre-exist.
 #There must be sufficient space in this directory to contain all returning compressed SAM files
 incoming_dir="/ssd4/incoming"
+
 
 EOF
 ) > $configprefix.config
@@ -393,9 +432,9 @@ then
 	crop_length=75
 fi
 
-if [ "$adapter_set" != "Truseq" -a "$adapter_set" != "Nextera" -a "$adapter_set" != "NexSolB" ]
+if [ "$adapter_set" != "Truseq" -a "$adapter_set" != "Nextera" -a "$adapter_set" != "NexSolB" -a "$adapter_set" != "NexSolTruseq" ]
 then
-	echo "${bold}$adapter_set${normal} is not a valid adapter_set - must be Truseq, Nextera, or NexSolB."
+	echo "${bold}$adapter_set${normal} is not a valid adapter_set - must be Truseq, Nextera, NexSolTruseq, or NexSolB."
 	echo "Please specify a valid adapter set using the -a switch."
 	exit 65
 fi
@@ -443,20 +482,11 @@ then
 	exit 65
 fi
 
-if [ ! $abysskmer ]
-then
-	abysskmer=34
-fi
-
-if [ ! $eBLASTn ]
-then
-	eBLASTn=1e-15
-fi
 nopathf=${FASTQ_file##*/} # remove the path to file
 basef=${nopathf%.fastq}
 
 #verify that all software dependencies are properly installed
-declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "snap" "rapsearch" "fastQValidator" "abyss-pe" "ABYSS-P" "Minimo")
+declare -a dependency_list=("gt" "seqtk" "fastq" "fqextract" "cutadapt" "prinseq-lite.pl" "dropcache" "$snap" "rapsearch" "fastQValidator" "abyss-pe" "ABYSS-P" "Minimo")
 echo "-----------------------------------------------------------------------------------------"
 echo "DEPENDENCY VERIFICATION"
 echo "-----------------------------------------------------------------------------------------"
@@ -474,23 +504,55 @@ do
         fi
 done
 echo "-----------------------------------------------------------------------------------------"
+echo "SOFTWARE VERSION INFORMATION"
+echo "-----------------------------------------------------------------------------------------"
+gt_version=$(gt -version | head -1 | awk '{print $3}')
+seqtk_version=$(seqtk 2>&1 | head -3 | tail -1 | awk '{print $2}')
+cutadapt_version=$(cutadapt --version)
+prinseqlite_version=$(prinseq-lite.pl --version 2>&1 | awk '{print $2}')
+snap_version=$(snap 2>&1 | grep version | awk '{print $5}')
+snap_dev_version=$(snap-dev 2>&1 | grep version | awk '{print $5}')
+rapsearch_version=$(rapsearch 2>&1 | head -2 | tail -1 | awk '{print $2}')
+abyss_pe_version=$(abyss-pe version | head -2 | tail -1 | awk '{print $3}')
+ABYSS_P_version=$(ABYSS-P  --version | head -1 | awk '{print $3}')
+Minimo_version=$(Minimo -h | tail -2 | awk '{print $2}')
+echo -e "SURPI version: $SURPI_version"
+echo -e "config file version: $config_file_version"
+echo -e "gt: $gt_version"
+echo -e "seqtk: $seqtk_version"
+echo -e "cutadapt: $cutadapt_version"
+echo -e "prinseq-lite: $prinseqlite_version${endColor}"
+echo -e "snap: $snap_version${endColor}"
+echo -e "snap-dev: $snap_dev_version${endColor}"
+echo -e "RAPSearch: $rapsearch_version"
+echo -e "abyss-pe: $abyss_pe_version"
+echo -e "ABYSS-P: $ABYSS_P_version"
+echo -e "Minimo: $Minimo_version"
+
+echo "-----------------------------------------------------------------------------------------"
 echo "REFERENCE DATA VERIFICATION"
 echo "-----------------------------------------------------------------------------------------"
-if [ -f $SNAP_subtraction_db/Genome ]
-then
-		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${green}OK${endColor}"
-else
-		echo -e "SNAP_subtraction_db: $SNAP_subtraction_db: ${red}BAD${endColor}"
-		reference_check="FAIL"
-fi
 
+echo -e "SNAP subtraction db"
+for f in $SNAP_subtraction_folder/*
+do
+	if [ -f $f/Genome ]
+	then
+		echo -e "\t$f: ${green}OK${endColor}"
+	else
+		echo -e "\t$f: ${red}BAD${endColor}"
+		reference_check="FAIL"
+	fi
+done
+
+echo -e "SNAP Comprehensive Mode database"
 for f in $SNAP_COMPREHENSIVE_db_dir/*
 do
 	if [ -f $f/Genome ]
 	then
-		echo -e "$f: ${green}OK${endColor}"
+		echo -e "\t$f: ${green}OK${endColor}"
 	else
-		echo -e "$f: ${red}BAD${endColor}"
+		echo -e "\t$f: ${red}BAD${endColor}"
 		if [ "$run_mode" = "Comprehensive" ]
 		then
 			reference_check="FAIL"
@@ -498,13 +560,14 @@ do
 	fi
 done
 
+echo -e "SNAP FAST Mode database"
 for f in $SNAP_FAST_db_dir/*
 do
 	if [ -f $f/Genome ]
 	then
-		echo -e "$f: ${green}OK${endColor}"
+		echo -e "\t$f: ${green}OK${endColor}"
 	else
-		echo -e "$f: ${red}BAD${endColor}"
+		echo -e "\t$f: ${red}BAD${endColor}"
 		if [ "$run_mode" = "Fast" ]
 		then
 			reference_check="FAIL"
@@ -523,38 +586,40 @@ else
 	reference_check="FAIL"
 fi
 
+echo -e "RAPSearch viral database"
 if [ -f $RAPSearch_VIRUS_db ]
 then
-	echo -e "$RAPSearch_VIRUS_db: ${green}OK${endColor}"
+	echo -e "\t$RAPSearch_VIRUS_db: ${green}OK${endColor}"
 else
-	echo -e "$RAPSearch_VIRUS_db: ${red}BAD${endColor}"
+	echo -e "\t$RAPSearch_VIRUS_db: ${red}BAD${endColor}"
 	echo
 	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_VIRUS_db.info ]
 then
-	echo -e "$RAPSearch_VIRUS_db.info: ${green}OK${endColor}"
+	echo -e "\t$RAPSearch_VIRUS_db.info: ${green}OK${endColor}"
 else
-	echo -e "$RAPSearch_VIRUS_db.info: ${red}BAD${endColor}"
+	echo -e "\t$RAPSearch_VIRUS_db.info: ${red}BAD${endColor}"
 	echo
 	reference_check="FAIL"
 fi
 
+echo -e "RAPSearch NR database"
 if [ -f $RAPSearch_NR_db ]
 then
-	echo -e "$RAPSearch_NR_db: ${green}OK${endColor}"
+	echo -e "\t$RAPSearch_NR_db: ${green}OK${endColor}"
 else
-	echo -e "$RAPSearch_NR_db: ${red}BAD${endColor}"
+	echo -e "\t$RAPSearch_NR_db: ${red}BAD${endColor}"
 	echo
 	reference_check="FAIL"
 fi
 
 if [ -f $RAPSearch_NR_db.info ]
 then
-	echo -e "$RAPSearch_NR_db.info: ${green}OK${endColor}"
+	echo -e "\t$RAPSearch_NR_db.info: ${green}OK${endColor}"
 else
-	echo -e "$RAPSearch_NR_db.info: ${red}BAD${endColor}"
+	echo -e "\t$RAPSearch_NR_db.info: ${red}BAD${endColor}"
 	echo
 	reference_check="FAIL"
 fi
@@ -563,7 +628,7 @@ then
 	echo -e "${red}There is an issue with one of the dependencies or reference databases above.${endColor}"
 	exit 65
 else
-	echo -e "${green}All dependencies and reference data pass.${endColor}"
+	echo -e "${green}All necessary dependencies and reference data pass.${endColor}"
 fi
 actual_slave_instances=$(ls -1 "$SNAP_COMPREHENSIVE_db_dir" | wc -l)
 if [ $max_slave_instances -lt $actual_slave_instances ]
@@ -588,11 +653,12 @@ echo "inputtype: $inputtype"
 echo "FASTQ_file: $FASTQ_file"
 echo "cores used: $cores"
 echo "Raw Read quality: $quality"
+echo "Quality cutoff: $quality_cutoff"
 echo "Read length_cutoff for preprocessing under which reads are thrown away: $length_cutoff"
 
 echo "temporary files location: $temporary_files_directory"
 
-echo "SNAP human indexed database (for subtraction): $SNAP_subtraction_db"
+echo "SNAP_db_directory housing the reference databases for Subtraction: $SNAP_subtraction_folder"
 
 echo "SNAP_db_directory housing the reference databases for Comprehensive Mode: $SNAP_COMPREHENSIVE_db_dir"
 echo "SNAP_db_directory housing the reference databases for Fast Mode: $SNAP_FAST_db_dir"
@@ -600,9 +666,9 @@ echo "snap_integrator: $snap_integrator"
 echo "SNAP edit distance for SNAP to Human: d_human: $d_human"
 echo "SNAP edit distance for SNAP to NT: d_NT_alignment: $d_NT_alignment"
 
+echo "rapsearch_database: $rapsearch_database"
 echo "RAPSearch indexed viral db used: $RAPSearch_VIRUS_db"
 echo "RAPSearch indexed NR db used: $RAPSearch_NR_db"
-echo "rapsearch_database: $rapsearch_database"
 
 echo "taxonomy database directory: $taxonomy_db_directory"
 echo "adapter_set: $adapter_set"
@@ -610,8 +676,9 @@ echo "adapter_set: $adapter_set"
 echo "Raw Read length: $length"
 echo "contigcutoff for abyss assembly unitigs: $contigcutoff"
 echo "abysskmer length: $abysskmer"
+echo "Ignore barcodes for assembly? $ignore_barcodes_for_de_novo"
 
-echo "cache_reset: $cache_reset"
+echo "cache_reset (if 0, then dropcache will never be used): $cache_reset"
 echo "start_nt: $start_nt"
 echo "crop_length: $crop_length"
 
@@ -689,7 +756,7 @@ then
 	echo -e "$(date)\t$scriptname\tStarting: preprocessing using $cores cores "
 	START_PREPROC=$(date +%s)
 	echo -e "$(date)\t$scriptname\tParameters: preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log"
-	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores Y N $adapter_set $start_nt $crop_length $temporary_files_directory >& $basef.preprocess.log
+	preprocess_ncores.sh $basef.fastq $quality N $length_cutoff $cores $cache_reset N $adapter_set $start_nt $crop_length $temporary_files_directory $quality_cutoff >& $basef.preprocess.log
 	echo -e "$(date)\t$scriptname\tDone: preprocessing "
 	END_PREPROC=$(date +%s)
 	diff_PREPROC=$(( END_PREPROC - START_PREPROC ))
@@ -707,36 +774,64 @@ fi
 ############# BEGIN SNAP PIPELINE #################
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
-if [ "$freemem" -lt "$cache_reset" ]
+if [[ $dropcache == "Y" ]]
 then
-	echo -e "$(date)\t$scriptname\tClearing cache..."
-	dropcache
+	if [ "$freemem" -lt "$cache_reset" ]
+	then
+		echo -e "$(date)\t$scriptname\tClearing cache..."
+		dropcache
+	fi
 fi
 ############# HUMAN MAPPING #################
 if [ "$human_mapping" != "skip" ]
 then
 	echo -e "$(date)\t$scriptname\t############### SNAP TO HUMAN ###############"
-	for d_human in $d_human; do
-		basef_h=${nopathf%.fastq}.preprocessed.s20.h250n25d${d_human}xfu # remove fastq extension
-		echo -e "$(date)\t$scriptname\tBase file: $basef_h"
-		echo -e "$(date)\t$scriptname\tStarting: $basef_h human mapping"
-		START_SUBTRACTION=$(date +%s)
-		echo -e "$(date)\t$scriptname\tParameters: snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u"
-		snap single $SNAP_subtraction_db $basef.preprocessed.fastq -o $basef_h.human.snap.unmatched.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u     
+	basef_h=${nopathf%.fastq}.preprocessed.s20.h250n25d${d_human}xfu # remove fastq extension
+	echo -e "$(date)\t$scriptname\tBase file: $basef_h"
+	echo -e "$(date)\t$scriptname\tStarting: $basef_h human mapping"
+
+	file_to_subtract="$basef.preprocessed.fastq"
+	subtracted_output_file="$basef_h.human.snap.unmatched.sam"
+	SUBTRACTION_COUNTER=0
+
+	START_SUBTRACTION=$(date +%s)
+	for SNAP_subtraction_db in $SNAP_subtraction_folder/*; do
+		SUBTRACTION_COUNTER=$[$SUBTRACTION_COUNTER +1]
+		# check if SNAP db is cached in RAM, use optimal parameters depending on result
+		SNAP_db_cached=$(vmtouch -m500G -f "$SNAP_subtraction_db" | grep 'Resident Pages' | awk '{print $5}')
+		if [[ "$SNAP_db_cached" == "100%" ]]
+		then
+			echo -e "$(date)\t$scriptname\tSNAP database is cached ($SNAP_db_cached)."
+			SNAP_cache_option=" -map "
+		else
+			echo -e "$(date)\t$scriptname\tSNAP database is not cached ($SNAP_db_cached)."
+			SNAP_cache_option=" -pre -map "
+		fi
+		echo -e "$(date)\t$scriptname\tParameters: snap-dev single $SNAP_subtraction_db $file_to_subtract -o -sam $subtracted_output_file.$SUBTRACTION_COUNTER.sam -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u $SNAP_cache_option"
+		START_SUBTRACTION_STEP=$(date +%s)
+		snap-dev single "$SNAP_subtraction_db" "$file_to_subtract" -o -sam "$subtracted_output_file.$SUBTRACTION_COUNTER.sam" -t $cores -x -f -h 250 -d ${d_human} -n 25 -F u $SNAP_cache_option
+		END_SUBTRACTION_STEP=$(date +%s)
 		echo -e "$(date)\t$scriptname\tDone: SNAP to human"
-		END_SUBTRACTION=$(date +%s)
-		diff_SUBTRACTION=$(( END_SUBTRACTION - START_SUBTRACTION ))
-		echo -e "$(date)\t$scriptname\tHuman mapping took $diff_SUBTRACTION seconds" | tee -a timing.$basef.log
-		egrep -v "^@" $basef_h.human.snap.unmatched.sam | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef_h".human.snap.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
+		diff_SUBTRACTION_STEP=$(( END_SUBTRACTION_STEP - START_SUBTRACTION_STEP ))
+		echo -e "$(date)\t$scriptname\tSubtraction step: $SUBTRACTION_COUNTER took $diff_SUBTRACTION_STEP seconds"
+		file_to_subtract="$subtracted_output_file.$SUBTRACTION_COUNTER.sam"
 	done
+	egrep -v "^@" "$subtracted_output_file.$SUBTRACTION_COUNTER.sam" | awk '{if($3 == "*") print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $(echo "$basef_h".human.snap.unmatched.sam | sed 's/\(.*\)\..*/\1/').fastq
+	END_SUBTRACTION=$(date +%s)
+	diff_SUBTRACTION=$(( END_SUBTRACTION - START_SUBTRACTION ))
+	rm $subtracted_output_file.*.sam
+	echo -e "$(date)\t$scriptname\tSubtraction took $diff_SUBTRACTION seconds" | tee -a timing.$basef.log
 fi
 ######dropcache?#############
 freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
 echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$cache_reset GB]"
-if [ "$freemem" -lt "$cache_reset" ]
+if [[ $dropcache == "Y" ]]
 then
-	echo -e "$(date)\t$scriptname\tClearing cache..."
-	dropcache
+	if [ "$freemem" -lt "$cache_reset" ]
+	then
+		echo -e "$(date)\t$scriptname\tClearing cache..."
+		dropcache
+	fi
 fi
 ############################# SNAP TO NT ##############################
 if [ "$alignment" != "skip" ]
@@ -754,8 +849,8 @@ then
 		then
 			if [ $snap_integrator = "inline" ]
 			then
-				echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment"
-				snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment
+				echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $snap"
+				snap_nt.sh "$basef_h.human.snap.unmatched.fastq" "${SNAP_COMPREHENSIVE_db_dir}" "$cores" "$cache_reset" "$d_NT_alignment" "$snap"
 			elif [ $snap_integrator = "end" ]
 			then
 				if [ "$snap_nt_procedure" = "AWS_master_slave" ]
@@ -771,25 +866,25 @@ then
 					done
 					echo
 					echo -e "$(date)\t$scriptname\tParameters: snap_on_slave.sh $basef_h.human.snap.unmatched.fastq $pemkey $file_with_slave_ips $incoming_dir ${basef}.NT.snap.sam $d_NT_alignment"
-					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> $basef.AWS.log 2>&1
+					snap_on_slave.sh "$basef_h.human.snap.unmatched.fastq" "$pemkey" "$file_with_slave_ips" "$incoming_dir" "${basef}.NT.snap.sam" "$d_human"> "$basef.AWS.log" 2>&1
 
 				elif [ "$snap_nt_procedure" = "solo" ]
 				then
 					echo -e "$(date)\t$scriptname\tParameters: snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $num_simultaneous_SNAP_runs"
-					snap_nt_combine.sh $basef_h.human.snap.unmatched.fastq ${SNAP_COMPREHENSIVE_db_dir} $cores $cache_reset $d_NT_alignment $num_simultaneous_SNAP_runs
+					snap_nt_combine.sh "$basef_h.human.snap.unmatched.fastq" "${SNAP_COMPREHENSIVE_db_dir}" "$cores" "$cache_reset" "$d_NT_alignment" "$num_simultaneous_SNAP_runs"
 				fi
 			fi
 		elif [ $run_mode = "Fast" ]
 		then
-			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment"
-			snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment
+			echo -e "$(date)\t$scriptname\tParameters: snap_nt.sh $basef_h.human.snap.unmatched.fastq ${SNAP_FAST_db_dir} $cores $cache_reset $d_NT_alignment $snap"
+			snap_nt.sh "$basef_h.human.snap.unmatched.fastq" "${SNAP_FAST_db_dir}" "$cores" "$cache_reset" "$d_NT_alignment" "$snap"
 		fi
 
-		echo -e "$(date)\t$scriptname\tDone:  SNAP to NT"
+		echo -e "$(date)\t$scriptname\tDone: SNAP to NT"
 		END_SNAPNT=$(date +%s)
 		diff_SNAPNT=$(( END_SNAPNT - START_SNAPNT ))
 		echo -e "$(date)\t$scriptname\tSNAP to NT took $diff_SNAPNT seconds." | tee -a timing.$basef.log
-		mv -f $basef_h.human.snap.unmatched.NT.sam $basef.NT.snap.sam
+		mv -f "$basef_h.human.snap.unmatched.NT.sam" "$basef.NT.snap.sam"
 	fi
 	echo -e "$(date)\t$scriptname\tStarting: parsing $basef.NT.snap.sam"
 	echo -e "$(date)\t$scriptname\textract matched/unmatched $basef.NT.snap.sam"
@@ -797,7 +892,7 @@ then
 	egrep -v "^@" $basef.NT.snap.sam | awk '{if($3 == "*") print }' > $basef.NT.snap.unmatched.sam
 	echo -e "$(date)\t$scriptname\tconvert sam to fastq from $basef.NT.snap.sam"
 	echo -e "$(date)\t$scriptname\tDone: parsing $basef.NT.snap.unmatched.sam"
-	if [ ! -f "$basef.NT.snap.matched.all.annotated" ];
+	if [ ! -f "$basef.NT.snap.matched.all.annotated" ]
 	then
 		## convert to FASTQ and retrieve full-length sequences
 		echo -e "$(date)\t$scriptname\tconvert to FASTQ and retrieve full-length sequences for SNAP NT matched hits"
@@ -812,7 +907,7 @@ then
 		echo -e "$(date)\t$scriptname\ttaxonomy retrieval for $basef.NT.snap.matched.fulllength.sam"
 		echo -e "$(date)\t$scriptname\tParameters: taxonomy_lookup.pl $basef.NT.snap.matched.fulllength.sam sam nucl $cores $taxonomy_db_directory"
 		taxonomy_lookup.pl "$basef.NT.snap.matched.fulllength.sam" sam nucl $cores $taxonomy_db_directory
-		sed 's/NM:i:\([0-9]\)/0\1/g' "$basef.NT.snap.matched.fulllength.all.annotated" | sort -k 14,14 > "$basef.NT.snap.matched.fulllength.all.annotated.sorted"
+		sort -k 13.7n "$basef.NT.snap.matched.fulllength.all.annotated" > "$basef.NT.snap.matched.fulllength.all.annotated.sorted" # sam format is no longer disturbed
 		rm -f  "$basef.NT.snap.matched.fulllength.gi" "$basef.NT.snap.matched.fullength.gi.taxonomy"
 	fi
 # adjust filenames for FAST mode
@@ -874,7 +969,7 @@ then
 	echo -e "$(date)\t$scriptname\tCompleted deNovo assembly: generated all.$basef.NT.snap.unmatched_addVir_uniq.fasta.unitigs.cut${length}.${contigcutoff}-mini.fa"
 	END_deNovo=$(date +%s)
 	diff_deNovo=$(( END_deNovo - START_deNovo ))
-	echo -e "$(date)\t$scriptname\tdeNovo Assembly took $diff_deNovo seconds."
+	echo -e "$(date)\t$scriptname\tdeNovo Assembly took $diff_deNovo seconds." | tee -a timing.$basef.log
 fi
 #######RAPSearch#####
 #################### RAPSearch to Vir ###########
@@ -885,7 +980,10 @@ then
 		if [ -f "$basef.NT.snap.unmatched.uniq.fl.fasta" ]
 		then
 			echo -e "$(date)\t$scriptname\t############# RAPSearch to ${RAPSearch_VIRUS_db} ON NT-UNMATCHED SEQUENCES #################"
-			dropcache
+			if [[ $dropcache == "Y" ]]
+			then
+				dropcache
+			fi
 			echo -e "$(date)\t$scriptname\tStarting: RAPSearch $basef.NT.snap.unmatched.uniq.fl.fasta "
 			START14=$(date +%s)
 			echo -e "$(date)\t$scriptname\tParameters: rapsearch -q $basef.NT.snap.unmatched.uniq.fl.fasta -d $RAPSearch_VIRUS_db -o $basef.$rapsearch_database.RAPSearch.e1 -z $cores -e $ecutoff_Vir -v 1 -b 1 -t N >& $basef.$rapsearch_database.RAPSearch.log"
@@ -1046,7 +1144,10 @@ then
 			echo -e "$(date)\t$scriptname\tCannot run RAPSearch to NR - necessary input file ($basef.Contigs.NT.snap.unmatched.uniq.fl.fasta) does not exist"
 		fi
 	fi
-	dropcache
+	if [[ $dropcache == "Y" ]]
+	then
+		dropcache
+	fi
 fi
 
 ############################# OUTPUT FINAL COUNTS #############################
@@ -1119,7 +1220,7 @@ fi
 #Move files to DATASETS
 
 mv $basef.cutadapt.fastq $dataset_folder
-mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.sam $dataset_folder
+if [[ -e $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.sam ]]; then mv $basef.preprocessed.s20.h250n25d12xfu.human.snap.unmatched.sam $dataset_folder; fi
 mv $basef.NT.snap.sam $dataset_folder
 mv $basef.NT.snap.matched.fulllength.sam $dataset_folder
 mv $basef.NT.snap.matched.fulllength.fastq $dataset_folder
@@ -1150,6 +1251,8 @@ mv $basef*.snap.log $log_folder
 mv $basef*.time.log $log_folder
 mv $basef.$rapsearch_database.RAPSearch.log $log_folder
 mv quality.$basef.log $log_folder
+mv $basef_h.human.snap.unmatched.snapNT.log $log_folder
+mv $basef_h.human.snap.unmatched.timeNT.log $log_folder
 
 mv $basef.NT.snap.matched.fulllength.all.annotated $trash_folder
 
@@ -1183,7 +1286,7 @@ if [ -e $basef.NT.snap.unmatched.fastq ]; then mv $basef.NT.snap.unmatched.fastq
 if [ -e $basef.NT.snap.matched.fastq ]; then mv $basef.NT.snap.matched.fastq $trash_folder; fi
 mv $basef.NT.snap.matched.sorted.sam.tmp1 $trash_folder
 mv $basef.NT.snap.matched.fulllength.sequence.txt $trash_folder
-mv $basef.NT.snap.matched.fulllength.gi.taxonomy $trash_folder
+if [[ -e $basef.NT.snap.matched.fulllength.gi.taxonomy ]]; then mv $basef.NT.snap.matched.fulllength.gi.taxonomy $trash_folder; fi
 mv $basef.NT.snap.matched.fl.Viruses.fastq $trash_folder
 mv $basef.NT.snap.unmatched.fulllength.sorted.fasta $trash_folder
 mv $basef.NT.snap.unmatched.fulllength.sorted.cropped.fasta $trash_folder
@@ -1192,11 +1295,11 @@ mv $basef.NT.snap.unmatched.uniq.fl.fasta $trash_folder
 mv $basef.NT.snap.matched.fl.Viruses.fasta $trash_folder
 mv $basef.Contigs.and.NTunmatched.Viral.RAPSearch.e*.NR.e*.annotated.header $trash_folder
 mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.m8 $trash_folder
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi $trash_folder
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.uniq $trash_folder 
-mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.taxonomy $trash_folder
+if [[ -e $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi ]]; then mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi $trash_folder; fi
+if [[ -e $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.uniq ]]; then mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.uniq $trash_folder; fi
+if [[ -e $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.taxonomy ]]; then mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.addseq.gi.taxonomy $trash_folder; fi
 mv $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.not.in.NR.header $trash_folder
-mv $basef.NT.snap.matched.fulllength.gi.uniq $trash_folder
+if [[ -e $basef.NT.snap.matched.fulllength.gi.uniq ]]; then mv $basef.NT.snap.matched.fulllength.gi.uniq $trash_folder; fi
 mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.addseq* $trash_folder
 mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.aln $trash_folder
 mv $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e*.m8.fasta $trash_folder

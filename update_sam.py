@@ -5,14 +5,17 @@
 #
 #	Chiu Laboratory
 #	University of California, San Francisco
-#	January, 2014
 #
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
 
 import sys
+import os
+
+def logHeader():
+	import os.path, sys, time
+	return "%s\t%s\t" % (time.strftime("%a %b %d %H:%M:%S %Z %Y"), os.path.basename(sys.argv[0]))
 
 usage = "update_sam.py <annotated SAM file> <outputFile>"
 if len(sys.argv) != 3:
@@ -20,10 +23,10 @@ if len(sys.argv) != 3:
 	sys.exit(0)
 
 SAMfile1 = sys.argv[1]
-outputFile = sys.argv[2]
+outputFile1 = sys.argv[2]
 
 file1 = open(SAMfile1, "r")
-outputFile = open(outputFile, "w")
+outputFile = open(outputFile1, "w")
 
 line1 = file1.readline()
 
@@ -34,9 +37,11 @@ while line1 != '':
 		if (len(header)>=2): # these is a hit in header
 			dvalue=header[1]
 			gi=header[2]
+			edit_distance=int(data1[12].split(":")[2])
+
 			line2a = line1.replace(data1[2], "gi|" + str(gi) + "|",1)
 			line2b = line2a.replace(data1[0], header[0],1)
-			if (len(data1)==14): # these is already a hit in the SAM entry
+			if (edit_distance >= 0): # then there is already a hit in the SAM entry
 				line2c = line2b.replace(data1[13], "NM:i:" + str(dvalue))
 			else:
 				line2c = line2b.replace(data1[12], data1[12] + "\t" + "NM:i:" + str(dvalue),1)
@@ -50,4 +55,4 @@ while line1 != '':
 file1.close()
 outputFile.close()
 
-print "Restored file %s in SAM format and copied to %s " % (sys.argv[1],sys.argv[2])
+print "%sRestored file %s in SAM format and copied to %s" % (logHeader(), SAMfile1, outputFile1)

@@ -11,10 +11,11 @@
 # Copyright (C) 2014 Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014
+
+scriptname=${0##*/}
 
 if [ $# -lt 3 ]; then
-    echo "Usage: extractSamFromSam.sh <SAM header file> <SAM reference file> <SAM output file> <optional: # of cores>"
+    echo "Usage: $scriptname <SAM header file> <SAM reference file> <SAM output file> <optional: # of cores>"
     exit
 fi
 
@@ -24,7 +25,6 @@ baseg=$2
 output_file=$3
 cores=$4
 ###
-scriptname=${0##*/}
 
 echo -e "$(date)\t$scriptname\tstarting: "
 START1=$(date +%s)

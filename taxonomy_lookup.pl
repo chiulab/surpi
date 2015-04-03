@@ -6,15 +6,13 @@
 #	It will append the family/genus/species name and the taxonomic lineage tree to the end of each hit/line.
 #	Chiu Laboratory
 #	University of California, San Francisco
-#	January, 2014
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
 
-# use strict;
-# use diagnostics;
+use strict;
+#use diagnostics;
 use Time::HiRes qw[gettimeofday tv_interval];
 use DBI;
 
@@ -56,7 +54,8 @@ else {
 }
 
 my $extracttime = tv_interval($begintime);
-print "time to extract gi: $extracttime seconds\n";
+
+print localtime()."\t$0\tTime to extract gi: $extracttime seconds\n";
 
 #create a unique list of gi, make a hash from that list, use the hash to populate the original nonunique list with tax info
 #starting point -> file containing all gi to look up
@@ -82,12 +81,26 @@ print "time to extract gi: $extracttime seconds\n";
 # sort/uniq gi file
 my $startsort = [gettimeofday()];
 system ("sort --parallel=$cores -u $basef_inputfile.gi > $basef_inputfile.gi.uniq");
+
 my $sorttime = tv_interval($startsort);
-print "time to sort -u: $sorttime seconds\n";
+print localtime()."\t$0\tTime to sort -u gi file: $sorttime seconds\n";
 
 # Parallelization can occur at this point in the code. Since the file in now sorted, it can be split into n chunks 
 # with no overlap.
 my %taxonomy;
+
+# prepare database connections and statements
+my $db = DBI->connect("dbi:SQLite:dbname=$sql_taxdb_loc", "", "", {RaiseError => 1, AutoCommit => 1}) or die $DBI::errstr;
+my $names_nodes_db = DBI->connect("dbi:SQLite:dbname=$names_nodes", "", "", {RaiseError => 1, AutoCommit => 1}) or die $DBI::errstr;
+# prepare gi to taxid lookup query
+my $taxid_return = $db->prepare("SELECT taxid FROM gi_taxid WHERE gi = ?");
+my $taxidrow;
+# prepare scientific name query
+my $name_return = $names_nodes_db->prepare("SELECT name FROM names WHERE taxid = ?");
+my $namerow;
+# prepare taxonomy query
+my $sth = $names_nodes_db->prepare("SELECT * FROM nodes WHERE taxid = ?");
+my @noderow;
 
 open (UNIQGI, "$basef_inputfile.gi.uniq") or die $!;
 
@@ -120,13 +133,13 @@ while (<UNIQGI>) {
 	$taxonomy{$_}{"lineage"} = $lineage;
 
 	#provide feedback on hash construction
-# 	my $count = scalar(keys %taxonomy);
-#  	if ($count % 500 == 0) {print "$count\n";}
+	#my $count = scalar(keys %taxonomy);
+	#if ($count % 500 == 0) {print "$count\n";}
 }
 close (UNIQGI);
 
 my $endhash = tv_interval($starthash);
-print "time to create hash: $endhash seconds\n";
+print localtime()."\t$0\tTime to create hash: $endhash seconds\n";
 
 my $starttaxwrite = [gettimeofday()];
 
@@ -144,9 +157,9 @@ close (ALLGI);
 close (FINALTAXOUTPUT);
 
 my $endtaxwrite = tv_interval($starttaxwrite);
-print "time to write taxonomy file: $endtaxwrite seconds\n";
+print localtime()."\t$0\tTime to write taxonomy file: $endtaxwrite seconds\n";
 
-my $startannotatedwrite = [gettimeofday()];
+my $start_annotated_write = [gettimeofday()];
 
 open (TAXONOMY, "$basef_inputfile.gi.taxonomy");
 open (SAMFILE, "$inputfile");
@@ -161,11 +174,16 @@ close(OUTALL);
 close(SAMFILE);
 close (TAXONOMY);
 
-my $annotatedtime = tv_interval($starttaxwrite);
-print "time to write annotated file: $annotatedtime seconds\n";
+my $end_annotated_write = tv_interval($start_annotated_write);
+print localtime()."\t$0\tTime to write annotated file: $end_annotated_write seconds\n";
 
 my $elapsedtime = tv_interval($begintime);
-print "total time: $elapsedtime seconds\n";
+print localtime()."\t$0\tTotal time: $elapsedtime seconds\n";
+
+#remove intermediate files
+unlink ("$basef_inputfile".".gi");
+unlink ("$basef_inputfile".".gi.uniq");
+unlink ("$basef_inputfile".".gi.taxonomy");
 
 exit;
 
@@ -179,8 +197,6 @@ sub trim ($){
 sub taxonomy_fgsl {
 	my ($gi, $seq_type) = @_;
 
-	my $taxid;
-	
 	my $lineage = "";
 	my $name;
 	my $gi_count = 0;
@@ -191,36 +207,30 @@ sub taxonomy_fgsl {
 	$rank_to_print{genus} = "1";
 	$rank_to_print{species} = "1";
 
-	my $db = DBI->connect("dbi:SQLite:dbname=$sql_taxdb_loc", "", "", {RaiseError => 1, AutoCommit => 1}) or die $DBI::errstr;
-	my $names_nodes_db = DBI->connect("dbi:SQLite:dbname=$names_nodes", "", "", {RaiseError => 1, AutoCommit => 1}) or die $DBI::errstr;
-
-	my $sth;
-	my $row;
 
 	my $begintime = [gettimeofday()];
 	my $numeric_lineage ="";
 
 	# convert gi -> taxid
-	my $ary = $db->selectrow_arrayref("SELECT taxid FROM gi_taxid WHERE gi = $gi LIMIT 1");
-	if ($ary){
-		$taxid = trim($ary->[0]);
+	my $taxid;
+	$taxid_return->execute(($gi));
+	if ($taxidrow = $taxid_return->fetchrow_array) {
+		$taxid = $taxidrow;
 	}
 	$taxonomy = "$gi\t";
 
 	if ($taxid) {
 		while ($taxid > 1) {
 			# Obtain the scientific name corresponding to a taxid
-			my $name_return = $names_nodes_db->selectrow_arrayref("SELECT name FROM names WHERE taxid = $taxid LIMIT 1");
+			$name_return->execute(($taxid));
 			# Obtain the parent taxa taxid
 			# nodes table: taxid - parent_tax id - rank
-			$sth = $names_nodes_db->prepare("SELECT * FROM nodes WHERE taxid = $taxid LIMIT 1");
-			$sth->execute();
-			if ($sth) {
-				$row = $sth->fetchrow_arrayref();
-				(my $tid, my $parent, my $rank) = @$row;
+			$sth->execute(($taxid));
+			if (@noderow = $sth->fetchrow_array) {
+				(my $tid, my $parent, my $rank) = @noderow;
 		
-				if ($name_return){
-					$name = trim($name_return->[0]);
+				if ($namerow = $name_return->fetchrow_array) {
+					$name = trim($namerow);
 				}
 				# print the rank if specified on the command line
 				if (exists($rank_to_print{$rank})) {
@@ -229,7 +239,10 @@ sub taxonomy_fgsl {
 				# Build the taxonomy path
 				$lineage = "$name;$lineage";
 				$numeric_lineage = "$tid "."$numeric_lineage ";
-				$taxid="$parent";
+
+				$taxid=$parent;
+			} else {
+				last;
 			}
 		}
 	}

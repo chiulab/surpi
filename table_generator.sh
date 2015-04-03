@@ -16,10 +16,11 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+
+scriptname=${0##*/}
 
 if [ $# -lt 6 ]; then
-	echo "Usage: <annotated file> <SNAP/RAP> <gi Y/N> <species Y/N> <genus Y/N> <family Y/N> " 
+	echo "Usage: $scriptname <annotated file> <SNAP/RAP> <gi Y/N> <species Y/N> <genus Y/N> <family Y/N> " 
     exit
 fi
 
@@ -31,7 +32,6 @@ species=$4
 genus=$5
 family=$6
 ###
-scriptname=${0##*/}
 
 ###substitute forward slash with @_ because forward slash in species name makes it ungreppable. using @_ because @ is used inside the contig barcode (ie. #@13 is barcode 13, contig generated) 
 create_tab_delimited_table.pl -f $file_type $inputfile  |  sed 's/ /_/g' | sed 's/,/_/g' | sed 's/\//@_/g' > $inputfile.tempsorted
@@ -58,7 +58,7 @@ then
 			do
 				grep -F -c -w "$d" bar.$f.$inputfile.tempsorted  >> bar$f.$inputfile.gi.output
 			done
-		done	
+		done
 	echo -e "GI\tSpecies\tGenus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.gi.uniq.columntable > $inputfile.gi.counttable_temp
 	paste $inputfile.gi.counttable_temp bar*.$inputfile.gi.output > $inputfile.gi.counttable 
@@ -81,7 +81,7 @@ then
 		do
 			grep -F -c -w "$d" bar.$f.$inputfile.tempsorted  >> bar$f.$inputfile.species.output
 		done
-	done	
+	done
 	echo -e "Species\tGenus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.species.uniq.columntable > $inputfile.species.counttable_temp
 	paste $inputfile.species.counttable_temp bar*.$inputfile.species.output > $inputfile.species.counttable 
@@ -103,7 +103,7 @@ then
 		do
 			grep -F -c -w "$d" bar.$f.$inputfile.tempsorted  >> bar$f.$inputfile.genus.output
 		done
-	done	
+	done
 	echo -e "Genus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.genus.uniq.columntable > $inputfile.genus.counttable_temp
 	paste $inputfile.genus.counttable_temp bar*.$inputfile.genus.output > $inputfile.genus.counttable 
@@ -116,18 +116,18 @@ then
 	sort -k5,5 -k5,5g $inputfile.tempsorted | sed 's/\t/,/g' | sort -u -t, -k 5,5 | sed 's/,/\t/g' | awk -F "\t" '{print$5}' | sed '/^$/d' | sed '/^ /d' > $inputfile.family.uniq.column
 	echo -e "$(date)\t$scriptname\tdone creating $inputfile.family.uniq.column"
 	for f in `cat $inputfile.barcodes`
+	do
+		echo "bar$f" > bar$f.$inputfile.family.output
+		echo -e "$(date)\t$scriptname\tparsing barcode $f"
+		grep "$f" $inputfile.tempsorted > bar.$f.$inputfile.tempsorted
+		for d in `cat $inputfile.family.uniq.column`
 		do
-			echo "bar$f" > bar$f.$inputfile.family.output
-			echo -e "$(date)\t$scriptname\tparsing barcode $f"
-			grep "$f" $inputfile.tempsorted > bar.$f.$inputfile.tempsorted
-			for d in `cat $inputfile.family.uniq.column`
-			do
-				grep -F -c -w "$d" bar.$f.$inputfile.tempsorted  >> bar$f.$inputfile.family.output
-			done
-		done	
+			grep -F -c -w "$d" bar.$f.$inputfile.tempsorted  >> bar$f.$inputfile.family.output
+		done
+	done
 	echo "Family(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.family.uniq.column > $inputfile.family.counttable_temp
-	paste $inputfile.family.counttable_temp bar*.$inputfile.family.output > $inputfile.family.counttable 
+	paste $inputfile.family.counttable_temp bar*.$inputfile.family.output > $inputfile.family.counttable
 	sed -i 's/@_/ /g' $inputfile.family.counttable
 	echo -e "$(date)\t$scriptname\tdone generating family counttable"
 fi

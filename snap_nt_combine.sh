@@ -18,13 +18,13 @@
 #
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
-# Last revised 5/22/2014
 
 expected_args=6
+scriptname=${0##*/}
 
 if [ $# -lt $expected_args ]
 then
-	echo "Usage: snap_nt_combine.sh <FASTQ input file> <directory containing SNAP NT indexes> <number of cores> <free cache memory cutoff in GB> <SNAP d-value cutoff> <# of simultaneous SNAP runs>"
+	echo "Usage: $scriptname <FASTQ input file> <directory containing SNAP NT indexes> <number of cores> <free cache memory cutoff in GB> <SNAP d-value cutoff> <# of simultaneous SNAP runs>"
 	exit 65
 fi
 
@@ -36,7 +36,6 @@ free_cache_cutoff=$4
 SNAP_d_cutoff=$5
 simultaneous_SNAPs=$6
 ###
-scriptname=${0##*/}
 
 echo -e "$(date)\t$scriptname\tStarting SNAP to NT"
 START1=$(date +%s)

@@ -15,10 +15,11 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 8/11/2014    
 
-if [ $# != 9 ]; then
-	echo "Usage: preprocess.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
+scriptname=${0##*/}
+
+if [ $# != 10 ]; then
+	echo "Usage: $scriptname <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory> <quality_cutoff>"
 	exit
 fi
 
@@ -32,8 +33,8 @@ adapter_set=$6
 start_nt=$7
 crop_length=$8
 temporary_files_directory=$9
+quality_cutoff=${10}
 ###
-scriptname=${0##*/}
 
 if [ ! -f $inputfile ];
 then
@@ -65,12 +66,12 @@ then
 	sed "s/\([@HWI|@M00135|@SRR][^ ]*\) \(.\):.:0:\(.*\)/\1#\3\/\2/g" $inputfile > $basef.modheader.fastq
 	# modified to take into account anything in there [N or Y]
 	START1=$(date +%s)
-	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
+	cutadapt_quality.csh $basef.modheader.fastq $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory $quality_cutoff
 	mv $basef.modheader.cutadapt.fastq $basef.cutadapt.fastq
 	rm -f $basef.modheader.fastq
 else
 	START1=$(date +%s)
-	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory
+	cutadapt_quality.csh $inputfile $quality $length_cutoff $keep_short_reads $adapter_set $temporary_files_directory $quality_cutoff
 fi
 
 END1=$(date +%s)

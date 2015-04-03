@@ -10,13 +10,13 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+
+scriptname=${0##*/}
 
 if [ $# -lt 1 ]; then
-    echo "Usage: fastq-extractBarcodedSRA.sh <SRA file>"
+    echo "Usage: $scriptname <SRA file>"
     exit
 fi
-scriptname=${0##*/}
 
 # 
 # gets absolute path to SRA file

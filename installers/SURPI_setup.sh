@@ -41,7 +41,7 @@ CWD=$(pwd)
 
 # Install packages necessary for the SURPI pipeline.
 sudo -E apt-get update -y
-sudo -E apt-get install -y make csh htop python-dev gcc unzip g++ cpanminus ghostscript blast2 python-matplotlib git pigz parallel python-openpyxl
+sudo -E apt-get install -y make csh htop python-dev gcc unzip g++ g++-4.6 cpanminus ghostscript blast2 python-matplotlib git pigz parallel ncbi-blast+
 sudo -E apt-get upgrade -y
 
 #
@@ -100,12 +100,13 @@ echo "PATH=\$PATH:$bin_folder/surpi" >> ~/.bashrc
 ### install gt (genometools)
 ##
 #
-curl -O "http://genometools.org/pub/genometools-1.5.1.tar.gz"
-tar xvfz genometools-1.5.1.tar.gz
-cd genometools-1.5.1
+#Works in Ubuntu 14.10
+curl -O "http://genometools.org/pub/genometools-1.5.4.tar.gz"
+tar xvfz genometools-1.5.4.tar.gz
+cd genometools-1.5.4
 make 64bit=yes curses=no cairo=no
-sudo make prefix=$install_folder 64bit=yes curses=no cairo=no install
-cd $CWD
+sudo make "prefix=$install_folder" 64bit=yes curses=no cairo=no install
+cd "$CWD"
 
 #
 ##
@@ -221,27 +222,28 @@ cd $CWD
 
 #
 ##
-### install AbySS
+### install AbySS 1.5.2
 ##
 #
 # http://www.bcgsc.ca/platform/bioinfo/software/abyss
 
 #Download ABySS
-wget "http://www.bcgsc.ca/platform/bioinfo/software/abyss/releases/1.3.5/abyss-1.3.5.tar.gz"
-tar xvfz abyss-1.3.5.tar.gz
+wget "https://github.com/bcgsc/abyss/releases/download/1.5.2/abyss-1.5.2.tar.gz"
+tar xvfz abyss-1.5.2.tar.gz
 
 #Set up Boost Dependency
-cd abyss-1.3.5
-wget "http://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2"
-tar jxf boost_1_50_0.tar.bz2
-ln -s boost_1_50_0/boost boost
+cd abyss-1.5.2
+wget "http://softlayer-dal.dl.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.gz"
+tar xvfz boost_1_57_0.tar.gz
+ln -s boost_1_57_0/boost boost
 
 #Install packaged dependencies
-sudo apt-get install -y openmpi-bin sparsehash libopenmpi-dev
+#sudo apt-get install -y openmpi-bin sparsehash libopenmpi-dev # Ubuntu 12.04
+sudo apt-get install -y openmpi-bin libsparsehash-dev libopenmpi-dev # Ubuntu 14.10
 
 # Configure ABySS
 ./configure --with-mpi=/usr/lib/openmpi CPPFLAGS=-I/usr/include/google
-make
+make AM_CXXFLAGS=-Wall
 sudo make install
 cd $CWD
 
@@ -259,7 +261,7 @@ sudo cpanm XML::Parser
 curl -O "http://iweb.dl.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz"
 tar xvfz amos-3.1.0.tar.gz
 cd amos-3.1.0
-./configure --prefix=$install_folder
+./configure --prefix=$install_folder CXX='g++-4.6'
 make
 sudo make install
 cd $CWD

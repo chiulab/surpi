@@ -1,19 +1,20 @@
 #!/bin/bash
-#     
+#
 #	ribo_snap_bac_euk.sh
-# 
+#
 # 	Chiu Laboratory
 # 	University of California, San Francisco
-# 	3/15/2014
+#
 #
 # Copyright (C) 2014 Samia Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 8/11/2014
+#
+scriptname=${0##*/}
 
 if [ $# -lt 4 ]
 then
-	echo " <.sorted> <BAC/EUK> <cores> <folder>"
+	echo "Usage: $scriptname <.sorted> <BAC/EUK> <cores> <folder containing SNAP databases>"
 	exit 65
 fi
 
@@ -23,7 +24,8 @@ inputfile_type=$2
 cores=$3
 directory=$4
 ###
-scriptname=${0##*/}
+nopathf=${1##*/}
+basef=${nopathf%.annotated}
 
 if [ $inputfile_type == "BAC" ]
 then
@@ -50,23 +52,21 @@ echo -e "$(date)\t$scriptname\tDone: first snap alignment"
 snap single $SNAP_index_Small $inputfile.noLargeS.unmatched.fastq -o $inputfile.noSmallS_LargeS.sam -t $cores -h 250 -d 18 -n 200 -F u
 echo -e "$(date)\t$scriptname\tDone: second snap alignment"
 
-# convert snap unmatched to ribo output to header format 
+# convert snap unmatched to ribo output to header format
 awk '{print$1}' $inputfile.noSmallS_LargeS.sam | sed '/^@/d' > $inputfile.noSmallS_LargeS.header.sam
 
-# retrieve reads from original $inputfile 
+# retrieve reads from original $inputfile
 
-extractSamFromSam.sh $inputfile.noSmallS_LargeS.header.sam $inputfile $inputfile.noRibo.annotated
+extractSamFromSam.sh $inputfile.noSmallS_LargeS.header.sam $inputfile $basef.noRibo.annotated
 echo -e "$(date)\t$scriptname\tCreated $inputfile.noRibo.annotated" 
-table_generator.sh $inputfile.noRibo.annotated SNAP N Y N N 
-
-dropcache
+table_generator.sh $basef.noRibo.annotated SNAP N Y N N 
 
 rm -f $inputfile.noLargeS.sam
 rm -f $inputfile.noLargeS.matched.sam
 rm -f $inputfile.noLargeS.unmatched.sam
 rm -f $inputfile.noSmallS_LargeS.sam
 rm -f $inputfile.noSmallS_LargeS.sam.header
-rm -f $inputfile.noLargeS.unmatched.fastq 
+rm -f $inputfile.noLargeS.unmatched.fastq
 rm -f $inputfile.fakq
 rm -f $inputfile.fakq.crop
 rm -f $inputfile.fasta

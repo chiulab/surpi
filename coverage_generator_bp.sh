@@ -12,11 +12,12 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/20/2014
+
+scriptname=${0##*/}
 
 if [ $# -lt 7 ]
 then
-	echo "Usage: <annotated SNAP file> <annotated RAPSearch file> <e value> <# cores> <top X gis to compare against each other> <top X coverage plots per genus> <basef>"
+	echo "Usage: $scriptname <annotated SNAP file> <annotated RAPSearch file> <e value> <# cores> <top X gis to compare against each other> <top X coverage plots per genus> <basef>"
 	exit
 fi
 ###
@@ -28,7 +29,6 @@ top_gis=$5
 top_plots=$6
 basef=$7
 ###
-scriptname=${0##*/}
 
 START0=$(date +%s)
 
@@ -38,11 +38,11 @@ create_tab_delimited_table.pl  -f SNAP $SNAP_file.nospace > $SNAP_file.tab  # cr
 echo -e "$(date)\t$scriptname\tDone creating $SNAP_file.tab tab delimited table"
 #GENERATE LIST OF ALL BARCODES
 
-# create list of barcodes present in $SNAP_file 
-# to get rid of ambiguity, if N is in the barcode you don't want it to count as a separate barcode. 
-# Might not be safe if Illumina changes barcoding scheme away from integers and ACTG. 
+# create list of barcodes present in $SNAP_file
+# to get rid of ambiguity, if N is in the barcode you don't want it to count as a separate barcode.
+# Might not be safe if Illumina changes barcoding scheme away from integers and ACTG.
 # On other hand don't want to create an infinite number of .pdf files if we have ambigous barcodes
-sed 's/#/ /g'  $SNAP_file.tab | sed 's/\// /g' | awk '{print$2}' | sort | uniq | sed '/N/d' > $SNAP_file.barcodes 
+sed 's/#/ /g'  $SNAP_file.tab | sed 's/\// /g' | awk '{print$2}' | sort | uniq | sed '/N/d' > $SNAP_file.barcodes
 
 echo -e "$(date)\t$scriptname\tCreated list of all barcodes in $SNAP_file"
 
@@ -87,7 +87,7 @@ do
 		echo -e "$(date)\t$scriptname\tCreated SnRa.$mixed "
 
 		# GENERATE LIST of GIs for each genus in order of read number
-		awk '{print$3}' Snap.$mixed.tmps  | sort | uniq -c | sed 's/gi|//g' | sed 's/|//g' | sort -g -r -k 1 | awk '{print$2}' | head -n 200 > bar.$bar.$SNAP_file.$genus.gi.list  
+		awk '{print$3}' Snap.$mixed.tmps  | sort | uniq -c | sed 's/gi|//g' | sed 's/|//g' | sort -g -r -k 1 | awk '{print$2}' | head -n 200 > bar.$bar.$SNAP_file.$genus.gi.list
 		# for $genus , GIs are retrieved and ordered by abundance. Only top 200 are retained due to genbank retrieval limit
 		echo -e "$(date)\t$scriptname\tCreated bar.$bar.$SNAP_file.$genus.gi.list"
 		# create list of curated GIs $SNAP_file.$genus.gi.list.curatedgenome
@@ -133,7 +133,7 @@ do
 
 		# LOOP 3: COMPARE against AlL GIs for each genus, plot all contained gis against genus-specific fasta from NT and RAPSearch
 		for gi in `cat bar.$bar.$SNAP_file.$genus.gi`
-		do	
+		do
 			START5=$(date +%s)
 			plot_reads_to_gi.sh SnRa.$mixed $gi $genus $e_value $cores
 			# highlight Report files
@@ -183,7 +183,7 @@ do
 
 	# Cleanup files into proper directories:
 	# rm -f bar.$bar.$SNAP_file.genus.report.top.gis
-	
+
 	output_directory="genus.bar.$bar.$basef.plotting"
 	mkdir $output_directory
 	mv bar.$bar*$basef*$e_value.Report 				$output_directory
@@ -196,18 +196,18 @@ do
 done # END LOOP 1 (barcodes)
 
 #######CLEANUP###############
-rm -f $SNAP_file.tab 
+rm -f $SNAP_file.tab
 rm -f $SNAP_file.nospace
 #rm -f $RAPSearch_file.nocontig
 rm -f $SNAP_file.barcodes
-rm -f bar*$SNAP_file*tmps 
-rm -f bar*$RAPSearch_file*tmps 
-rm -f bar*$SNAP_file*genus.uniq.list 
+rm -f bar*$SNAP_file*tmps
+rm -f bar*$RAPSearch_file*tmps
+rm -f bar*$SNAP_file*genus.uniq.list
 rm -f Snap*tmps
 rm -f Snap*tmpsfa
 rm -f Rap*tmpsfa
-rm -f bar*$SNAP_file*gi.list  
-rm -f bar*$SNAP_file*gi.headers 
+rm -f bar*$SNAP_file*gi.list
+rm -f bar*$SNAP_file*gi.headers
 rm -f bar*$SNAP_file*gi
 rm -f bar*$basef.genus.report.coverage.top.gis
 rm -f formatdb.log

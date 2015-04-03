@@ -5,12 +5,10 @@
 #	This program retrieves FASTA formatted files from Genbank for a list of gi.
 #	Chiu Laboratory
 #	University of California, San Francisco
-#	January, 2014
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014
 
 use LWP::Simple;
 use Getopt::Std;

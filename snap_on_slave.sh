@@ -20,14 +20,13 @@
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
-# Last revised 6/30/2014
-
 
 expected_args=6
+scriptname=${0##*/}
 
 if [ $# -lt $expected_args ]
 then
-	echo "Usage: snap_on_slave.sh <file_to_transfer> <pemkey> <file_with_slave_list> <incoming_directory_for_results> <output_filename> <SNAP d-value cutoff>"
+	echo "Usage: $scriptname <file_to_transfer> <pemkey> <file_with_slave_list> <incoming_directory_for_results> <output_filename> <SNAP d-value cutoff>"
 	exit 65
 fi
 
@@ -39,7 +38,6 @@ incoming_dir_for_results=$4
 output_file=$5
 SNAP_d_cutoff=$6
 ###
-scriptname=${0##*/}
 
 #remove this hardcode before release
 working_directory_on_slave="/mnt/SURPI_data"

@@ -6,3 +6,11 @@ AACGCCTGCTGCGCCTGCCACGAG
 TTCGAGGACGAGAGAATGGCCAAC
 +
 ~~~~~~~~~~~~~~~~~~~~~~~~
+@Test_Sequence3
+TCTACTCGTTATAAAGAA
++
+~~~~~~~~~~~~~~~~~~~~~~~~
+@Test_Sequence4
+TGTCATGCTCGTCTTGAATCT
++
+~~~~~~~~~~~~~~~~~~~~~~~~

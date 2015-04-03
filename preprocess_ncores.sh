@@ -12,8 +12,10 @@
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
 
-if [ $# != 11 ]; then
-	echo "Usage: preprocess_ncores.sh <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <Y/N clear_cache> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory>"
+scriptname=${0##*/}
+
+if [ $# != 12 ]; then
+	echo "Usage: $scriptname <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <free cache memory cutoff in GB> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory> <quality_cutoff>"
 	exit
 fi
 
@@ -23,14 +25,14 @@ quality=$2
 run_uniq=$3
 length_cutoff=$4
 cores=$5
-clear_cache=$6
+cache_reset=$6
 keep_short_reads=$7
 adapter_set=$8
 start_nt=$9
 crop_length=${10}
 temporary_files_directory=${11}
+quality_cutoff=${12}
 ###
-scriptname=${0##*/}
 
 if [ ! -f $inputfile ]
 then
@@ -38,9 +40,12 @@ then
 	exit
 fi
 
-if [ $clear_cache = "Y" ]
+freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
+echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
+if [ $freemem -lt $free_cache_cutoff ]
 then
-    dropcache
+	echo -e "$(date)\t$scriptname\tClearing cache..."
+	dropcache
 fi
 
 START=$(date +%s)
@@ -69,7 +74,7 @@ for f in x??
 do
 	mv $f $f.fastq
 	echo -e "$(date)\t$scriptname\tpreprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &"
-	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &
+	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory $quality_cutoff >& $f.preprocess.log &
 done
 
 for job in `jobs -p`

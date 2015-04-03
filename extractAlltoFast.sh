@@ -12,11 +12,12 @@
 # Copyright (C) 2014 Samia Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/19/2014
+
+scriptname=${0##*/}
 
 if [ $# -lt 6 ]
 then
-	echo "<inputfile> <Input File Type [BLASTN/FASTA/FASTQ]> <Parent file> <Parent File Type [FASTA/FASTQ]> <Output file> <Output format: [FASTA/FASTQ]>" 
+	echo "Usage: $scriptname <inputfile> <Input File Type [BLASTN/FASTA/FASTQ]> <Parent file> <Parent File Type [FASTA/FASTQ]> <Output file> <Output format: [FASTA/FASTQ]>" 
 	exit 65
 fi
 
@@ -28,7 +29,6 @@ parentfile_type=$4
 outputfile=$5
 output_format=$6
 ###
-scriptname=${0##*/}
 
 echo -e "$(date)\t$scriptname\tprepare $inputfile_type file"
 
@@ -42,7 +42,7 @@ then
 		seqtk subseq $parentfile $inputfile.header > $outputfile
 	elif [ $parentfile_type = FASTQ ]
 	then
-		if [ $output_format = FASTQ]
+		if [ $output_format = FASTQ ]
 		then
 			cat $parentfile | fqextract $inputfile.header > $outputfile
 		elif [ $output_format = FASTA ]

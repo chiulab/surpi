@@ -10,15 +10,15 @@
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
-# Last revised 5/15/2014
 
 START1=$(date +%s)
 
 expected_args=7
+scriptname=${0##*/}
 
 if [ $# -lt $expected_args ]
 then
-	echo "Usage: start_slaves_setup.sh <ami> <number_of_slaves> <instance_type> <keypair> <security_group> <availability_zone> <file_with_slave_list> <placement_group>"
+	echo "Usage: $scriptname <ami> <number_of_slaves> <instance_type> <keypair> <security_group> <availability_zone> <file_with_slave_list> <placement_group>"
 	exit 65
 fi
 
@@ -32,7 +32,6 @@ availability_zone=$6
 file_with_slave_ips=$7
 placement_group=$8
 ###
-scriptname=${0##*/}
 
 #This is the time (in seconds) this script waits after starting up the AWS machines. 
 #It allows the instances time to start up. In practice, 120s appears to be sufficient.

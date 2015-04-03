@@ -5,7 +5,6 @@
 #	This program will take a gi (or list of gis) as input, and return taxonomic information.
 #	Chiu Laboratory
 #	University of California, San Francisco
-#	January, 2014
 #
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.

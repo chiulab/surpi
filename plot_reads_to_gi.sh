@@ -12,14 +12,14 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 5/20/2014    
+
+scriptname=${0##*/}
 
 if [ $# -lt 5 ]; then
-    echo "Usage: <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"    
+    echo "Usage: $scriptname <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"    
     echo "not uniquing Blastn anymore 9/13/13 given a fasta file and the GI or FASTA of the reference to assemble to -> makes an assembly.  blastn e value in 1e-8 format . jedi has 16 cores available"
     exit
 fi
-scriptname=${0##*/}
 
 plot_log="B" # set coveragePlotLog.py to display both log and linear plots
 
