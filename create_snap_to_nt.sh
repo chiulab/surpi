@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/2/2014  
+# Last revised 7/2/2014
 
 scriptname=${0##*/}
 bold=$(tput bold)
@@ -25,10 +25,7 @@ red='\e[0;31m'
 endColor='\e[0m'
 prefix=$(date +%m%d%Y)
 
-#set SNAP index Ofactor. See SNAP documentation for details
-Ofactor=1000
-
-while getopts ":n:hs:f:" option; do
+while getopts ":n:hp:s:f:" option; do
 	case "${option}" in
 		f) fasta_file_to_index=${OPTARG};;
 		n) num_chunks=${OPTARG};;
@@ -44,20 +41,20 @@ done
 if [[ ${HELP} -eq 1  ||  $# -lt 1 ]]
 then
 	cat <<USAGE
-	
+
 ${bold}$scriptname${normal}
 
-This program will download necessary databases and run snap index NCBI NT for use with SURPI. 
+This program will download necessary databases and run snap index NCBI NT for use with SURPI.
 
 ${bold}Command Line Switches:${normal}
 
 	-h	Show this help
 
 	-f	Specify path to nt file (or other FASTA file to be indexed)
-	
+
 	-n	Specify number of chunks
-	
-	-s	Specify size of chunks	
+
+	-s	Specify size of chunks
 
 ${bold}Usage:${normal}
 
@@ -108,7 +105,7 @@ else
 	echo -e "$(date)\t$scriptname\tSplit file already present."
 	echo -e "$(date)\t$scriptname\t$scriptname is currently not capable of verifying the split files."
 	echo -e "$(date)\t$scriptname\tIn order to complete the indexing, please delete, or move the split files out of this directory."
-	exit
+#	exit
 fi
 
 #SNAP index each chunk
@@ -116,7 +113,7 @@ echo -e "$(date)\t$scriptname\tStarting SNAP indexing of nt..."
 for f in $prefix.nt.*
 do
 	echo -e "$(date)\t$scriptname\tStarting SNAP indexing of $f..."
-    snap index $f snap_index_$f -O$Ofactor
+    snap index $f snap_index_$f -locationSize 5
 	echo -e "$(date)\t$scriptname\tCompleted SNAP indexing of $f..."
 done
 echo -e "$(date)\t$scriptname\tCompleted SNAP indexing of nt."
