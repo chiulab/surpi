@@ -13,7 +13,7 @@
 #
 SURPI_version="1.0.22"
 
-optspec=":f:hvz:"
+optspec=":f:d:hvz:"
 bold=$(tput bold)
 normal=$(tput sgr0)
 green='\e[0;32m'
@@ -26,6 +26,7 @@ scriptname=${0##*/}
 while getopts "$optspec" option; do
 	case "${option}" in
 		f) config_file=${OPTARG};; # get parameters from config file if specified
+    d) ref_path=${OPTARG};; # Path to reference db directory.
 		h) HELP=1;;
 		v) VERIFICATION=1;;
 		z)	create_config_file=${OPTARG}
@@ -246,32 +247,32 @@ eBLASTn="1e-15"
 # SURPI will subtract all SNAP databases found in this directory from the input sequence
 # Useful if you want to subtract multiple genomes (without combining SNAP databases)
 # or, if you need to split a db if it is larger than available RAM.
-SNAP_subtraction_folder="/reference/hg19"
+SNAP_subtraction_db="$ref_path/hg19"
 
 # directory for SNAP-indexed databases of NCBI NT (for mapping phase in comprehensive mode)
 # directory must ONLY contain snap indexed databases
-SNAP_COMPREHENSIVE_db_dir="/reference/COMP_SNAP"
+SNAP_COMPREHENSIVE_db_dir="$ref_path/COMP_SNAP"
 
 # directory for SNAP-indexed databases for mapping phase in FAST mode
 # directory must ONLY contain snap indexed databases
-SNAP_FAST_db_dir="/reference/FAST_SNAP"
+SNAP_FAST_db_dir="$ref_path/FAST_SNAP"
 
 #Taxonomy Reference data directory
 #This folder should contain the 3 SQLite files created by the script "create_taxonomy_db.sh"
 #gi_taxid_nucl.db - nucleotide db of gi/taxonid
 #gi_taxid_prot.db - protein db of gi/taxonid
 #names_nodes_scientific.db - db of taxonid/taxonomy
-taxonomy_db_directory="/reference/taxonomy"
+taxonomy_db_directory="$ref_path/taxonomy"
 
 #RAPSearch viral database name: indexed protein dataset (all of Viruses)
-#make sure that directory also includes the .info file 
-RAPSearch_VIRUS_db="/reference/RAPSearch/rapsearch_viral_db"
+#make sure that directory also includes the .info file
+RAPSearch_VIRUS_db="$ref_path/RAPSearch/rapsearch_viral_db"
 
 #RAPSearch nr database name: indexed protein dataset (all of NR)
-#make sure that directory also includes the .info file 
-RAPSearch_NR_db="/reference/RAPSearch/rapsearch_nr_db"
+#make sure that directory also includes the .info file
+RAPSearch_NR_db="$ref_path/RAPSearch/rapsearch_nr_db"
 
-ribo_snap_bac_euk_directory="/reference/RiboClean_SNAP"
+ribo_snap_bac_euk_directory="$ref_path/RiboClean_SNAP"
 
 ##########################
 # Server related values
@@ -296,7 +297,7 @@ cache_reset="0"
 ##########################
 
 # AWS_master_slave will start up a slave instance on AWS for each division of the nt database
-# It will be more costly, but should run significantly faster than the solo method, which 
+# It will be more costly, but should run significantly faster than the solo method, which
 # runs each NT division through SNAP serially on a single machine.
 # If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
 # set properly.
@@ -306,7 +307,7 @@ cache_reset="0"
 
 #Which method to use for SNAP to nt [AWS_master_slave/solo]
 # AWS_master_slave will start up a slave instance on AWS for each division of the nt database
-# It will be more costly, but should run significantly faster than the solo method, which 
+# It will be more costly, but should run significantly faster than the solo method, which
 # runs each NT division through SNAP serially on a single machine.
 # If using the "AWS_master_slave" option, be sure that all parameters in the AWS section below are
 # set properly.
@@ -318,7 +319,7 @@ snap_nt_procedure="solo"
 ami_id="ami-5ef61936"
 
 #Number of slave instances will not exceed this value. Useful for testing, in order to restrict instance count.
-#Otherwise, number of instances should be equal to number of SNAP-NT database divisions. This value is 
+#Otherwise, number of instances should be equal to number of SNAP-NT database divisions. This value is
 #automatically calculated by SURPI.
 max_slave_instances=29
 
@@ -959,7 +960,7 @@ if [ $run_mode = "Comprehensive" ]
 then
 	echo -e "$(date)\t$scriptname\t######### Running ABYSS and Minimus #########"
 	START_deNovo=$(date +%s)
-	echo -e "$(date)\t$scriptname\tAdding matched viruses to NT unmatched" 
+	echo -e "$(date)\t$scriptname\tAdding matched viruses to NT unmatched"
 	sed "n;n;n;d" "$basef.NT.snap.matched.fl.Viruses.fastq" | sed "n;n;d" | sed "s/^@/>/g" | sed 's/>/>Vir/g' > "$basef.NT.snap.matched.fl.Viruses.fasta"
 	gt sequniq -seqit -force -o "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" "$basef.NT.snap.matched.fl.Viruses.fasta"
 	cat "$basef.NT.snap.unmatched.uniq.fl.fasta" "$basef.NT.snap.matched.fl.Viruses.uniq.fasta" > "$basef.NT.snap.unmatched_addVir_uniq.fasta"
@@ -1062,7 +1063,7 @@ then
 
 			awk '{print$1}'  $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated > $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header
 			awk '{print$1}' $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header
-			# find headers in viral rapsearch that are no longer found in rapsearch to nr 
+			# find headers in viral rapsearch that are no longer found in rapsearch to nr
 			sort $basef.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.annotated.header \
 					$basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_Vir}.NR.e${ecutoff_NR}.annotated.header | \
 					uniq -d | \
@@ -1125,7 +1126,7 @@ then
 			cp $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.addseq.all.annotated $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated
 			echo -e "$(date)\t$scriptname\tretrieved taxonomy"
 			grep "Viruses" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated
-			egrep "^contig" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated 
+			egrep "^contig" $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated > $basef.Contigs.$rapsearch_database.RAPSearch.e${ecutoff_NR}.annotated
 			echo -e "$(date)\t$scriptname\textracted RAPSearch taxonomy"
 			echo -e "$(date)\t$scriptname\tStarting Readcount table"
 			echo -e "$(date)\t$scriptname\tParameters: table_generator.sh $basef.Contigs.and.NTunmatched.$rapsearch_database.RAPSearch.e${ecutoff_NR}.Viruses.annotated RAP Y Y Y Y"
