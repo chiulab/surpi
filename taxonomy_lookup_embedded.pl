@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #	taxonomy_lookup_embedded.pl
 #
@@ -12,6 +12,7 @@
 # Last revised 1/26/2014
 
 use DBI;
+use warnings;
 use strict;
 use Getopt::Std;
 use Time::HiRes qw[gettimeofday tv_interval];
