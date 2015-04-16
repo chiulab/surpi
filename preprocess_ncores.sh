@@ -1,5 +1,5 @@
 #!/bin/bash
-#                      
+#
 #	preprocess_ncores.sh
 #
 #	This script runs preprocessing across multiple cores (FASTA/FASTQ header modification, quality filtering, adapter trimming, and low-complexity filtering)
@@ -108,13 +108,13 @@ do
 	cat $basef.preprocessed.fastq >> $basef2.preprocessed.fastq
 	rm -f $basef.preprocessed.fastq
 	cat $basef.cutadapt.cropped.dusted.bad.fastq >> $basef2.cutadapt.cropped.dusted.bad.fastq
-	rm -f $basef.cutadapt.cropped.dusted.bad.fastq 
+	rm -f $basef.cutadapt.cropped.dusted.bad.fastq
 
 	rm -f $f
 	rm -f $basef.modheader.fastq
 	rm -f $basef.cutadapt.summary.log
 	rm -f $basef.adapterinfo.log
-	rm -f $basef.cutadapt.cropped.fastq 
+	rm -f $basef.cutadapt.cropped.fastq
 done
 
 echo -e "$(date)\t$scriptname\tDone concatenating output..."

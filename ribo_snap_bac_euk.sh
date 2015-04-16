@@ -58,8 +58,8 @@ awk '{print$1}' $inputfile.noSmallS_LargeS.sam | sed '/^@/d' > $inputfile.noSmal
 # retrieve reads from original $inputfile
 
 extractSamFromSam.sh $inputfile.noSmallS_LargeS.header.sam $inputfile $basef.noRibo.annotated
-echo -e "$(date)\t$scriptname\tCreated $inputfile.noRibo.annotated" 
-table_generator.sh $basef.noRibo.annotated SNAP N Y N N 
+echo -e "$(date)\t$scriptname\tCreated $inputfile.noRibo.annotated"
+table_generator.sh $basef.noRibo.annotated SNAP N Y N N
 
 rm -f $inputfile.noLargeS.sam
 rm -f $inputfile.noLargeS.matched.sam

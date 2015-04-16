@@ -16,7 +16,7 @@
 scriptname=${0##*/}
 
 if [ $# -lt 5 ]; then
-    echo "Usage: $scriptname <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"    
+    echo "Usage: $scriptname <.fasta> <gi # OR reference fasta> <name of gi / FA (if reference in fasta form> <e value> <cores available>"
     echo "not uniquing Blastn anymore 9/13/13 given a fasta file and the GI or FASTA of the reference to assemble to -> makes an assembly.  blastn e value in 1e-8 format . jedi has 16 cores available"
     exit
 fi
@@ -59,7 +59,7 @@ done
 
 cat $1*.$2.$3.$4.blastn > $1.$2.$3.$4.Blastn
 
-uniq_blastn_nopipes.sh $1.$2.$3.$4.Blastn  
+uniq_blastn_nopipes.sh $1.$2.$3.$4.Blastn
 extractAlltoFast.sh $1.$2.$3.$4.Blastn.uniq BLASTN $1 FASTA $1.$2.$3.$4.Blastn.uniq.ex.fa FASTA
 
 ####figuring out length of sequence in gi#######
@@ -79,7 +79,7 @@ echo -e -n "$(date)\t$scriptname\t%Coverage = "
 echo "scale=6;100*$coverage/$gilength" | bc
 
 let "sumofcolumntwo = `awk '{print$2}' $1.$2.$3.$4.map | awk '{sum += $1} END{print sum}'`"
-echo -e -n "$(date)\t$scriptname\tAverage depth of coverage (x) = " 
+echo -e -n "$(date)\t$scriptname\tAverage depth of coverage (x) = "
 echo "scale=6;$sumofcolumntwo/$gilength" | bc
 let "numberBlastnReads = `egrep -c "^SCS|^HWI|gi|^M00|^kmer|^SRR" $1.$2.$3.$4.Blastn.uniq`"
 echo -e "$(date)\t$scriptname\tNumber of reads contributing to assembly  $numberBlastnReads"
@@ -94,7 +94,7 @@ echo "Reference sequence length = $gilength bp" >> $1.$2.$3.$4.report
 echo "Coverage in bp = $coverage" >> $1.$2.$3.$4.report
 echo -n "%Coverage = " >> $1.$2.$3.$4.report
 echo "scale=6;100*$coverage/$gilength" | bc >> $1.$2.$3.$4.report
-echo -n "Average depth of coverage = " >> $1.$2.$3.$4.report 
+echo -n "Average depth of coverage = " >> $1.$2.$3.$4.report
 echo "scale=6;$sumofcolumntwo/$gilength" | bc >> $1.$2.$3.$4.report
 #echo "Average depth of coverage = $averagedepthcoverage x " >> $1.$2.$3.$4.report
 echo "Number of reads contributing to assembly = $numberBlastnReads" >> $1.$2.$3.$4.report
@@ -106,7 +106,7 @@ ps2pdf14 $1.$2.$3.$4.ps $1.$2.$3.$4.pdf
 #### Cleanup ########
 rm -f $1*$2.$3.$4.blastn
 rm -f $1*$2.$3.$4.error
-rm -f $3.$2.fasta.nhr                                                     
+rm -f $3.$2.fasta.nhr
 rm -f $3.$2.fasta.nin
 rm -f $3.$2.fasta.nsq
 #rm -f $1.$2.$3.$4.Blastn

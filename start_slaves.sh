@@ -33,14 +33,14 @@ file_with_slave_ips=$7
 placement_group=$8
 ###
 
-#This is the time (in seconds) this script waits after starting up the AWS machines. 
+#This is the time (in seconds) this script waits after starting up the AWS machines.
 #It allows the instances time to start up. In practice, 120s appears to be sufficient.
 WAIT_TIME=120
 
 #folder where slave scripts are located
 slave_folder="/usr/local/bin/surpi/slave"
 #script located on slave to run
-slave_script="slave_setup.sh"	
+slave_script="slave_setup.sh"
 
 #this parameter is currently tied to the $keypair used during slave_setup.sh. should be cleaned up prior to release
 pemkey="/home/ubuntu/.ssh/surpi.pem"
@@ -106,7 +106,7 @@ do
 done
 # instance_id_list=( $result )
 # instance_id_size=${#instance_id_list[@]}
-# 
+#
 # if [ "$instance_id_size" != "$number_of_instances" ]; then
 # 	echo "ERROR: could not create $number_of_instances instances"
 # 	echo "$number_of_instances instances were created."
@@ -150,7 +150,7 @@ do
 
 	echo -e "$(date)\t$scriptname\t$attached" >> slave.$COUNTER.log 2>&1
 	#verify $attached here to verify that EBS was attached
-	
+
 	echo -e "$(date)\t$scriptname\tconnecting and running $slave_script script..." >> slave.$COUNTER.log 2>&1
 	ssh -o StrictHostKeyChecking=no -i $pemkey ubuntu@$host "/home/ubuntu/$slave_script" >> slave.$COUNTER.log 2>&1 &
 	let COUNTER=COUNTER+1

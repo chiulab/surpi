@@ -9,7 +9,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014    
+# Last revised 1/26/2014
 
 use DBI;
 use strict;
@@ -36,12 +36,12 @@ getopts('q:d:kpcofgslhx');
 
 if ($opt_h) {
 	print <<USAGE;
-	
+
 taxonomy_lookup_embedded.pl
 
 This program will query the NCBI taxonomic database and return whatever taxonomy is requested for a gi, or list of gis. The
 returned data will be in tabular format, and will be in the following order.
-	
+
 	species	genus	family	order	class	phylum	kingdom
 
 Usage:
@@ -60,7 +60,7 @@ Command Line Switches:
 
 	-d	nucl/prot
 		This specifies whether the gi list are nucleotides or protein. It is a required parameter.
-	
+
 	The following switches all will specify which taxonomic information will be returned.
 	-k	Kingdom
 	-p	Phylum
@@ -71,7 +71,7 @@ Command Line Switches:
 	-s	Species
 	-l	Lineage
 	-x	Display Taxid in output table
-	
+
 USAGE
 	exit;
 }

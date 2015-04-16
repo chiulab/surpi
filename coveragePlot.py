@@ -2,7 +2,7 @@
 #
 #	coveragePlot.py
 #
-#	This program generates genomic coverage plots 
+#	This program generates genomic coverage plots
 #	Chiu Laboratory
 #	University of California, San Francisco
 #	January, 2014
@@ -47,7 +47,7 @@ mpl_version=matplotlib.__version__
 
 # print "Installed version is: %s." % mpl_version
 
-#load function is deprecated as of matplotlib v1.3.1, replaced with 
+#load function is deprecated as of matplotlib v1.3.1, replaced with
 if (LooseVersion(mpl_version) >= LooseVersion('1.3.1') ):
 	data = np.loadtxt(dataFile)
 else:
@@ -78,7 +78,7 @@ if logPlot=='N':
     plot(data[:,0],data[:,1],color)
     xlabel("base position",fontsize=8)
     ylabel("fold coverage",fontsize=8)
-    title_text = sys.argv[2] 
+    title_text = sys.argv[2]
     suptitle(title_text,fontsize=9)
     xMin, xMax, yMin, yMax = min(data[:,0]),max(data[:,0]),min(data[:,1]),max(data[:,1])
     # add a 10% buffer to yMax
@@ -105,7 +105,7 @@ if logPlot=='B':
     plot(data[:,0],data[:,1],color)
     xlabel("base position",fontsize=8)
     ylabel("fold coverage",fontsize=8)
-    title_text = sys.argv[2] 
+    title_text = sys.argv[2]
     suptitle(title_text,fontsize=9)
     xMin, xMax, yMin, yMax = min(data[:,0]),max(data[:,0]),min(data[:,1]),max(data[:,1])
     yMax *= 1.1
@@ -122,7 +122,7 @@ if logPlot=='Y':
     plot(data[:,0],data[:,1],color)
     xlabel("base position",fontsize=8)
     ylabel("fold coverage",fontsize=8)
-    title_text = sys.argv[2] 
+    title_text = sys.argv[2]
     suptitle(title_text,fontsize=9)
     xMin, xMax, yMin, yMax = min(data[:,0]),max(data[:,0]),min(data[:,1]),max(data[:,1])
     yMax *= 1.1

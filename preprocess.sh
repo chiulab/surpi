@@ -8,7 +8,7 @@
 #	January, 2014
 #
 # cutadapt=>crop->dust removal (no uniq) ***
-#                                                                                                                                
+#
 # 12/20/12 - modified to switch to cutadapt for trimming
 # 12/31/12 - modified from Cshell to BASH version for timing
 #
@@ -100,7 +100,7 @@ fi
 echo -e "$(date)\t$scriptname\t********** running crop, Read1 **********"
 START1=$(date +%s)
 
-if [ $run_uniq == "Y" ] 
+if [ $run_uniq == "Y" ]
 then
 	echo -e "$(date)\t$scriptname\tWe will be using $crop_length as the length of the cropped read"
 	crop_reads.csh $basef.cutadapt.uniq.fastq $start_nt $crop_length > $basef.cutadapt.uniq.cropped.fastq
@@ -117,7 +117,7 @@ echo -e "$(date)\t$scriptname\tDone crop: CROP took $diff seconds"
 echo -e "$(date)\t$scriptname\t********** running dust, Read1 **********"
 START1=$(date +%s)
 
-if [ $run_uniq == "Y" ] 
+if [ $run_uniq == "Y" ]
 then
 	prinseq-lite.pl -fastq $basef.cutadapt.uniq.cropped.fastq -out_format 3 -out_good $basef.cutadapt.uniq.cropped.dusted -out_bad $basef.cutadapt.uniq.cropped.dusted.bad -log -lc_method dust -lc_threshold 7
 	mv -f $basef.cutadapt.uniq.cropped.dusted.fastq $basef.preprocessed.fastq

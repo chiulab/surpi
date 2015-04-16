@@ -17,7 +17,7 @@ scriptname=${0##*/}
 
 if [ $# -lt 6 ]
 then
-	echo "Usage: $scriptname <inputfile> <Input File Type [BLASTN/FASTA/FASTQ]> <Parent file> <Parent File Type [FASTA/FASTQ]> <Output file> <Output format: [FASTA/FASTQ]>" 
+	echo "Usage: $scriptname <inputfile> <Input File Type [BLASTN/FASTA/FASTQ]> <Parent file> <Parent File Type [FASTA/FASTQ]> <Output file> <Output format: [FASTA/FASTQ]>"
 	exit 65
 fi
 
@@ -36,7 +36,7 @@ if [ $inputfile_type = BLASTN ]
 then
 	awk '{print$1}' $inputfile > $inputfile.header
 	echo -e "$(date)\t$scriptname\tuniqued blastn file, replaced beginning with @"
-	
+
 	if [ $parentfile_type = FASTA ]
 	then
 		seqtk subseq $parentfile $inputfile.header > $outputfile
@@ -59,12 +59,12 @@ then
 	echo -e "$(date)\t$scriptname\tDone preparing input Fasta file "
 
 	if [ $parentfile_type = FASTA ]
-	then   
+	then
 		seqtk subseq $parentfile $inputfile.header > $outputfile
 	elif [ $parentfile_type = FASTQ ]
 	then
 		if [ $output_format = FASTQ ]
-		then        
+		then
 			cat $parentfile | fqextract $inputfile.header > $outputfile
 		elif [ $output_format = FASTA ]
 		then

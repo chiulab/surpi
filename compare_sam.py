@@ -42,17 +42,17 @@ linenum += 1
 
 while line1 != '':
 	data1 = line1.split()
-	 
+
 	# check to see whether line is in the SAM header or alignment section
 	if (data1[0][0]!="@"):
 		#We are in the SAM alignment section
 
 		edit_distance=int(data1[12].split(":")[2])
-	
+
 		#using old snap (<=v0.15.4), could use length of line to determine if it was a hit or miss.
 		#new snap (>=v1.0) instead uses an edit distance of -1 to signify a miss.
-	
-		if (edit_distance >= 0):	
+
+		if (edit_distance >= 0):
 			#this is a hit
 			new_hits += 1
 			sum_edistance_new += int(data1[12].split(":")[2])
@@ -61,10 +61,10 @@ while line1 != '':
 				# this has been previously flagged as a hit, and is also now a hit. Compare edit distances to find best hit.
 				edit_distance_previous=firstentry[1]
 				edit_distance_current = data1[12].split(":")[2]
-				
+
 				existing_hits += 1
 				sum_edistance_existing += int(edit_distance_previous)
-				
+
 				if (int(edit_distance_current) <= int(edit_distance_previous)):
 					replacements += 1
 					sum_data1 += int(edit_distance_current)

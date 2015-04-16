@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/7/2014  
+# Last revised 7/7/2014
 
 scriptname=${0##*/}
 green='\e[0;32m'
@@ -42,7 +42,7 @@ SNAP_nt_dir="COMP_SNAP"
 RiboClean_dir="RiboClean_SNAP"
 
 # SNAP_nt_chunks=  # of chunks to split nt into, SNAP index will be created for each chunk.
-# Currently, the minimum number of chunks is around 17-20 
+# Currently, the minimum number of chunks is around 17-20
 # SNAP 0.15.4 will not successfully index nt with less than 17 chunks, though this will vary a bit with each NT release.
 # I picked 20 here as a safe default.
 # This will likely have to be increased when using SNAP 1.0, which has different indexing characteristics,

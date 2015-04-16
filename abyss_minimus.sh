@@ -77,11 +77,11 @@ for f in `cat $inputfile.barcodes` ; do
 	END_SPLIT=$(date +%s)
 	diff_SPLIT=$(( $END_SPLIT - $START_SPLIT ))
 	echo -e "$(date)\t$scriptname\tSplitting FASTA took $diff_SPLIT s."
-	### run abyss (deBruijn assembler) on each 100,000 read demultiplexed fasta file, including the unsplit demultiplexed file 
+	### run abyss (deBruijn assembler) on each 100,000 read demultiplexed fasta file, including the unsplit demultiplexed file
 	echo -e "$(date)\t$scriptname\tRunning abyss on each $split_FASTA_size chunk..."
 	START_ABYSS=$(date +%s)
 
-	for d in bar$f.${inputfile}_* ; do 
+	for d in bar$f.${inputfile}_* ; do
 		abyss-pe k=$kmer name=$d.f se=$d np=$cores >& $d.abyss.log
 	done
 
@@ -115,10 +115,10 @@ for f in `cat $inputfile.barcodes` ; do
 ###########
 	echo -e "$(date)\t$scriptname\tStarting cat barcode addition and cutoff of minimo output"
 	START_MIN_PROCESS=$(date +%s)
-	# Minimo output gives more than one line per sequence, so here we linearize sequences (linearization protocol from here http://seqanswers.com/forums/showthread.php?t=27567 ) 
+	# Minimo output gives more than one line per sequence, so here we linearize sequences (linearization protocol from here http://seqanswers.com/forums/showthread.php?t=27567 )
 	# then we add the relevant barcode to the end of the header contig. Contigs that survive untouched from abyss already have a barcode at the end of them, so that extra barcode is taken away
-	cat all-contigs.fa | awk '{if (substr($0,1,1)==">"){if (p){print "\n";} print $0} else printf("%s",$0);p++;}END{print "\n"}' | sed '/^$/d' | sed 's/ /_/g' | sed "s/$/"$f"/g;n" | sed "s/"$f""$f"/"$f"/g" | sed 's/#/#@/g' | sed 's/^>/>contig_/g' > all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss-minim.fa	
-	# change generic name all-contigs.fa 
+	cat all-contigs.fa | awk '{if (substr($0,1,1)==">"){if (p){print "\n";} print $0} else printf("%s",$0);p++;}END{print "\n"}' | sed '/^$/d' | sed 's/ /_/g' | sed "s/$/"$f"/g;n" | sed "s/"$f""$f"/"$f"/g" | sed 's/#/#@/g' | sed 's/^>/>contig_/g' > all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss-minim.fa
+	# change generic name all-contigs.fa
 	mv all-contigs.fa all-contigs.fa.$f
 	# only contigs larger than $cutoff_post_Minimo are retained
 	cat all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss-minim.fa | awk 'NR%2==1 {x = $0} NR%2==0 { if (length($0) >= '$3') printf("%s\n%s\n",x,$0)}' > all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss.${cutoff_post_Minimo}-mini.fa
@@ -148,7 +148,7 @@ fi
 rm -f all.$inputfile.contigs.abyssmini.cut$cutoff_post_Abyss.$cutoff_post_Minimo.e1.NR.RAPSearch.aln
 rm -f all.$inputfile.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader
 rm -f all.$inputfile.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.seq
-rm -f all.$inputfile.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader 
+rm -f all.$inputfile.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader
 rm -f all.$inputfile.contigs.abyssmini.e1.NR.RAPSearch.m8.noheader.ex.fa
 rm -f all.$inputfile.unitigs.cut$cutoff_post_Abyss-contigs.sortlen.seq
 rm -f all-contigs*

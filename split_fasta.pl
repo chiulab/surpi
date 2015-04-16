@@ -80,7 +80,7 @@ while (my $sequenceEntry = <SEQFILE>) {
     #write record to file
     print (OUTFILE ">$sequenceTitle\n");
     print (OUTFILE "$sequenceEntry\n");
-    $seqCount++;   
+    $seqCount++;
     $seqThisFile++;
 
     if ($seqThisFile == $numberToCopy) {

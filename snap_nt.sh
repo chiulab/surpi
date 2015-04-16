@@ -1,16 +1,16 @@
 #!/bin/bash
-#                                                                                                                                
+#
 #	snap_nt.sh
 #
 #	This script runs SNAP against the NT database
 #	Chiu Laboratory
 #	University of California, San Francisco
 #
-# 
+#
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-                 
+
 expected_args=6
 scriptname=${0##*/}
 
@@ -72,12 +72,12 @@ for snap_index in $SNAP_NT_index_directory/* ; do
 	cat $basef.snap.log >> $basef.snapNT.log
 	cat $basef.time.log >> $basef.timeNT.log
 
-    
+
 	compare_sam.py $basef.tmp.sam $basef.prev.sam
 	cat $basef.prev.sam | egrep -v "^@" | awk '{print "@"$1"\n"$10"\n""+"$1"\n"$11}' > $basef.tmp.fastq
 
 	counter=1
-    
+
 	END2=$(date +%s)
 
 	echo -e "$(date)\t$scriptname\tDone with $snap_index."
@@ -86,7 +86,7 @@ for snap_index in $SNAP_NT_index_directory/* ; do
 done
 
 # need to restore the hits
-update_sam.py $basef.prev.sam $basef.NT.sam 
+update_sam.py $basef.prev.sam $basef.NT.sam
 
 rm -f $basef.tmp.sam
 rm -f $basef.tmp.fastq

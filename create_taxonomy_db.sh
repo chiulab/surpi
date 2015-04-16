@@ -11,7 +11,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/2/2014  
+# Last revised 7/2/2014
 
 scriptname=${0##*/}
 
@@ -28,16 +28,16 @@ done
 if [[ ${HELP-} -eq 1  ||  $# -lt 1 ]]
 then
 	cat <<USAGE
-	
+
 ${bold}$scriptname${normal}
 
-This script will create the taxonomy SQLite database using NCBI downloadable files. 
+This script will create the taxonomy SQLite database using NCBI downloadable files.
 
 ${bold}Command Line Switches:${normal}
 
 	-h	Show this help
 
-	-d	Specify directory containing NCBI data	
+	-d	Specify directory containing NCBI data
 
 ${bold}Usage:${normal}
 
@@ -65,7 +65,7 @@ pigz -dc -k "$db_directory/gi_taxid_nucl.dmp.gz" > gi_taxid_nucl.dmp
 pigz -dc -k "$db_directory/gi_taxid_prot.dmp.gz" > gi_taxid_prot.dmp
 
 # the below grep "fixes" the issue whereby aliases, mispellings, and other alternate names are returned.
-# We could simply look for a name that is a "scientific name", 
+# We could simply look for a name that is a "scientific name",
 # but this shrinks the db a bit, speeding up lookups, and removes data we do not need at this time.
 echo -e "$(date)\t$scriptname\tRetaining scientific names..."
 grep "scientific name" names.dmp > names_scientificname.dmp

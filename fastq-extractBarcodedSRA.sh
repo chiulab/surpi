@@ -18,7 +18,7 @@ if [ $# -lt 1 ]; then
     exit
 fi
 
-# 
+#
 # gets absolute path to SRA file
 #
 SRA_PATH=$(readlink -e $1)
@@ -34,7 +34,7 @@ files=($header*.fastq)
 
 # restore barcode and R1/R2 designation to FASTQ headers
 for f in "${files[@]}"
-do 
+do
     barcode=$(echo "$f" | sed 's/_[12]//g' | sed 's/.fastq//g' | sed 's/.*_//g')
     readnum=$(echo "$f" | sed 's/.*_\([12]\).fastq/\1/g' | sed '/'$header'/d')
     echo -e "$(date)\t$scriptname\tRestoring barcode # $barcode and R1/R2 designation to $f"

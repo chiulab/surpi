@@ -7,7 +7,7 @@
 #	University of California, San Francisco
 #	January, 2014
 #
-# input file: annotated sam or annotated -m 8 file with taxonomies provided in the following format at the end of the .sam and -m 8 file: 
+# input file: annotated sam or annotated -m 8 file with taxonomies provided in the following format at the end of the .sam and -m 8 file:
 # "gi# --family --genus --species"
 # Output files are tab delimited  files ending in .counttable whereby rows represent taxonomic annotations at various levels (family, genus, species, gi)
 # Columns represent individual barcodes found in the dataset, and cells contain the number of reads
@@ -20,7 +20,7 @@
 scriptname=${0##*/}
 
 if [ $# -lt 6 ]; then
-	echo "Usage: $scriptname <annotated file> <SNAP/RAP> <gi Y/N> <species Y/N> <genus Y/N> <family Y/N> " 
+	echo "Usage: $scriptname <annotated file> <SNAP/RAP> <gi Y/N> <species Y/N> <genus Y/N> <family Y/N> "
     exit
 fi
 
@@ -33,7 +33,7 @@ genus=$5
 family=$6
 ###
 
-###substitute forward slash with @_ because forward slash in species name makes it ungreppable. using @_ because @ is used inside the contig barcode (ie. #@13 is barcode 13, contig generated) 
+###substitute forward slash with @_ because forward slash in species name makes it ungreppable. using @_ because @ is used inside the contig barcode (ie. #@13 is barcode 13, contig generated)
 create_tab_delimited_table.pl -f $file_type $inputfile  |  sed 's/ /_/g' | sed 's/,/_/g' | sed 's/\//@_/g' > $inputfile.tempsorted
 echo -e "$(date)\t$scriptname\tdone creating $inputfile.tempsorted"
 
@@ -61,7 +61,7 @@ then
 		done
 	echo -e "GI\tSpecies\tGenus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.gi.uniq.columntable > $inputfile.gi.counttable_temp
-	paste $inputfile.gi.counttable_temp bar*.$inputfile.gi.output > $inputfile.gi.counttable 
+	paste $inputfile.gi.counttable_temp bar*.$inputfile.gi.output > $inputfile.gi.counttable
 	sed -i 's/@_/ /g' $inputfile.gi.counttable
 	echo -e "$(date)\t$scriptname\tdone generating gi counttable"
 fi
@@ -84,7 +84,7 @@ then
 	done
 	echo -e "Species\tGenus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.species.uniq.columntable > $inputfile.species.counttable_temp
-	paste $inputfile.species.counttable_temp bar*.$inputfile.species.output > $inputfile.species.counttable 
+	paste $inputfile.species.counttable_temp bar*.$inputfile.species.output > $inputfile.species.counttable
 	sed -i 's/@_/ /g' $inputfile.species.counttable
 	echo -e "$(date)\t$scriptname\tdone generating species counttable"
 fi
@@ -106,7 +106,7 @@ then
 	done
 	echo -e "Genus\tFamily(@=contigbarcode)" > $inputfile.header
 	cat $inputfile.header $inputfile.genus.uniq.columntable > $inputfile.genus.counttable_temp
-	paste $inputfile.genus.counttable_temp bar*.$inputfile.genus.output > $inputfile.genus.counttable 
+	paste $inputfile.genus.counttable_temp bar*.$inputfile.genus.output > $inputfile.genus.counttable
 	sed -i 's/@_/ /g' $inputfile.genus.counttable
 	echo -e "$(date)\t$scriptname\tdone generating genus counttable"
 fi

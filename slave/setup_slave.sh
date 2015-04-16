@@ -22,7 +22,7 @@ if [ ! -d $bin_folder ]
 then
 	mkdir $bin_folder
 fi
-	
+
 CWD=$(pwd)
 
 # set timezone

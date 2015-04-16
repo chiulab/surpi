@@ -33,7 +33,7 @@ else {$rettype = "fasta"}
 
 if ($opt_h) {
 	print <<USAGE;
-	
+
 get_genbankfasta.pl
 
 Currently, the maximum number of sequences this program can retrieve in a single run is about 750.
@@ -53,7 +53,7 @@ Usage:
 4. To output to a file, use the -o switch
 	get_genbankfasta.pl -o outputfile 149408158 116734707
 		note: all command line switches must be present before gi on command line
-		
+
 	get_genbankfasta.pl -i gi_list -o outputfile
 
 5. Use the -f switch to select the output type:
@@ -61,7 +61,7 @@ Usage:
 	fasta - retrieve FASTA file for gi input
 	docsum - retrieve Document Summary for gi input
 	docsum_oneline - retrieve Document Summary for gi input & collapse to one line per gi
-		
+
 		get_genbankfasta.pl -f docsum_oneline 149408158 410777373
 		get_genbankfasta.pl -f fasta -i gi_list
 		get_genbankfasta.pl -f docsum_oneline -i gi_list
