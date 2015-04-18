@@ -26,7 +26,7 @@ scriptname=${0##*/}
 while getopts "$optspec" option; do
 	case "${option}" in
 		f) config_file=${OPTARG};; # get parameters from config file if specified
-    d) ref_path=${OPTARG};; # Path to reference db directory.
+		d) ref_path=${OPTARG:-/reference};; # Path to reference db directory.
 		h) HELP=1;;
 		v) VERIFICATION=1;;
 		z)	create_config_file=${OPTARG}
