@@ -91,7 +91,7 @@ fi
 
 if [[ $create_config_file ]]
 then
-	echo "PATH=/usr/local/bin/surpi:/usr/local/bin:/usr/bin/:/bin" > go_$configprefix
+	echo "PATH=/usr/local/bin/surpi:/usr/local/bin:/usr/bin/:/bin:$PATH" > go_$configprefix
 	echo "nohup $scriptname -f $configprefix.config > SURPI.$configprefix.log 2> SURPI.$configprefix.err" >> go_$configprefix
 
 	chmod +x go_$configprefix
