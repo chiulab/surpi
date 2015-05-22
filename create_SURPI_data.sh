@@ -35,6 +35,7 @@ cleanup_dir="rawdata"
 #You should likely stick with the default values here. If changing them, then the corresponding
 #values will also need to be changed within the SURPI config file.
 reference_dir="reference"
+subtraction_dir="Subtraction_SNAP"
 taxonomy_dir="taxonomy"
 RAPSearch_dir="RAPSearch"
 FAST_dir="FAST_SNAP"
@@ -133,8 +134,12 @@ if [ ! -d "$reference_dir/$FAST_dir" ]; then
 	mkdir "$reference_dir/$FAST_dir"
 fi
 
+if [ ! -d "$reference_dir/$subtraction_dir" ]; then
+	mkdir "$reference_dir/$subtraction_dir"
+fi
+
 echo -e "$(date)\t$scriptname\tMoving curated data into place..."
-mv snap_index_hg19_rRNA_mito_Hsapiens_rna "$reference_dir"
+mv snap_index_hg19_rRNA_mito_Hsapiens_rna "$reference_dir/$subtraction_dir"
 mv snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq_s16 "$reference_dir/$FAST_dir"
 mv rapsearch_viral_aa_130628_db_v2.12 "$reference_dir/$RAPSearch_dir"
 mv rapsearch_viral_aa_130628_db_v2.12.info "$reference_dir/$RAPSearch_dir"
