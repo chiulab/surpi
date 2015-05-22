@@ -50,7 +50,7 @@ split -l $LinesPerCore -a 3 $parentfile $parentfile.SplitXS &
 awk '{print$1}' $queryfile > $queryfile.header &
 echo -e "$(date)\t$scriptname\textracting header from $queryfile"
 
-for job in `jobs -p`
+for job in $(jobs -p)
 do
 	wait $job
 done

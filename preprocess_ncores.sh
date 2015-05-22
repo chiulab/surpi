@@ -13,8 +13,9 @@
 # Please see license file for details.
 
 scriptname=${0##*/}
+source logging.sh
 
-if [ $# != 12 ]; then
+if [ $# != 11 ]; then
 	echo "Usage: $scriptname <R1 FASTQ file> <S/I quality> <Y/N uniq> <length cutoff; 0 for no length cutoff> <# of cores> <free cache memory cutoff in GB> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory> <quality_cutoff>"
 	exit
 fi
@@ -25,13 +26,12 @@ quality=$2
 run_uniq=$3
 length_cutoff=$4
 cores=$5
-cache_reset=$6
-keep_short_reads=$7
-adapter_set=$8
-start_nt=$9
-crop_length=${10}
-temporary_files_directory=${11}
-quality_cutoff=${12}
+keep_short_reads=$6
+adapter_set=$7
+start_nt=$8
+crop_length=${9}
+temporary_files_directory=${10}
+quality_cutoff=${11}
 ###
 
 if [ ! -f $inputfile ]
@@ -40,40 +40,33 @@ then
 	exit
 fi
 
-freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
-echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
-if [ $freemem -lt $free_cache_cutoff ]
-then
-	echo -e "$(date)\t$scriptname\tClearing cache..."
-	dropcache
-fi
-
 START=$(date +%s)
 
-echo -e "$(date)\t$scriptname\tSplitting $inputfile..."
+log "Splitting $inputfile..."
 
 let "numlines = `wc -l $inputfile | awk '{print $1}'`"
 let "FASTQentries = numlines / 4"
-echo -e "$(date)\t$scriptname\tThere are $FASTQentries FASTQ entries in $inputfile"
+log "There are $FASTQentries FASTQ entries in $inputfile"
 let "LinesPerCore = numlines / $cores"
-let "FASTQperCore = LinesPerCore / 4"
+# Prevent leaving a small remainder file after split by adding 1.
+let "FASTQperCore = LinesPerCore / 4 + 1"
 let "SplitPerCore = FASTQperCore * 4"
-echo -e "$(date)\t$scriptname\twill use $cores cores with $FASTQperCore entries per core"
+log "will use $cores cores with $FASTQperCore entries per core"
 
 split -l $SplitPerCore $inputfile
 
 END_SPLIT=$(date +%s)
 diff_SPLIT=$(( END_SPLIT - START ))
 
-echo -e "$(date)\t$scriptname\tDone splitting: "
-echo -e "$(date)\t$scriptname\tSPLITTING took $diff_SPLIT seconds"
+log "Done splitting: "
+log "SPLITTING took $diff_SPLIT seconds"
 
-echo -e "$(date)\t$scriptname\tRunning preprocess script for each chunk..."
+log "Running preprocess script for each chunk..."
 
 for f in x??
 do
 	mv $f $f.fastq
-	echo -e "$(date)\t$scriptname\tpreprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &"
+	log "preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory >& $f.preprocess.log &"
 	preprocess.sh $f.fastq $quality N $length_cutoff $keep_short_reads $adapter_set $start_nt $crop_length $temporary_files_directory $quality_cutoff >& $f.preprocess.log &
 done
 
@@ -82,7 +75,7 @@ do
 	wait $job
 done
 
-echo -e "$(date)\t$scriptname\tDone preprocessing for each chunk..."
+log "Done preprocessing for each chunk..."
 
 nopathf2=${1##*/}
 basef2=${nopathf2%.fastq}
@@ -117,11 +110,11 @@ do
 	rm -f $basef.cutadapt.cropped.fastq
 done
 
-echo -e "$(date)\t$scriptname\tDone concatenating output..."
+log "Done concatenating output..."
 
 if [ $run_uniq == "Y" ]; # selecting unique reads
 then
-	echo -e "$(date)\t$scriptname\tSelecting unique reads"
+	log "Selecting unique reads"
 	START_UNIQ=$(date +%s)
 	# selecting unique reads
 	sed "n;n;n;d" $basef2.preprocessed.fastq | sed "n;n;d" | sed "s/^@/>/g" > $basef2.preprocessed.fasta
@@ -130,28 +123,28 @@ then
 	cp -f $basef2.uniq.fastq $basef2.preprocessed.fastq
 	END_UNIQ=$(date +%s)
 	diff_UNIQ=$(( END_UNIQ - START_UNIQ ))
-	echo -e "$(date)\t$scriptname\tUNIQ took $diff_UNIQ seconds"
+	log "UNIQ took $diff_UNIQ seconds"
 else
-	echo -e "$(date)\t$scriptname\tIncluding duplicates (did not run UNIQ)"
+	log "Including duplicates (did not run UNIQ)"
 fi
 
 END=$(date +%s)
 diff_TOTAL=$(( END - START ))
 
 let "avgtime1=`grep CUTADAPT $basef2.preprocess.log | awk '{print $12}' | sort -n | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
-echo -e "$(date)\t$scriptname\tmedian CUTADAPT time per core: $avgtime1 seconds"
+log "median CUTADAPT time per core: $avgtime1 seconds"
 
 if [ $run_uniq = "Y" ]; then
 	let "avgtime2 = $diff_UNIQ"
-	echo -e "$(date)\t$scriptname\tUNIQ time: $diff_UNIQ seconds"
+	log "UNIQ time: $diff_UNIQ seconds"
 else
 	let "avgtime2=0"
 fi
 
 let "avgtime3=`grep DUST $basef2.preprocess.log | awk '{print $12}' | sort -n | awk '{ a[i++]=$1} END {print a[int(i/2)];}'`"
-echo -e "$(date)\t$scriptname\tmedian DUST time per core: $avgtime3 seconds"
+log "median DUST time per core: $avgtime3 seconds"
 
 let "totaltime = diff_SPLIT + avgtime1 + avgtime2 + avgtime3"
-echo -e "$(date)\t$scriptname\tTOTAL TIME: $totaltime seconds"
+log "TOTAL TIME: $totaltime seconds"
 
-echo -e "$(date)\t$scriptname\tTOTAL CLOCK TIME (INCLUDING OVERHEAD): $diff_TOTAL seconds"
+log "TOTAL CLOCK TIME (INCLUDING OVERHEAD): $diff_TOTAL seconds"

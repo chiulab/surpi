@@ -15,8 +15,9 @@
 # Copyright (C) 2014 Samia N Naccache - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-
 scriptname=${0##*/}
+source debug.sh
+source logging.sh
 
 if [ $# -lt 5 ]
 then
@@ -34,7 +35,7 @@ ignore_barcodes=$6
 split_FASTA_size=100000
 
 #### create list of barcodes in the fasta file in the following format: #barcode
-echo -e "$(date)\t$scriptname\tDemultiplexing barcodes..."
+log "Demultiplexing barcodes..."
 START_DEMULTIPLEX=$(date +%s)
 
 #The sed '/^#$/d' removes a blank #. This is needed in cases where barcodes are present along with reads that have no barcodes
@@ -54,10 +55,10 @@ else #$inputfile.barcodes doesn't exist, or size=0, then we only have 1 barcode,
 	echo "#" > $inputfile.barcodes
 fi
 
-echo -e "$(date)\t$scriptname\tCompleted demultiplexing barcodes."
+log "Completed demultiplexing barcodes."
 END_DEMULTIPLEX=$(date +%s)
 diff_DEMULTIPLEX=$(( END_DEMULTIPLEX - START_DEMULTIPLEX ))
-echo -e "$(date)\t$scriptname\tBarcode demultiplex took $diff_DEMULTIPLEX s."
+log "Barcode demultiplex took $diff_DEMULTIPLEX s."
 ### generate fasta file for every separate barcode (demultiplex)
 
 for f in `cat $inputfile.barcodes` ; do
@@ -68,30 +69,33 @@ for f in `cat $inputfile.barcodes` ; do
 		grep -E "$f(/|$)" $inputfile -A 1 --no-group-separator > bar$f.$inputfile
 	fi
 	# split demultiplexed fasta file into 100,000 read sub-fastas
-	echo -e "$(date)\t$scriptname\tSplitting FASTA into chunks of size: $split_FASTA_size."
+	log "Splitting FASTA into chunks of size: $split_FASTA_size."
 	START_SPLIT=$(date +%s)
 
 	cp bar$f.$inputfile bar$f.${inputfile}_n # So that the unsplit demultiplexed file is also denovo assembled #
 	split_fasta.pl -i bar$f.$inputfile -o bar$f.$inputfile -n $split_FASTA_size
-	echo -e "$(date)\t$scriptname\tCompleted splitting FASTA file."
+	log "Completed splitting FASTA file."
 	END_SPLIT=$(date +%s)
 	diff_SPLIT=$(( $END_SPLIT - $START_SPLIT ))
-	echo -e "$(date)\t$scriptname\tSplitting FASTA took $diff_SPLIT s."
+	log "Splitting FASTA took $diff_SPLIT s."
 	### run abyss (deBruijn assembler) on each 100,000 read demultiplexed fasta file, including the unsplit demultiplexed file
-	echo -e "$(date)\t$scriptname\tRunning abyss on each $split_FASTA_size chunk..."
+	log "Running abyss on each $split_FASTA_size chunk..."
 	START_ABYSS=$(date +%s)
 
 	for d in bar$f.${inputfile}_* ; do
-		abyss-pe k=$kmer name=$d.f se=$d np=$cores >& $d.abyss.log
+    echo $d
+	  log "Command: abyss-pe k=$kmer name=$d.f se=$d np=$cores >& $d.abyss.log"
+		#abyss-pe k=$kmer name=$d.f se=$d np=$cores >& $d.abyss.log
+		abyss-pe k=$kmer name=$d.f se=$d >& $d.abyss.log
 	done
 
-	echo -e "$(date)\t$scriptname\tCompleted running abyss on each $split_FASTA_size chunk."
+	log "Completed running abyss on each $split_FASTA_size chunk."
 	END_ABYSS=$(date +%s)
 	diff_ABYSS=$(( END_ABYSS - START_ABYSS ))
-	echo -e "$(date)\t$scriptname\tAbyss took $diff_ABYSS s."
+	log "Abyss took $diff_ABYSS s."
 ###
 ### contigs from split files concatenated, after which reads smaller than the cutoff value are eliminated
-	echo -e "$(date)\t$scriptname\tStarting concatenating and cutoff of abyss output"
+	log "Starting concatenating and cutoff of abyss output"
 	START_CATCONTIGS=$(date +%s)
 
 	#concatenating contig files from different fasta splits, and adding kmer infromation and barcode information to contig headers
@@ -99,21 +103,22 @@ for f in `cat $inputfile.barcodes` ; do
 	# only contigs larger than $cutoff_post_Abyss are retained
  	cat all.bar$f.$inputfile.unitigs.fa | awk 'NR%2==1 {x = $0} NR%2==0 { if (length($0) >= '$2') printf("%s\n%s\n",x,$0)}' > all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss.fa
 
-	echo -e "$(date)\t$scriptname\tDone concatenating and cutoff of abyss output"
+	log "Done concatenating and cutoff of abyss output"
 	END_CATCONTIGS=$(date +%s)
 	diff_CATCONTIGS=$(( END_CATCONTIGS - START_CATCONTIGS ))
-	echo -e "$(date)\t$scriptname\tConcatenating and cutoff of abyss output took $diff_CATCONTIGS s."
+	log "Concatenating and cutoff of abyss output took $diff_CATCONTIGS s."
 ###
 ### run Minimo (OLC assembler)
-	echo -e "$(date)\t$scriptname\tStarting Minimo..."
+	log "Starting Minimo..."
 	START_MINIMO=$(date +%s)
+  log "Command: Minimo all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss.fa -D FASTA_EXP=1"
 	Minimo all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss.fa -D FASTA_EXP=1
-	echo -e "$(date)\t$scriptname\tCompleted Minimo."
+	log "Completed Minimo."
 	END_MINIMO=$(date +%s)
 	diff_MINIMO=$(( END_MINIMO - START_MINIMO ))
-	echo -e "$(date)\t$scriptname\tMinimo took $diff_MINIMO s."
+	log "Minimo took $diff_MINIMO s."
 ###########
-	echo -e "$(date)\t$scriptname\tStarting cat barcode addition and cutoff of minimo output"
+	log "Starting cat barcode addition and cutoff of minimo output"
 	START_MIN_PROCESS=$(date +%s)
 	# Minimo output gives more than one line per sequence, so here we linearize sequences (linearization protocol from here http://seqanswers.com/forums/showthread.php?t=27567 )
 	# then we add the relevant barcode to the end of the header contig. Contigs that survive untouched from abyss already have a barcode at the end of them, so that extra barcode is taken away
@@ -123,23 +128,23 @@ for f in `cat $inputfile.barcodes` ; do
 	# only contigs larger than $cutoff_post_Minimo are retained
 	cat all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss-minim.fa | awk 'NR%2==1 {x = $0} NR%2==0 { if (length($0) >= '$3') printf("%s\n%s\n",x,$0)}' > all.bar$f.$inputfile.unitigs.cut$cutoff_post_Abyss.${cutoff_post_Minimo}-mini.fa
 
-	echo -e "$(date)\t$scriptname\tDone cat barcode addition and cutoff of minimo output"
+	log "Done cat barcode addition and cutoff of minimo output"
 	END_MIN_PROCESS=$(date +%s)
 	diff_MIN_PROCESS=$(( END_MIN_PROCESS - START_MIN_PROCESS ))
-	echo -e "$(date)\t$scriptname\tcat barcode addition and cutoff of minimo output took $diff_MIN_PROCESS s"
+	log "cat barcode addition and cutoff of minimo output took $diff_MIN_PROCESS s"
 done
 ###
 ### concatenate deBruijn -> OLC contigs from all barcodes together
-echo -e "$(date)\t$scriptname\tConcatenating all barcodes together..."
+log "Concatenating all barcodes together..."
 START_CAT=$(date +%s)
 cat all.bar*.$inputfile.unitigs.cut$cutoff_post_Abyss.${cutoff_post_Minimo}-mini.fa > all.$inputfile.unitigs.cut$cutoff_post_Abyss.${cutoff_post_Minimo}-mini.fa
-echo -e "$(date)\t$scriptname\tCompleted concatenating all barcodes."
+log "Completed concatenating all barcodes."
 END_CAT=$(date +%s)
 diff_CAT=$(( END_CAT - START_CAT ))
-echo -e "$(date)\t$scriptname\tBarcode concatenation took $diff_CAT s."
+log "Barcode concatenation took $diff_CAT s."
 
 # cleaning up files by organizing directories, moving files into directories, and removing temporary files
-mkdir $inputfile.dir
+mkdir --parents $inputfile.dir
 mv bar*$inputfile*.fa $inputfile.dir
 if [ -e all.$inputfile.contigs.abyssmini.cut$cutoff_post_Abyss.$cutoff_post_Minimo.e1.NR.RAPSearch.m8 ]
 then

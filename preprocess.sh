@@ -17,6 +17,8 @@
 # Please see license file for details.
 
 scriptname=${0##*/}
+source debug.sh
+source logging.sh
 
 if [ $# != 10 ]; then
 	echo "Usage: $scriptname <R1 FASTQ file> <S/I quality> <Y/N uniq> <length_cutoff; 0 for no length_cutoff> <Y/N keep short reads> <adapter_set> <start_nt> <crop_length> <temporary_files_directory> <quality_cutoff>"
@@ -44,15 +46,15 @@ fi
 
 if [ $quality = "S" ]
 then
-	echo -e "$(date)\t$scriptname\tselected Sanger quality"
+	log "selected Sanger quality"
 else
-	echo -e "$(date)\t$scriptname\tselected Illumina quality"
+	log "selected Illumina quality"
 fi
 
 # fix header if space is present
 s=`head -1 $inputfile | awk '{if ($0 ~ / /) {print "SPACE"} else {print "NOSPACE"}}'`
 
-echo -e "$(date)\t$scriptname\t$s in header"
+log "$s in header"
 
 nopathf=${1##*/}
 basef=${nopathf%.fastq}
@@ -60,7 +62,7 @@ basef=${nopathf%.fastq}
 #################### START OF PREPROCESSING, READ1 #########################
 
 # run cutadapt, Read1
-echo -e "$(date)\t$scriptname\t********** running cutadapt, Read1 **********"
+log "********** running cutadapt, Read1 **********"
 if [ $s == "SPACE" ]
 then
 	sed "s/\([@HWI|@M00135|@SRR][^ ]*\) \(.\):.:0:\(.*\)/\1#\3\/\2/g" $inputfile > $basef.modheader.fastq
@@ -76,12 +78,12 @@ fi
 
 END1=$(date +%s)
 diff=$(( $END1 - $START1 ))
-echo -e "$(date)\t$scriptname\tDone cutadapt: CUTADAPT took $diff seconds"
+log "Done cutadapt: CUTADAPT took $diff seconds"
 
 # run uniq, Read1
 if [ $run_uniq == "Y" ]
 then
-	echo -e "$(date)\t$scriptname\t********** running uniq, Read1 **********"
+	log "********** running uniq, Read1 **********"
 	START1=$(date +%s)
 
 	if [ $quality = "S" ]
@@ -93,28 +95,28 @@ then
 
 	END1=$(date +%s)
 	diff=$(( $END1 - $START1 ))
-	echo -e "$(date)\t$scriptname\tDone uniq: UNIQ took $diff seconds"
+	log "Done uniq: UNIQ took $diff seconds"
 fi
 
 # run crop, Read 1
-echo -e "$(date)\t$scriptname\t********** running crop, Read1 **********"
+log "********** running crop, Read1 **********"
 START1=$(date +%s)
 
 if [ $run_uniq == "Y" ]
 then
-	echo -e "$(date)\t$scriptname\tWe will be using $crop_length as the length of the cropped read"
+	log "We will be using $crop_length as the length of the cropped read"
 	crop_reads.csh $basef.cutadapt.uniq.fastq $start_nt $crop_length > $basef.cutadapt.uniq.cropped.fastq
 else
-	echo -e "$(date)\t$scriptname\tWe will be using $crop_length as the length of the cropped read"
+	log "We will be using $crop_length as the length of the cropped read"
 	crop_reads.csh $basef.cutadapt.fastq $start_nt $crop_length > $basef.cutadapt.cropped.fastq
 fi
 
 END1=$(date +%s)
 diff=$(( $END1 - $START1 ))
-echo -e "$(date)\t$scriptname\tDone crop: CROP took $diff seconds"
+log "Done crop: CROP took $diff seconds"
 
 # run dust, Read1
-echo -e "$(date)\t$scriptname\t********** running dust, Read1 **********"
+log "********** running dust, Read1 **********"
 START1=$(date +%s)
 
 if [ $run_uniq == "Y" ]
@@ -128,4 +130,4 @@ fi
 
 END1=$(date +%s)
 diff=$(( $END1 - $START1 ))
-echo -e "$(date)\t$scriptname\tDone dust: DUST took $diff seconds"
+log "Done dust: DUST took $diff seconds"
