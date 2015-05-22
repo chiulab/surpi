@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 #
 #	taxonomy_lookup.pl
 #
@@ -12,6 +12,7 @@
 # Please see license file for details.
 
 use strict;
+use warnings;
 #use diagnostics;
 use Time::HiRes qw[gettimeofday tv_interval];
 use DBI;
