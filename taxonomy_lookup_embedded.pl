@@ -115,7 +115,7 @@ $gi = $ARGV[0];
 $lineage = "";
 chomp $gi;
 # convert gi -> taxid
-my $ary = $db->selectrow_arrayref("SELECT taxid FROM gi_taxid WHERE gi = $gi LIMIT 1");
+my $ary = $db->selectrow_arrayref("SELECT taxid FROM gi_taxid WHERE gi = \"$gi\" LIMIT 1");
 if ($ary){
 	$taxid = trim($ary->[0]);
 }
