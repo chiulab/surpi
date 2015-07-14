@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #	compare_multiple_sam.py
 #
@@ -9,7 +9,7 @@
 #
 # Copyright (C) 2014 Charles Y Chiu - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
-# Last revised 3/21/2014  
+# Last revised 3/21/2014
 
 import sys
 
@@ -61,7 +61,7 @@ while lineList[0] != '':
 	lineList = []
 	for file in fileObjList:
 		lineList.append(file.readline())
-		
+
 for file in fileObjList:
 	file.close()
 outputFile.close()

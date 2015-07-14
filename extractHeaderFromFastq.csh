@@ -14,7 +14,7 @@
 # Copyright (C) 2014 Charles Y Chiu - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014  
+# Last revised 1/26/2014
 
 if ($#argv != 4) then
 	echo "Usage: extractHeaderFromFastq.csh <header file> <format of header list file (BLASTN / FASTQ / FASTA)> <data file in FASTQ format> <output file>"

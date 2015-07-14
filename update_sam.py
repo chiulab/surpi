@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #	update_sam.py
-#       this script reannotates the SAM file based on the better hit identified in "compare_sam.py" 
+#       this script reannotates the SAM file based on the better hit identified in "compare_sam.py"
 #
 #	Chiu Laboratory
 #	University of California, San Francisco

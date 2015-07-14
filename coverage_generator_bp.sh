@@ -93,7 +93,7 @@ do
 		# create list of curated GIs $SNAP_file.$genus.gi.list.curatedgenome
 		# First retain only gis that are complete genomes if no GIs with "complete genomes" are returned, we'll go to GIs  "complete sequences", if no complete sequences, then we just go with the GIs we have
 
-		get_genbankfasta.pl -i bar.$bar.$SNAP_file.$genus.gi.list  > bar.$bar.$SNAP_file.$genus.gi.headers 
+		get_genbankfasta.pl -i bar.$bar.$SNAP_file.$genus.gi.list  > bar.$bar.$SNAP_file.$genus.gi.headers
 
 		egrep ">gi.*[Cc]omplete [Gg]enome" bar.$bar.$SNAP_file.$genus.gi.headers  | awk -F "|" '{print$2}'  | head -n $top_gis > bar.$bar.$SNAP_file.$genus.gi
 		if [ -s bar.$bar.$SNAP_file.$genus.gi ]

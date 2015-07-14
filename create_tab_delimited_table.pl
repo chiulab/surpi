@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 #	create_tab_delimited_table.pl
 #
@@ -10,7 +10,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 1/26/2014  
+# Last revised 1/26/2014
 
 use Getopt::Std;
 use strict;
@@ -21,14 +21,14 @@ getopts('f:h');
 
 if ($opt_h) {
 	print <<USAGE;
-	
+
 create_tab_delimited_table.pl
 
 This program will return a simpler version of a SNAP or RAP output file that has been produced via the SURPI pipeline.
 Output file is in the following format:
 
 	header	gi	species	genus	family
-	
+
 
 Usage:
 
@@ -39,7 +39,7 @@ create_tab_delimited_table.pl -f SNAP sample8.NT.snap.matched.Viruses.sorted
 Command Line Switches:
 
 	-f	Specify SNAP/RAP input format
-	
+
 USAGE
 	exit;
 }

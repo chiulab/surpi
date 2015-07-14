@@ -1,7 +1,7 @@
 #!/bin/bash
-#     
+#
 #	extactSamFromSam.sh
-# 
+#
 #	extract SAM reads corresponding to a SAM header file from another SAM reference file and writes to
 #	SAM output file
 # 	Chiu Laboratory
@@ -40,7 +40,7 @@ else
     let "numlines = `wc -l basef | awk '{print $1}'`"
     let "LinesPerCore = numlines / $cores"
     echo -e "$(date)\t$scriptname\twill use $cores cores with $LinesPerCore entries per core"
-    
+
     split -l $LinesPerCore $basef
 
     echo -e "$(date)\t$scriptname\textracting reads from $baseg using headers from $basef"

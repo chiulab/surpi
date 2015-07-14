@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #	create_taxonomy_db.py
 #
@@ -10,7 +10,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/2/2014  
+# Last revised 7/2/2014
 
 import sqlite3
 
@@ -27,13 +27,13 @@ with open('names_scientificname.dmp', 'r') as map_file:
 		line = line.split("|")
 		taxid = line[0].strip()
 		name = line[1].strip()
-		
+
 		c.execute ("INSERT INTO names VALUES (?,?)", (taxid, name))
 
 d = conn.cursor()
 d.execute('''CREATE TABLE nodes (
 			taxid INTEGER PRIMARY KEY,
-			parent_taxid INTEGER, 
+			parent_taxid INTEGER,
 			rank TEXT)''')
 
 with open('nodes.dmp', 'r') as map_file:
@@ -42,7 +42,7 @@ with open('nodes.dmp', 'r') as map_file:
 		taxid = line[0].strip()
 		parent_taxid = line[1].strip()
 		rank = line[2].strip()
-		
+
 		d.execute ("INSERT INTO nodes VALUES (?,?,?)", (taxid, parent_taxid, rank))
 conn.commit()
 conn.close()
@@ -67,7 +67,7 @@ print ("Creating gi_taxid_prot.db...")
 conn = sqlite3.connect('gi_taxid_prot.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE gi_taxid (
-			gi INTEGER PRIMARY KEY, 
+			gi INTEGER PRIMARY KEY,
 			taxid INTEGER)''')
 
 with open('gi_taxid_prot.dmp', 'r') as map_file:

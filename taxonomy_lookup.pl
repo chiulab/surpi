@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #	taxonomy_lookup.pl
 #
@@ -12,6 +12,7 @@
 # Please see license file for details.
 
 use strict;
+use warnings;
 #use diagnostics;
 use Time::HiRes qw[gettimeofday tv_interval];
 use DBI;
@@ -80,12 +81,11 @@ print localtime()."\t$0\tTime to extract gi: $extracttime seconds\n";
 
 # sort/uniq gi file
 my $startsort = [gettimeofday()];
-system ("sort --parallel=$cores -u $basef_inputfile.gi > $basef_inputfile.gi.uniq");
-
+system ("sort -u $basef_inputfile.gi > $basef_inputfile.gi.uniq");
 my $sorttime = tv_interval($startsort);
 print localtime()."\t$0\tTime to sort -u gi file: $sorttime seconds\n";
 
-# Parallelization can occur at this point in the code. Since the file in now sorted, it can be split into n chunks 
+# Parallelization can occur at this point in the code. Since the file in now sorted, it can be split into n chunks
 # with no overlap.
 my %taxonomy;
 
@@ -110,19 +110,19 @@ while (<UNIQGI>) {
 	chomp;
 	my ($family, $genus, $species, $lineage) = ("") x 4;
 	my $result = taxonomy_fgsl($_, $seq_type);
-	
+
 	if ($result =~ /family--(.*?)\t/) {
 		$family = $1;
 	}
-	
+
 	if ($result =~ /genus--(.*?)\t/) {
 		$genus = $1;
 	}
-	
+
 	if ($result =~ /species--(.*?)\t/) {
 		$species = $1;
 	}
-	
+
 	if ($result =~ /lineage--(.*)$/) {
 		$lineage = $1;
 	}
@@ -228,7 +228,7 @@ sub taxonomy_fgsl {
 			$sth->execute(($taxid));
 			if (@noderow = $sth->fetchrow_array) {
 				(my $tid, my $parent, my $rank) = @noderow;
-		
+
 				if ($namerow = $name_return->fetchrow_array) {
 					$name = trim($namerow);
 				}

@@ -12,7 +12,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/2/2014  
+# Last revised 7/2/2014
 
 scriptname=${0##*/}
 bold=$(tput bold)
@@ -38,10 +38,10 @@ done
 if [[ ${HELP-} -eq 1 ]]
 then
 	cat <<USAGE
-	
+
 ${bold}$scriptname${normal}
 
-This program will download necessary files from NCBI for use with SURPI. 
+This program will download necessary files from NCBI for use with SURPI.
 
 ${bold}Command Line Switches:${normal}
 
@@ -85,7 +85,7 @@ download_file ()
 	remote_dir=$2
 	file=$3
 	md5=$4
-	
+
 	( cd $destination_folder ; curl -O "$remote_dir/$file" )
 	if [[ $md5 ]]
 	then

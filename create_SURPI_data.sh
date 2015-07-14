@@ -15,7 +15,7 @@
 # Copyright (C) 2014 Scot Federman - All Rights Reserved
 # SURPI has been released under a modified BSD license.
 # Please see license file for details.
-# Last revised 7/7/2014  
+# Last revised 7/7/2014
 
 scriptname=${0##*/}
 green='\e[0;32m'
@@ -23,8 +23,9 @@ red='\e[0;31m'
 endColor='\e[0m'
 
 DATE=$(date +%m%d%Y)
-db_dir="NCBI_$DATE"
-curated_dir="curated_$DATE"
+echo $DATE > DATE.txt
+db_dir="NCBI"
+curated_dir="curated"
 
 cleanup_dir="rawdata"
 
@@ -34,6 +35,7 @@ cleanup_dir="rawdata"
 #You should likely stick with the default values here. If changing them, then the corresponding
 #values will also need to be changed within the SURPI config file.
 reference_dir="reference"
+subtraction_dir="Subtraction_SNAP"
 taxonomy_dir="taxonomy"
 RAPSearch_dir="RAPSearch"
 FAST_dir="FAST_SNAP"
@@ -41,7 +43,7 @@ SNAP_nt_dir="COMP_SNAP"
 RiboClean_dir="RiboClean_SNAP"
 
 # SNAP_nt_chunks=  # of chunks to split nt into, SNAP index will be created for each chunk.
-# Currently, the minimum number of chunks is around 17-20 
+# Currently, the minimum number of chunks is around 17-20
 # SNAP 0.15.4 will not successfully index nt with less than 17 chunks, though this will vary a bit with each NT release.
 # I picked 20 here as a safe default.
 # This will likely have to be increased when using SNAP 1.0, which has different indexing characteristics,
@@ -52,9 +54,6 @@ SNAP_nt_chunks="20"
 if [ ! -d "$reference_dir" ]; then
 	mkdir "$reference_dir"
 fi
-
-#set SNAP index Ofactor. See SNAP documentation for details.
-Ofactor=1000
 
 #download NCBI data to $db_dir, curated data to $curated_dir
 echo -e "$(date)\t$scriptname\tdownload_SURPI_data.sh -d $db_dir -c $curated_dir"
@@ -68,12 +67,10 @@ if [ ! -d "$reference_dir/$taxonomy_dir" ]; then
 fi
 
 create_taxonomy_db.sh -d "$db_dir"
-mv gi_taxid_nucl.db "$reference_dir/$taxonomy_dir/gi_taxid_nucl_$DATE.db"
-mv gi_taxid_prot.db "$reference_dir/$taxonomy_dir/gi_taxid_prot_$DATE.db"
-mv names_nodes_scientific.db "$reference_dir/$taxonomy_dir/names_nodes_scientific_$DATE.db"
-ln -s "gi_taxid_nucl_$DATE.db" "$reference_dir/$taxonomy_dir/gi_taxid_nucl.db"
-ln -s "gi_taxid_prot_$DATE.db" "$reference_dir/$taxonomy_dir/gi_taxid_prot.db"
-ln -s "names_nodes_scientific_$DATE.db" "$reference_dir/$taxonomy_dir/names_nodes_scientific.db"
+mv gi_taxid_nucl.db "$reference_dir/$taxonomy_dir/gi_taxid_nucl.db"
+mv gi_taxid_prot.db "$reference_dir/$taxonomy_dir/gi_taxid_prot.db"
+mv names_nodes_scientific.db "$reference_dir/$taxonomy_dir/names_nodes_scientific.db"
+
 #
 ##create RAPSearch nr db and move into $RAPSearch_dir
 #
@@ -85,10 +82,10 @@ echo -e "$(date)\t$scriptname\tDecompressing nr..."
 pigz -dc -k "$db_dir/nr.gz" > nr
 
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on nr..."
-prerapsearch -d nr -n "rapsearch_nr_${DATE}_db_v2.12"
+prerapsearch -d nr -n "rapsearch_nr_db_v2.12"
 echo -e "$(date)\t$scriptname\tCompleted prerapsearch on nr."
-mv rapsearch_nr_${DATE}_db_v2.12 "$reference_dir/$RAPSearch_dir"
-mv rapsearch_nr_${DATE}_db_v2.12.info "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_db_v2.12 "$reference_dir/$RAPSearch_dir"
+mv rapsearch_nr_db_v2.12.info "$reference_dir/$RAPSearch_dir"
 
 #
 ## Index curated data
@@ -111,13 +108,13 @@ pigz -dc -k "$curated_dir/rdp_typed_iso_goodq_9210seqs.fa.gz" > rdp_typed_iso_go
 echo -e "$(date)\t$scriptname\tIndexing curated data..."
 
 echo -e "$(date)\t$scriptname\tSNAP indexing hg19_rRNA_mito_Hsapiens_rna.fa..."
-snap index hg19_rRNA_mito_Hsapiens_rna.fa snap_index_hg19_rRNA_mito_Hsapiens_rna -hg19 -O$Ofactor
+snap index hg19_rRNA_mito_Hsapiens_rna.fa snap_index_hg19_rRNA_mito_Hsapiens_rna -hg19 -locationSize 5
 echo -e "$(date)\t$scriptname\tSNAP indexing Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq.fa..."
-snap index Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq.fa snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq_s16 -s 16 -O$Ofactor
+snap index Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq.fa snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq_s16 -s 16 -locationSize 5
 echo -e "$(date)\t$scriptname\tStarting prerapsearch on rapsearch_viral_aa_130628_db_v2.12.fasta..."
 prerapsearch -d rapsearch_viral_aa_130628_db_v2.12.fasta -n "rapsearch_viral_aa_130628_db_v2.12"
 echo -e "$(date)\t$scriptname\tSNAP indexing viruses-5-2012_trimmedgi-MOD_addedgi.fa..."
-snap index viruses-5-2012_trimmedgi-MOD_addedgi.fa snap_index_viruses-5-2012_trimmedgi-MOD_addedgi -O$Ofactor
+snap index viruses-5-2012_trimmedgi-MOD_addedgi.fa snap_index_viruses-5-2012_trimmedgi-MOD_addedgi -locationSize 5
 
 #RiboClean additions
 if [ ! -d "$reference_dir/$RiboClean_dir" ]; then
@@ -125,20 +122,24 @@ if [ ! -d "$reference_dir/$RiboClean_dir" ]; then
 fi
 
 echo -e "$(date)\t$scriptname\tSNAP indexing 18s_rRNA_gene_not_partial.fa..."
-snap index 18s_rRNA_gene_not_partial.fa snap_index_18s_rRNA_gene_not_partial.fa -O$Ofactor
+snap index 18s_rRNA_gene_not_partial.fa snap_index_18s_rRNA_gene_not_partial.fa -locationSize 5
 echo -e "$(date)\t$scriptname\tSNAP indexing viruses-5-2012_trimmedgi-MOD_addedgi.fa..."
-snap index 23s.fa snap_index_23sRNA -O$Ofactor
+snap index 23s.fa snap_index_23sRNA -locationSize 5
 echo -e "$(date)\t$scriptname\tSNAP indexing rdp_typed_iso_goodq_9210seqs.fa..."
-snap index 28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa snap_index_28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa -O$Ofactor
+snap index 28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa snap_index_28s_rRNA_gene_NOT_partial_18s_spacer_5.8s.fa -locationSize 5
 echo -e "$(date)\t$scriptname\tSNAP indexing viruses-5-2012_trimmedgi-MOD_addedgi.fa..."
-snap index rdp_typed_iso_goodq_9210seqs.fa snap_index_rdp_typed_iso_goodq_9210seqs -O$Ofactor
+snap index rdp_typed_iso_goodq_9210seqs.fa snap_index_rdp_typed_iso_goodq_9210seqs -locationSize 5
 
 if [ ! -d "$reference_dir/$FAST_dir" ]; then
 	mkdir "$reference_dir/$FAST_dir"
 fi
 
+if [ ! -d "$reference_dir/$subtraction_dir" ]; then
+	mkdir "$reference_dir/$subtraction_dir"
+fi
+
 echo -e "$(date)\t$scriptname\tMoving curated data into place..."
-mv snap_index_hg19_rRNA_mito_Hsapiens_rna "$reference_dir"
+mv snap_index_hg19_rRNA_mito_Hsapiens_rna "$reference_dir/$subtraction_dir"
 mv snap_index_Bacterial_Refseq_05172012.CLEAN.LenFiltered.uniq_s16 "$reference_dir/$FAST_dir"
 mv rapsearch_viral_aa_130628_db_v2.12 "$reference_dir/$RAPSearch_dir"
 mv rapsearch_viral_aa_130628_db_v2.12.info "$reference_dir/$RAPSearch_dir"
@@ -160,14 +161,14 @@ else
 fi
 echo -e "$(date)\t$scriptname\tStarting indexing of SNAP-nt..."
 echo -e "$(date)\t$scriptname\tcreate_snap_to_nt.sh -n $SNAP_nt_chunks -f nt"
-create_snap_to_nt.sh -n "$SNAP_nt_chunks" -f "nt" -p "$DATE"
+create_snap_to_nt.sh -n "$SNAP_nt_chunks" -f "nt" -p "prefix"
 echo -e "$(date)\t$scriptname\tCompleted indexing of SNAP-nt."
 
 if [ ! -d "$reference_dir/$SNAP_nt_dir" ]; then
 	mkdir "$reference_dir/$SNAP_nt_dir"
 fi
 
-mv "snap_index_${DATE}.nt."* "$reference_dir/$SNAP_nt_dir"
+mv "snap_index_prefix.nt."* "$reference_dir/$SNAP_nt_dir"
 
 #
 ## Cleanup
@@ -181,6 +182,6 @@ mv *.fa "$cleanup_dir"
 mv *.fasta "$cleanup_dir"
 mv nr "$cleanup_dir"
 mv nt "$cleanup_dir"
-mv "$DATE"* "$cleanup_dir"
+mv "prefix"* "$cleanup_dir"
 
 echo -e "$(date)\t$scriptname\t${green}Completed creation of SURPI reference data.${endColor}"

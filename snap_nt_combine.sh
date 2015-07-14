@@ -19,7 +19,7 @@
 # Copyright (C) 2014 Charles Chiu - All Rights Reserved
 # Permission to copy and modify is granted under the BSD license
 
-expected_args=6
+expected_args=5
 scriptname=${0##*/}
 
 if [ $# -lt $expected_args ]
@@ -32,9 +32,8 @@ fi
 inputfile=$1
 SNAP_NT_index_directory=$2
 cores=$3
-free_cache_cutoff=$4
-SNAP_d_cutoff=$5
-simultaneous_SNAPs=$6
+SNAP_d_cutoff=$4
+simultaneous_SNAPs=$5
 ###
 
 echo -e "$(date)\t$scriptname\tStarting SNAP to NT"
@@ -54,14 +53,6 @@ for snap_index in $SNAP_NT_index_directory/*; do
 	START2=$(date +%s)
 	nopathsnap_index=${snap_index##*/} # remove the path to file
 	echo -e "$(date)\t$scriptname\tStarting SNAP on $nopathsnap_index"
-
-	freemem=$(free -g | awk '{print $4}' | head -n 2 | tail -1)
-	echo -e "$(date)\t$scriptname\tThere is $freemem GB available free memory...[cutoff=$free_cache_cutoff GB]"
-	if [ $freemem -lt $free_cache_cutoff ]
-	then
-		echo -e "$(date)\t$scriptname\tClearing cache..."
-		dropcache
-	fi
 
 	START_SNAP=$(date +%s)
 	/usr/bin/time -o $basef.$nopathsnap_index.snap.log snap single $snap_index $basef.fastq -o $basef.$nopathsnap_index.sam -t $cores -x -f -h 250 -d $SNAP_d_cutoff -n 25 > $basef.$nopathsnap_index.time.log
