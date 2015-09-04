@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Simple script to iterate over the -m 8 results from a
 # BLAST and spits out the number of hits at each base of the
