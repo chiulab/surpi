@@ -24,30 +24,36 @@ The steps to install SURPI on a machine are as follows:
 
 	The below software must be installed for SURPI to function properly.
 
-	• fastQValidator
-		http://genome.sph.umich.edu/wiki/FastQValidator
-	• Minimo (v1.6)
-		http://sourceforge.net/projects/amos/files/amos/3.1.0/
 	• Abyss (v1.3.5)
 		http://www.bcgsc.ca/platform/bioinfo/software/abyss
+	• cutadapt (v1.2.1)
+		https://code.google.com/p/cutadapt/
+	• dropcache
+		http://stackoverflow.com/questions/13646925/allowing-a-non-root-user-to-drop-cache
+	• fastq
+		https://github.com/brentp/bio-playground/tree/master/reads-utils
+	• fastQValidator
+		http://genome.sph.umich.edu/wiki/FastQValidator
+	• fqextract
+		https://gist.github.com/drio/1168330
+	• gt (v1.5.1)
+		http://genometools.org/index.html
+	• Minimo (v1.6)
+		http://sourceforge.net/projects/amos/files/amos/3.1.0/
+	• Open MPI:
+		https://www.open-mpi.org/
+	• Perl DBD::Sqlite:
+		http://search.cpan.org/~ishigaki/DBD-SQLite-1.50/lib/DBD/SQLite.pm
+	• pigz
+		http://www.zlib.net/pigz/
+	• prinseq-lite.pl
+		http://prinseq.sourceforge.net
 	• RAPSearch (v2.12)
 		http://omics.informatics.indiana.edu/mg/RAPSearch2/
 	• seqtk (v 1.0r31)
 		https://github.com/lh3/seqtk
 	• SNAP (v0.15)
 		http://snap.cs.berkeley.edu
-	• gt (v1.5.1)
-		http://genometools.org/index.html
-	• fastq
-		https://github.com/brentp/bio-playground/tree/master/reads-utils
-	• fqextract
-		https://gist.github.com/drio/1168330
-	• cutadapt (v1.2.1)
-		https://code.google.com/p/cutadapt/
-	• prinseq-lite.pl
-		http://prinseq.sourceforge.net
-	• dropcache
-		http://stackoverflow.com/questions/13646925/allowing-a-non-root-user-to-drop-cache
 
 2. Decompress SURPI
 
